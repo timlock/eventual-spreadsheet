@@ -21,15 +21,15 @@ export class CommunicationService<T> implements Remote<T> {
     if (this.channel !== undefined) {
       this.channel.close();
     }
-    this.channel = new BroadcastChannel(channelName);
     this.observer = observer;
     if (identifier !== undefined) {
       this._identifier = identifier;
     }
+    this.channel = new BroadcastChannel(channelName);
     this.channel.onmessage = event => {
       let message = event.data as Message<T>;
       this.onNode(message.sender);
-      if (message.destination === undefined || message.destination === this.identifier?.uuid) {
+      if (message.payload !== undefined && (message.destination === undefined || message.destination === this.identifier?.uuid)) {
         this.observer?.onMessage(message);
       }
     }
@@ -48,7 +48,6 @@ export class CommunicationService<T> implements Remote<T> {
       console.warn('Cant post message, channel is undefined');
       return false;
     }
-    console.log('send message: ', message);
     this.channel.postMessage(message);
     return true;
   }
@@ -58,6 +57,7 @@ export class CommunicationService<T> implements Remote<T> {
     this._nodes.add(nodeId);
     if (this._nodes.size > oldSize) {
       this.observer?.onNode(nodeId);
+      this.advertiseSelf();
     }
   }
 
