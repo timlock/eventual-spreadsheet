@@ -1,0 +1,94 @@
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-title>Node id: {{identifier.uuid}}</ion-title>
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-title>Operations: {{messageList.length}}</ion-title>
+      </ion-col>
+      <ion-col>
+        <ion-title>Remote nodes: {{clusterSize}}</ion-title>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col>
+        <div
+          style="height:250px;border:1px solid #ccc;overflow:auto;display: flex;flex-direction: column-reverse;">
+          <div *ngFor="let message of messageList">
+            <ion-label>
+              Sender: <span style="font-weight:bold;">{{message.sender}}:</span>
+              Action: <span style="color:blue;">{{message.payload?.action}}</span>
+              Address: <span style="color:red;">{{message.payload?.column}}|{{message.payload?.row}}</span>
+              Input: <span style="color:green;">{{message.payload?.input}}</span>
+            </ion-label>
+          </div>
+        </div>
+      </ion-col>
+      <ion-col>
+        <div
+          style="height:250px;border:1px solid #ccc;overflow:auto;display: flex;flex-direction: column;">
+          <div *ngFor="let node of nodes">
+            <ion-label>{{node}}</ion-label>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col>
+        <ion-title>Cell: {{currentCell.column}}|{{currentCell.row}}</ion-title>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col>
+        <ion-input fill="outline" label="Input:" [(ngModel)]="currentCell.input"></ion-input>
+      </ion-col>
+      <ion-col>
+        <ion-button color="success" (click)="insertCell(currentCell)">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" (click)="deleteCell(currentCell)">
+          <ion-icon name="close-circle-outline"></ion-icon>
+        </ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-button color="success" (click)="insertRow(currentCell.row)">
+        Insert row
+      </ion-button>
+      <ion-button color="danger" (click)="deleteRow(currentCell.row)">
+        Delete row
+      </ion-button>
+      <ion-button color="success" (click)="insertColumn(currentCell.column)">
+        Insert column
+      </ion-button>
+      <ion-button color="danger" (click)="deleteColumn(currentCell.column)">
+        Delete column
+      </ion-button>
+    </ion-row>
+    <ion-row>
+      <ion-col>
+        <ion-row>
+          <ion-col class="cell table-header"></ion-col>
+          <ion-col class="cell table-header" *ngFor="let col of columns;let i = index">{{i + 1}} ({{col}})
+          </ion-col>
+        </ion-row>
+        <ion-row *ngFor="let row of rows;let r = index">
+          <ion-col class="cell table-header">{{r + 1}} ({{row}})</ion-col>
+          <ion-col (click)=selectCell(column,row) class="cell" *ngFor="let column of columns; let c = index">
+            {{ getCell(column, row)?.content }}
+          </ion-col>
+        </ion-row>
+      </ion-col>
+        <ion-col>
+          <ion-button color="primary" (click)=addColumn()>
+            <ion-icon name="add"></ion-icon>
+          </ion-button>
+        </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-button color="primary" (click)=addRow()>
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-row>
+  </ion-grid>
+</ion-content>
+
