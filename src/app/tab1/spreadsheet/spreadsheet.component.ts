@@ -30,15 +30,15 @@ export class SpreadsheetComponent implements OnInit, OnDestroy, RemoteObserver<P
     this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
     this.applicationRef = applicationRef;
     this.communicationService = communicationService;
-    this.communicationService.openChannel(this.channelName, this);
   }
 
 
   ngOnInit() {
-
+    this.communicationService.openChannel(this.channelName, this);
   }
 
   ngOnDestroy() {
+    this.communicationService.closeChannel();
     this.spreadsheetService.reset();
   }
 

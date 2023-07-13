@@ -30,14 +30,15 @@ export class ConsistentSpreadsheetComponent implements OnInit, OnDestroy, Remote
     this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
     this.applicationRef = applicationRef;
     this.raftService = raftService;
-    this.raftService.openChannel(this.channelName, this);
   }
 
 
   ngOnInit() {
+    this.raftService.openChannel(this.channelName, this);
   }
 
   ngOnDestroy() {
+    this.raftService.closeChannel();
     this.spreadsheetService.reset();
   }
 

@@ -7,7 +7,7 @@ import {Identifier} from "../spreadsheet/util/Identifier";
 @Injectable({
   providedIn: 'root'
 })
-export class CommunicationService<T> implements Remote<T>{
+export class CommunicationService<T> implements Remote<T> {
   private channel?: BroadcastChannel;
   private observer?: RemoteObserver<T>;
   private _identifier: Identifier;
@@ -23,13 +23,14 @@ export class CommunicationService<T> implements Remote<T>{
     }
     this.channel = new BroadcastChannel(channelName);
     this.observer = observer;
-    if(identifier !== undefined){
+    if (identifier !== undefined) {
       this._identifier = identifier;
     }
     this.channel.onmessage = event => {
       let message = event.data as Message<T>;
+      console.log('received message: ', message);
       this.onNode(message.sender);
-      if(message.destination === undefined ||message.destination === identifier?.uuid){
+      if (message.destination === undefined || message.destination === this.identifier?.uuid) {
         this.observer?.onMessage(message);
       }
     }
@@ -49,13 +50,15 @@ export class CommunicationService<T> implements Remote<T>{
       console.warn('Cant post message, channel is undefined');
       return false;
     }
+    console.log('send message: ', message);
     this.channel.postMessage(message);
     return true;
   }
+
   public onNode(nodeId: string) {
     let oldSize = this._nodes.size;
     this._nodes.add(nodeId);
-    if(this._nodes.size > oldSize){
+    if (this._nodes.size > oldSize) {
       this.observer?.onNode(nodeId);
     }
   }
