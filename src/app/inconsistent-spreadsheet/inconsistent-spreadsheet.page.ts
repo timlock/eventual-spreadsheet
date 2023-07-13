@@ -1,22 +1,22 @@
 import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {Address} from "../../spreadsheet/domain/Address";
-import {Cell} from "../../spreadsheet/domain/Cell";
-import {CellDto} from "../../spreadsheet/controller/CellDto";
-import {CommunicationService} from "../../communication/communication.service";
-import {RemoteObserver} from "../../communication/RemoteObserver";
-import {Message, Payload} from "../../communication/Message";
-import {Identifier} from "../../spreadsheet/util/Identifier";
-import {Action} from "../../spreadsheet/domain/Action";
-import {MessageBuilder} from "../../spreadsheet/controller/MessageBuilder";
-import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
-import {RaftService} from "../../communication/raft.service";
+import {RemoteObserver} from "../communication/RemoteObserver";
+import {Message, Payload} from "../communication/Message";
+import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
+import {CellDto} from "../spreadsheet/controller/CellDto";
+import {CommunicationService} from "../communication/communication.service";
+import {RaftService} from "../communication/raft.service";
+import {Address} from "../spreadsheet/domain/Address";
+import {MessageBuilder} from "../spreadsheet/controller/MessageBuilder";
+import {Action} from "../spreadsheet/domain/Action";
+import {Cell} from "../spreadsheet/domain/Cell";
+import {Identifier} from "../spreadsheet/util/Identifier";
 
 @Component({
-  selector: 'app-spreadsheet',
-  templateUrl: './spreadsheet.component.html',
-  styleUrls: ['./spreadsheet.component.scss'],
+  selector: 'app-inconsistent-spreadsheet',
+  templateUrl: './inconsistent-spreadsheet.page.html',
+  styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class SpreadsheetComponent implements OnInit, OnDestroy, RemoteObserver<Payload> {
+export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';
@@ -26,7 +26,6 @@ export class SpreadsheetComponent implements OnInit, OnDestroy, RemoteObserver<P
 
   constructor(communicationService: CommunicationService<Payload>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
-    this.initTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
     this.applicationRef = applicationRef;
     this.communicationService = communicationService;
@@ -39,20 +38,8 @@ export class SpreadsheetComponent implements OnInit, OnDestroy, RemoteObserver<P
 
   ngOnDestroy() {
     this.communicationService.closeChannel();
-    this.spreadsheetService.reset();
+    this.spreadsheetService.init();
   }
-
-  private initTable() {
-    let counter = 0;
-    let tag = 'init';
-    this.spreadsheetService.addRow(tag + counter++);
-    this.spreadsheetService.addRow(tag + counter++);
-    this.spreadsheetService.addRow(tag + counter++);
-    this.spreadsheetService.addColumn(tag + counter++);
-    this.spreadsheetService.addColumn(tag + counter++);
-    this.spreadsheetService.addColumn(tag + counter++);
-  }
-
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById(Address.of(colId, rowId));
@@ -315,3 +302,4 @@ export class SpreadsheetComponent implements OnInit, OnDestroy, RemoteObserver<P
     return this.communicationService.identifier;
   }
 }
+

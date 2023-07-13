@@ -8,27 +8,27 @@ const routes: Routes = [
     component: TabsPage,
     children: [
       {
-        path: 'tab1',
-        loadChildren: () => import('../tab1/tab1.module').then(m => m.Tab1PageModule)
+        path: 'inconsistent',
+        loadChildren: () => import('../inconsistent-spreadsheet/inconsistent-spreadsheet.module').then(m => m.InconsistentSpreadsheetPageModule)
       },
       {
-        path: 'tab2',
-        loadChildren: () => import('../tab2/tab2.module').then(m => m.Tab2PageModule)
+        path: 'consistent',
+        loadChildren: () => import('../consistent-spreadsheet/consistent-spreadsheet.module').then(m => m.ConsistentSpreadsheetPageModule)
       },
       {
-        path: 'tab3',
-        loadChildren: () => import('../tab3/tab3.module').then(m => m.Tab3PageModule)
+        path: 'crdt',
+        loadChildren: () => import('../crdt-spreadsheet/crdt-spreadsheet.module').then(m => m.CrdtSpreadsheetPageModule)
       },
       {
         path: '',
-        redirectTo: '/tabs/tab1',
+        redirectTo: '/tabs/inconsistent',
         pathMatch: 'full'
       }
     ]
   },
   {
     path: '',
-    redirectTo: '/tabs/tab1',
+    redirectTo: '/tabs/inconsistent',
     pathMatch: 'full'
   }
 ];

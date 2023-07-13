@@ -28,7 +28,6 @@ export class CommunicationService<T> implements Remote<T> {
     }
     this.channel.onmessage = event => {
       let message = event.data as Message<T>;
-      console.log('received message: ', message);
       this.onNode(message.sender);
       if (message.destination === undefined || message.destination === this.identifier?.uuid) {
         this.observer?.onMessage(message);
@@ -39,7 +38,6 @@ export class CommunicationService<T> implements Remote<T> {
 
   public closeChannel() {
     if (this.channel === undefined) {
-      console.warn('Cant close channel, channel is undefined');
     } else {
       this.channel.close();
     }

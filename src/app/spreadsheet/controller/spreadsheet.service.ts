@@ -17,10 +17,19 @@ export class SpreadsheetService {
 
   public constructor() {
     this.table = new Table<Cell>();
+    this.init();
   }
 
-  public reset() {
+  public init() {
     this.table = new Table<Cell>();
+    let counter = 0;
+    let tag = 'init';
+    this.addRow(tag + counter++);
+    this.addRow(tag + counter++);
+    this.addRow(tag + counter++);
+    this.addColumn(tag + counter++);
+    this.addColumn(tag + counter++);
+    this.addColumn(tag + counter++);
     this.renderedTable = undefined;
   }
 

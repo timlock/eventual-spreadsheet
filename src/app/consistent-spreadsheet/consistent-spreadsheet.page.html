@@ -1,4 +1,15 @@
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Consistent Spreadsheet</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">consistent-spreadsheet</ion-title>
+    </ion-toolbar>
+  </ion-header>
   <ion-title>Node id: {{identifier.uuid}}</ion-title>
   <ion-grid>
     <ion-row>
@@ -78,11 +89,11 @@
           </ion-col>
         </ion-row>
       </ion-col>
-        <ion-col>
-          <ion-button color="primary" (click)=addColumn()>
-            <ion-icon name="add"></ion-icon>
-          </ion-button>
-        </ion-col>
+      <ion-col>
+        <ion-button color="primary" (click)=addColumn()>
+          <ion-icon name="add"></ion-icon>
+        </ion-button>
+      </ion-col>
     </ion-row>
     <ion-row>
       <ion-button color="primary" (click)=addRow()>
@@ -91,4 +102,3 @@
     </ion-row>
   </ion-grid>
 </ion-content>
-
