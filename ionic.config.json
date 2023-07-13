@@ -1,0 +1,8 @@
+{
+  "name": "EventualSpreadsheet",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "1617db07"
+}
