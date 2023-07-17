@@ -57,11 +57,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('addRow cant build message')
       return
     }
+    this.spreadsheetService.addRow(id);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.addRow(id);
     this.messageList.unshift(message);
   }
 
@@ -77,11 +77,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('insertRow cant build message')
       return
     }
+    this.spreadsheetService.insertRow(id, row);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.insertRow(id, row);
     this.messageList.unshift(message);
   }
 
@@ -95,11 +95,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('deleteRow cant build message')
       return
     }
+    this.spreadsheetService.deleteRow(row);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.deleteRow(row);
     this.messageList.unshift(message);
   }
 
@@ -114,11 +114,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('addColumn cant build message')
       return
     }
+    this.spreadsheetService.addColumn(id);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.addColumn(id);
     this.messageList.unshift(message);
   }
 
@@ -134,11 +134,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('insertColumn cant build message')
       return
     }
+    this.spreadsheetService.insertColumn(id, column);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.insertColumn(id, column);
     this.messageList.unshift(message);
   }
 
@@ -152,11 +152,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('deleteColumn cant build message')
       return
     }
+    this.spreadsheetService.deleteColumn(column);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.deleteColumn(column);
     this.messageList.unshift(message);
   }
 
@@ -171,11 +171,11 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
       console.warn('insertCell cant build message')
       return
     }
+    this.spreadsheetService.insertCell(cell);
     this.nodes.forEach(destination => {
       message!.destination = destination;
       this.communicationService.postMessage(message!);
     })
-    this.spreadsheetService.insertCell(cell);
     this.messageList.unshift(message);
   }
 

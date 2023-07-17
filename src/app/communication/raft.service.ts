@@ -8,16 +8,14 @@ import {RaftNode} from "../raft/RaftNode";
 import {Identifier} from "../spreadsheet/util/Identifier";
 import {RaftObserver} from "../raft/RaftObserver";
 import {Log} from "../raft/domain/Log";
-import {Remote} from "./Remote";
 import {Payload} from "../spreadsheet/util/Payload";
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class RaftService implements RaftObserver, RemoteObserver<RaftMessage>, Remote<Payload> {
+export class RaftService implements RaftObserver, RemoteObserver<RaftMessage> {
   private readonly communicationService: CommunicationService<RaftMessage>;
-  private _identifier: Identifier;
   private readonly timer: Timer;
   private readonly node: RaftNode;
   private observer: RemoteObserver<Payload> | undefined;
@@ -25,18 +23,14 @@ export class RaftService implements RaftObserver, RemoteObserver<RaftMessage>, R
 
   constructor(communicationService: CommunicationService<RaftMessage>) {
     this.communicationService = communicationService;
-    this._identifier = Identifier.generate();
     this.timer = new Timer();
-    this.node = new RaftNode(this._identifier.uuid, this);
+    this.node = new RaftNode(this.identifier.uuid, this);
   }
 
-  public openChannel(channelName: string, observer: RemoteObserver<Payload>, identifier?: Identifier) {
+  public openChannel(channelName: string, observer: RemoteObserver<Payload>) {
     this.channelName = channelName;
     this.observer = observer;
-    if (identifier !== undefined) {
-      this._identifier = identifier;
-    }
-    this.communicationService.openChannel(this.channelName, this, this._identifier);
+    this.communicationService.openChannel(this.channelName, this);
   }
 
   public closeChannel() {
@@ -56,7 +50,7 @@ export class RaftService implements RaftObserver, RemoteObserver<RaftMessage>, R
 
   public sendMessage(destination: NodeId, raftMessage: RaftMessage): void {
     let message: Message<RaftMessage> = {
-      sender: this._identifier.uuid,
+      sender: this.identifier.uuid,
       destination: destination,
       payload: raftMessage
     }
@@ -118,6 +112,6 @@ export class RaftService implements RaftObserver, RemoteObserver<RaftMessage>, R
   }
 
   get identifier(): Identifier {
-    return this._identifier;
+    return this.communicationService.identifier;
   }
 }
