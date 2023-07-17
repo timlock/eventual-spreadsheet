@@ -5,7 +5,7 @@ import {Identifier} from "../util/Identifier";
 import {Address} from "./Address";
 
 
-describe('Spreadsheet', () => {
+describe('Table', () => {
   let table: Table<Cell>;
   let idGenerator: Identifier;
 

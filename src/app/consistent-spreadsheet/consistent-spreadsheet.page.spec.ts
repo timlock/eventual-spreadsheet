@@ -1,11 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import { ConsistentSpreadsheetPage } from './consistent-spreadsheet.page';
 
 describe('ConsistentSpreadsheetPage', () => {
   let component: ConsistentSpreadsheetPage;
   let fixture: ComponentFixture<ConsistentSpreadsheetPage>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     fixture = TestBed.createComponent(ConsistentSpreadsheetPage);
     component = fixture.componentInstance;
     fixture.detectChanges();

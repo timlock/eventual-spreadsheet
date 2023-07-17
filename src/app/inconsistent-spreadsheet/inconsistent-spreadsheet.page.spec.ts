@@ -1,11 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import { InconsistentSpreadsheetPage } from './inconsistent-spreadsheet.page';
 
 describe('InconsistentSpreadsheetPage', () => {
   let component: InconsistentSpreadsheetPage;
   let fixture: ComponentFixture<InconsistentSpreadsheetPage>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     fixture = TestBed.createComponent(InconsistentSpreadsheetPage);
     component = fixture.componentInstance;
     fixture.detectChanges();

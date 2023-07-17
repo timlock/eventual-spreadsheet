@@ -64,7 +64,7 @@ export class SpreadsheetService {
   }
 
   public insertCell(cellDto: CellDto) {
-    if (cellDto.input.trim().length == 0) {
+    if (cellDto.input.trim().length === 0) {
       this.deleteCell(cellDto);
     } else {
       let cell = CellParser.parseCell(cellDto.input);
@@ -79,7 +79,7 @@ export class SpreadsheetService {
   }
 
   public renderTable(): Table<Cell> {
-    if (this.renderedTable == undefined) {
+    if (this.renderedTable === undefined) {
       this.renderedTable = new Table<Cell>(this.rows, this.columns);
       this.renderSimpleCells(this.renderedTable);
       let formulas = this.collectFormulas(this.table);
@@ -94,9 +94,9 @@ export class SpreadsheetService {
       for (const colId of this.columns) {
         let address = new Address(colId, rowId);
         let cell = this.table.get(address)!;
-        if (cell == undefined) {
+        if (cell === undefined) {
           renderedTable.set(address, Cell.empty());
-        } else if (typeof (cell.content) == 'number') {
+        } else if (typeof (cell.content) === 'number') {
           renderedTable.set(address, cell);
         }
       }
@@ -120,7 +120,7 @@ export class SpreadsheetService {
 
   private renderFormulas(formulas: [Address, Address[]][], renderedTable: Table<Cell>) {
     let sorter = new GraphSorter();
-    formulas.filter(formula => this.renderedTable?.get(formula[0]) == undefined).forEach(v => sorter.addCell(v));
+    formulas.filter(formula => this.renderedTable?.get(formula[0]) === undefined).forEach(v => sorter.addCell(v));
     for (const group of sorter.sort()) {
       for (const address of group) {
         let formulaCell = this.table.get(address)!;
@@ -145,7 +145,7 @@ export class SpreadsheetService {
 
   public getCellById(address: Address): CellDto {
     let cell = this.renderedTable?.get(address);
-    if (cell == undefined) {
+    if (cell === undefined) {
       return new CellDto(address, '');
     }
     return new CellDto(address, cell.rawInput);
