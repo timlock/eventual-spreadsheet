@@ -152,9 +152,9 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
     return;
   }
 
-//TODO Überflüssig? Löschen kann auch mit dem setzen einer leeren Zelle erreicht werden
   public deleteCell(cell: CellDto) {
-    this.spreadsheetService.deleteCell(cell);
+    cell.input = '';
+    this.insertCell(cell);
   }
 
   public getCell(column: string, row: string): Cell | undefined {
