@@ -4,10 +4,4 @@ export interface Message<T> {
   payload?: T;
 }
 
-export interface Payload {
-  action: string;
-  column: string | undefined;
-  row: string | undefined;
-  input: string | undefined;
-}
 

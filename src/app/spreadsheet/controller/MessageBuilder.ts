@@ -1,6 +1,7 @@
 import {Action} from "../domain/Action";
 import {Address} from "../domain/Address";
-import {Message, Payload} from "../../communication/Message";
+import {Message} from "../../communication/Message";
+import {Payload} from "../util/Payload";
 
 export class MessageBuilder {
   private _sender: string | undefined;

@@ -1,6 +1,6 @@
 import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {RemoteObserver} from "../communication/RemoteObserver";
-import {Message, Payload} from "../communication/Message";
+import {Message} from "../communication/Message";
 import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/communication.service";
@@ -10,6 +10,7 @@ import {MessageBuilder} from "../spreadsheet/controller/MessageBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../spreadsheet/util/Identifier";
+import {isPayload, Payload} from "../spreadsheet/util/Payload";
 
 @Component({
   selector: 'app-crdt-spreadsheet',
@@ -204,7 +205,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
   }
 
   public onMessage(message: Message<Payload>) {
-    if (!this.messageIsValid(message)) {
+    if (message.payload !== undefined && isPayload(message.payload)) {
       console.warn('Invalid message', message);
       return;
     }
@@ -248,43 +249,6 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
   }
 
-  private messageIsValid(message: Message<Payload>): boolean {
-    if (message.payload === undefined) {
-      return false;
-    }
-    switch (message.payload.action) {
-      case Action.INSERT_CELL:
-      case Action.ADD_ROW:
-      case Action.INSERT_ROW:
-      case Action.ADD_COLUMN:
-      case Action.INSERT_COLUMN: {
-        if (message.payload.input === undefined) {
-          return false;
-        }
-        switch (message.payload.action) {
-          case Action.INSERT_CELL:
-          case Action.INSERT_ROW:
-          case Action.INSERT_COLUMN: {
-            if (message.payload.column === undefined || message.payload.row === undefined) {
-              return false;
-            }
-          }
-        }
-      }
-        break;
-      case Action.DELETE_COLUMN:
-      case Action.DELETE_ROW: {
-        if (message.payload.column === undefined || message.payload.row === undefined) {
-          return false;
-        }
-      }
-        break;
-      default:
-        console.warn('Unknown action', message.payload.action);
-        return false;
-    }
-    return true;
-  }
 
   get messageList(): Message<Payload>[] {
     return this._messageList;
