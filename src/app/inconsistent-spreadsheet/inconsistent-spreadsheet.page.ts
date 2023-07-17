@@ -179,9 +179,9 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     this.messageList.unshift(message);
   }
 
-//TODO Überflüssig? Löschen kann auch mit dem setzen einer leeren Zelle erreicht werden
   public deleteCell(cell: CellDto) {
-    this.spreadsheetService.deleteCell(cell);
+    cell.input = '';
+    this.insertCell(cell);
   }
 
   public getCell(column: string, row: string): Cell | undefined {
@@ -205,7 +205,7 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
   }
 
   public onMessage(message: Message<Payload>) {
-    if (message.payload !== undefined && isPayload(message.payload)) {
+    if (message.payload === undefined || !isPayload(message.payload)) {
       console.warn('Invalid message', message);
       return;
     }

@@ -178,7 +178,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
   }
 
   public onMessage(message: Message<Payload>) {
-    if (message.payload !== undefined && isPayload(message.payload)) {
+    if (message.payload === undefined || !isPayload(message.payload)) {
       console.warn('Invalid message', message);
       return;
     }
