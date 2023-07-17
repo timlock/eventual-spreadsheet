@@ -1,13 +1,13 @@
 import {Injectable} from '@angular/core';
 import {CommunicationService} from "./communication.service";
-import {NodeId, RaftMessage} from "../consistent-spreadsheet/raft/domain/Types";
+import {NodeId, RaftMessage} from "../raft/domain/Types";
 import {RemoteObserver} from "./RemoteObserver";
 import {Message} from "./Message";
-import {Timer} from "../consistent-spreadsheet/raft/Timer";
-import {RaftNode} from "../consistent-spreadsheet/raft/RaftNode";
+import {Timer} from "../raft/Timer";
+import {RaftNode} from "../raft/RaftNode";
 import {Identifier} from "../spreadsheet/util/Identifier";
-import {RaftObserver} from "../consistent-spreadsheet/raft/RaftObserver";
-import {Log} from "../consistent-spreadsheet/raft/domain/Log";
+import {RaftObserver} from "../raft/RaftObserver";
+import {Log} from "../raft/domain/Log";
 import {Remote} from "./Remote";
 import {Payload} from "../spreadsheet/util/Payload";
 
