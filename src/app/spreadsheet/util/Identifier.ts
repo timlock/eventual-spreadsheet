@@ -1,9 +1,12 @@
+import {LogicalClock} from "../../LogicalClock";
+
 export class Identifier {
-  private counter = 0;
+  private clock : LogicalClock;
   private readonly _uuid: string;
 
-  public constructor(tag: string) {
+  public constructor(tag: string, range? : number) {
     this._uuid = tag;
+    this.clock = new LogicalClock(range);
   }
 
   public static generate(): Identifier {
@@ -16,7 +19,7 @@ export class Identifier {
   }
 
   public next(): string {
-    return this._uuid + this.counter++;
+    return this._uuid + this.clock.next();
   }
 
   public multiple(amount: number): string[] {
@@ -28,6 +31,6 @@ export class Identifier {
   }
 
   public getLastId(): string {
-    return this._uuid + this.counter;
+    return this._uuid + this.clock.current();
   }
 }
