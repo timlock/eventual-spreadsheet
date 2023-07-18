@@ -7,7 +7,7 @@ import {Address} from "../spreadsheet/domain/Address";
 import {PayloadBuilder} from "../spreadsheet/controller/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
-import {Identifier} from "../spreadsheet/util/Identifier";
+import {Identifier} from "../Identifier";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
 import {RaftServiceObserver} from "../communication/RaftServiceObserver";
 

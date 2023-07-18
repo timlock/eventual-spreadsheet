@@ -22,6 +22,12 @@
     </ion-row>
     <ion-row>
       <ion-col>
+        <ion-toggle [(ngModel)]="connectionEnabled">Global coordination
+        </ion-toggle>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col>
         <div
           style="height:250px;border:1px solid #ccc;overflow:auto;display: flex;flex-direction: column-reverse;">
           <div *ngFor="let message of messageList">

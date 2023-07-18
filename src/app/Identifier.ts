@@ -1,4 +1,4 @@
-import {LogicalClock} from "../../LogicalClock";
+import {LogicalClock} from "./LogicalClock";
 
 export class Identifier {
   private clock : LogicalClock;

@@ -2,10 +2,9 @@ import {Injectable} from '@angular/core';
 import {CommunicationService} from "./communication.service";
 import {NodeId, RaftMessage} from "../raft/domain/Types";
 import {RemoteObserver} from "./RemoteObserver";
-import {Message} from "./Message";
 import {Timer} from "../raft/Timer";
 import {RaftNode} from "../raft/RaftNode";
-import {Identifier} from "../spreadsheet/util/Identifier";
+import {Identifier} from "../Identifier";
 import {RaftNodeObserver} from "../raft/RaftNodeObserver";
 import {Log} from "../raft/domain/Log";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
@@ -54,7 +53,7 @@ export class RaftService implements RaftNodeObserver, RemoteObserver<RaftMessage
   }
 
   public sendMessage(destination: NodeId, raftMessage: RaftMessage): void {
-    this.communicationService.postMessage(raftMessage, destination);
+    this.communicationService.send(raftMessage, destination);
   }
 
 

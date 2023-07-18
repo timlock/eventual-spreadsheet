@@ -8,7 +8,7 @@ import {Address} from "../spreadsheet/domain/Address";
 import {PayloadBuilder} from "../spreadsheet/controller/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
-import {Identifier} from "../spreadsheet/util/Identifier";
+import {Identifier} from "../Identifier";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
 
 @Component({
@@ -57,7 +57,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.addRow(id);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
   }
@@ -75,7 +75,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.insertRow(id, row);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
 
@@ -92,7 +92,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.deleteRow(row);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
 
@@ -110,7 +110,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.addColumn(id);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
 
@@ -129,7 +129,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.insertColumn(id, column);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
 
@@ -146,7 +146,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.deleteColumn(column);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
 
@@ -164,7 +164,7 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
     }
     this.spreadsheetService.insertCell(cell);
     this.nodes.forEach(destination => {
-      this.communicationService.postMessage(message!, destination);
+      this.communicationService.send(message!, destination);
     })
     this.messageList.unshift([this.identifier.uuid, message]);
 
@@ -254,6 +254,14 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Pa
 
   get identifier(): Identifier {
     return this.communicationService.identifier;
+  }
+
+  get connectionEnabled(): boolean {
+    return this.communicationService.connected;
+  }
+
+  set connectionEnabled(enabled: boolean) {
+    this.communicationService.connected = enabled;
   }
 }
 

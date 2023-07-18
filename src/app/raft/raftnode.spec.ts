@@ -1,4 +1,4 @@
-import {Identifier} from "../spreadsheet/util/Identifier";
+import {Identifier} from "../Identifier";
 import {TestBed} from "@angular/core/testing";
 import {RaftObserverBuilder} from "./RaftObserverBuilder";
 import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "./domain/RequestVoteRequest";

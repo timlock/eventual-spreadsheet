@@ -1,7 +1,7 @@
 import {TestBed, waitForAsync} from '@angular/core/testing';
 
 import { SpreadsheetService } from './spreadsheet.service';
-import {Identifier} from "../util/Identifier";
+import {Identifier} from "../../Identifier";
 import {Address} from "../domain/Address";
 import {CellDto} from "./CellDto";
 
