@@ -7,10 +7,10 @@ import {Identifier} from "../spreadsheet/util/Identifier";
 @Injectable({
   providedIn: 'root'
 })
-export class CommunicationService<T> implements Remote<T> {
-  private channel?: BroadcastChannel;
-  private observer?: RemoteObserver<T>;
-  private _identifier: Identifier;
+export class CommunicationService<T> {
+  private readonly _identifier: Identifier = Identifier.generate();
+  private channel: BroadcastChannel | undefined;
+  private observer: RemoteObserver<T> | undefined;
   private _nodes: Set<string> = new Set<string>();
 
   constructor() {
@@ -37,17 +37,19 @@ export class CommunicationService<T> implements Remote<T> {
   }
 
   public closeChannel() {
-    if (this.channel === undefined) {
-    } else {
+    if (this.channel !== undefined) {
       this.channel.close();
     }
+    this.channel = undefined;
   }
 
-  public postMessage(message: Message<T>): boolean {
+  public postMessage(payload: T, destination: string): boolean {
     if (this.channel === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
       return false;
     }
+    let message: Message<T> = {sender: this._identifier.uuid, destination: destination, payload: payload};
+
     this.channel.postMessage(message);
     return true;
   }
@@ -56,7 +58,11 @@ export class CommunicationService<T> implements Remote<T> {
     let oldSize = this._nodes.size;
     this._nodes.add(nodeId);
     if (this._nodes.size > oldSize) {
-      this.observer?.onNode(nodeId);
+      if (this.observer === undefined) {
+        console.warn('Observer is undefined');
+        return;
+      }
+      this.observer.onNode(nodeId);
       this.advertiseSelf();
     }
   }

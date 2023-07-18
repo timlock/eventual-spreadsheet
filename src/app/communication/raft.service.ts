@@ -6,19 +6,20 @@ import {Message} from "./Message";
 import {Timer} from "../raft/Timer";
 import {RaftNode} from "../raft/RaftNode";
 import {Identifier} from "../spreadsheet/util/Identifier";
-import {RaftObserver} from "../raft/RaftObserver";
+import {RaftNodeObserver} from "../raft/RaftNodeObserver";
 import {Log} from "../raft/domain/Log";
-import {Payload} from "../spreadsheet/util/Payload";
+import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {RaftServiceObserver} from "./RaftServiceObserver";
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class RaftService implements RaftObserver, RemoteObserver<RaftMessage> {
+export class RaftService implements RaftNodeObserver, RemoteObserver<RaftMessage> {
   private readonly communicationService: CommunicationService<RaftMessage>;
   private readonly timer: Timer;
   private readonly node: RaftNode;
-  private observer: RemoteObserver<Payload> | undefined;
+  private observer: RaftServiceObserver<Payload> | undefined;
   private channelName: string = 'raft';
 
   constructor(communicationService: CommunicationService<RaftMessage>) {
@@ -27,7 +28,7 @@ export class RaftService implements RaftObserver, RemoteObserver<RaftMessage> {
     this.node = new RaftNode(this.identifier.uuid, this);
   }
 
-  public openChannel(channelName: string, observer: RemoteObserver<Payload>) {
+  public openChannel(channelName: string, observer: RaftServiceObserver<Payload>) {
     this.channelName = channelName;
     this.observer = observer;
     this.communicationService.openChannel(this.channelName, this);
@@ -38,31 +39,29 @@ export class RaftService implements RaftObserver, RemoteObserver<RaftMessage> {
     this.communicationService.closeChannel();
   }
 
-  public postMessage(message: Message<Payload>): boolean {
+  public postMessage(message: Payload): boolean {
     this.node.command(message);
     return true;
   }
 
   public onLog(log: Log): void {
-    console.log('Log applied: ', log);
-    this.observer?.onMessage(log.content);
+    if(isPayload(log.content)){
+      this.observer?.onMessage(log.content);
+      console.log('Log applied: ', log);
+      return;
+    }
+    console.warn('Log doesnt contain payload, ', log);
   }
 
   public sendMessage(destination: NodeId, raftMessage: RaftMessage): void {
-    let message: Message<RaftMessage> = {
-      sender: this.identifier.uuid,
-      destination: destination,
-      payload: raftMessage
-    }
-    this.communicationService.postMessage(message);
+    this.communicationService.postMessage(raftMessage, destination);
   }
 
 
-  public onMessage(message: Message<RaftMessage>): void {
-    if (message.payload !== undefined) {
-      this.node.handleMessage(message.payload);
-    }
+  public onMessage(message: RaftMessage, source: string): void {
+    this.node.handleMessage(message);
   }
+
 
   public onNode(nodeId: string) {
     let result = this.node.addNode(nodeId);

@@ -16,19 +16,19 @@ import {Candidate} from "./domain/Candidate";
 import {Follower} from "./domain/Follower";
 import {ServerState} from "./domain/ServerState";
 import {isLog, Log} from "./domain/Log";
-import {RaftObserver} from "./RaftObserver";
+import {RaftNodeObserver} from "./RaftNodeObserver";
 
 
 export class RaftNode {
   private readonly _nodeId: NodeId;
-  private readonly observer: RaftObserver;
+  private readonly observer: RaftNodeObserver;
   private role: Leader | Candidate | Follower;
   private serverState: ServerState;
   private _cluster: Set<NodeId>;
   private commandBuffer: any[];
 
 
-  constructor(id: NodeId, observer: RaftObserver, logs: Log[] = []) {
+  constructor(id: NodeId, observer: RaftNodeObserver, logs: Log[] = []) {
     this._nodeId = id;
     this.observer = observer;
     this.role = new Follower();
@@ -157,14 +157,14 @@ export class RaftNode {
     }
   }
 
-  public command(payload: any) {
+  public command(command: any) {
     if (this.role instanceof Follower && this.role.leaderId !== undefined) {
-      this.log(this.role.leaderId, payload)
+      this.log(this.role.leaderId, command)
     } else if (this.role instanceof Leader) {
-      let log: Log = {term: this.serverState.currentTerm, content: payload};
+      let log: Log = {term: this.serverState.currentTerm, content: command};
       this.handleCommand(log);
     } else {
-      this.commandBuffer.push(payload);
+      this.commandBuffer.push(command);
     }
   }
 
@@ -226,8 +226,8 @@ export class RaftNode {
     console.log('Send appendEntriesResponse: ', message);
   }
 
-  private log(destination: NodeId, payload: any) {
-    let message: Log = {term: this.serverState.currentTerm, content: payload};
+  private log(destination: NodeId, command: any) {
+    let message: Log = {term: this.serverState.currentTerm, content: command};
     this.observer.sendMessage(destination, message);
     console.log('Send command: ', message);
   }

@@ -1,29 +1,29 @@
 import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {RemoteObserver} from "../communication/RemoteObserver";
-import {Message} from "../communication/Message";
 import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {RaftService} from "../communication/raft.service";
 import {CommunicationService} from "../communication/communication.service";
 import {Address} from "../spreadsheet/domain/Address";
-import {MessageBuilder} from "../spreadsheet/controller/MessageBuilder";
+import {PayloadBuilder} from "../spreadsheet/controller/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../spreadsheet/util/Identifier";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {RaftServiceObserver} from "../communication/RaftServiceObserver";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Payload> {
+export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RaftServiceObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';
   private raftService: RaftService;
   private applicationRef: ApplicationRef;
-  private _messageList: Message<Payload>[] = [];
+  private _messageList: Payload[] = [];
+  private _role: string = '';
 
   constructor(communicationService: CommunicationService<Payload>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
@@ -49,8 +49,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
 
   public addRow() {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.ADD_ROW)
       .input(id)
       .build();
@@ -64,8 +63,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
 
   public insertRow(row: string) {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.INSERT_ROW)
       .address(Address.of('', row))
       .input(id)
@@ -79,8 +77,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
   }
 
   public deleteRow(row: string) {
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.DELETE_ROW)
       .address(Address.of('', row))
       .build();
@@ -94,8 +91,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
 
   public addColumn() {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.ADD_COLUMN)
       .input(id)
       .build();
@@ -109,8 +105,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.INSERT_COLUMN)
       .address(Address.of(column, ''))
       .input(id)
@@ -124,8 +119,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
   }
 
   public deleteColumn(column: string) {
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.DELETE_COLUMN)
       .address(Address.of(column, ''))
       .build();
@@ -138,8 +132,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
   }
 
   public insertCell(cell: CellDto) {
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.INSERT_CELL)
       .address(cell.address)
       .input(cell.input)
@@ -177,8 +170,8 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
     return this._currentCell;
   }
 
-  public onMessage(message: Message<Payload>) {
-    if (message.payload === undefined || !isPayload(message.payload)) {
+  public onMessage(message: Payload) {
+    if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
     }
@@ -191,30 +184,35 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
     this.applicationRef.tick();
   }
 
-  private performAction(message: Message<Payload>) {
-    switch (message.payload?.action) {
+  public onRoleChange(newRole: string) {
+    this._role = newRole;
+    this.applicationRef.tick();
+  }
+
+  private performAction(message: Payload) {
+    switch (message.action) {
       case Action.INSERT_CELL:
-        let address = new Address(message.payload.column!, message.payload.row!);
-        let cell = new CellDto(address, message.payload.input!);
+        let address = new Address(message.column!, message.row!);
+        let cell = new CellDto(address, message.input!);
         this.spreadsheetService.insertCell(cell);
         break;
       case Action.ADD_ROW:
-        this.spreadsheetService.addRow(message.payload.input!);
+        this.spreadsheetService.addRow(message.input!);
         break;
       case Action.INSERT_ROW:
-        this.spreadsheetService.insertRow(message.payload.input!, message.payload.row!)
+        this.spreadsheetService.insertRow(message.input!, message.row!)
         break;
       case Action.ADD_COLUMN:
-        this.spreadsheetService.addColumn(message.payload.input!);
+        this.spreadsheetService.addColumn(message.input!);
         break;
       case Action.INSERT_COLUMN:
-        this.spreadsheetService.insertColumn(message.payload.input!, message.payload.column!);
+        this.spreadsheetService.insertColumn(message.input!, message.column!);
         break;
       case Action.DELETE_COLUMN:
-        this.spreadsheetService.deleteColumn(message.payload.column!);
+        this.spreadsheetService.deleteColumn(message.column!);
         break;
       case Action.DELETE_ROW:
-        this.spreadsheetService.deleteRow(message.payload.row!)
+        this.spreadsheetService.deleteRow(message.row!)
         break;
       default:
         console.warn('Cant perform action for message: ', message);
@@ -223,7 +221,7 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
   }
 
 
-  get messageList(): Message<Payload>[] {
+  get messageList(): Payload[] {
     return this._messageList;
   }
 
@@ -237,6 +235,11 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObser
 
   get identifier(): Identifier {
     return this.raftService.identifier;
+  }
+
+
+  get role(): string {
+    return this._role;
   }
 }
 

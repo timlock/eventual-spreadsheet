@@ -1,12 +1,11 @@
 import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {RemoteObserver} from "../communication/RemoteObserver";
-import {Message} from "../communication/Message";
 import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/communication.service";
 import {RaftService} from "../communication/raft.service";
 import {Address} from "../spreadsheet/domain/Address";
-import {MessageBuilder} from "../spreadsheet/controller/MessageBuilder";
+import {PayloadBuilder} from "../spreadsheet/controller/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../spreadsheet/util/Identifier";
@@ -23,7 +22,7 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
   private channelName: string = 'spreadsheet';
   private communicationService: CommunicationService<Payload>;
   private applicationRef: ApplicationRef;
-  private _messageList: Message<Payload>[] = [];
+  private _messageList: [string, Payload][] = [];
 
   constructor(communicationService: CommunicationService<Payload>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
@@ -48,8 +47,7 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
 
   public addRow() {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.ADD_ROW)
       .input(id)
       .build();
@@ -59,16 +57,14 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.addRow(id);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.INSERT_ROW)
       .address(Address.of('', row))
       .input(id)
@@ -79,15 +75,14 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.insertRow(id, row);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
+
   }
 
   public deleteRow(row: string) {
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.DELETE_ROW)
       .address(Address.of('', row))
       .build();
@@ -97,16 +92,15 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.deleteRow(row);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
+
   }
 
   public addColumn() {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.ADD_COLUMN)
       .input(id)
       .build();
@@ -116,16 +110,15 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.addColumn(id);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
+
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.INSERT_COLUMN)
       .address(Address.of(column, ''))
       .input(id)
@@ -136,15 +129,14 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.insertColumn(id, column);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
+
   }
 
   public deleteColumn(column: string) {
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.DELETE_COLUMN)
       .address(Address.of(column, ''))
       .build();
@@ -154,15 +146,14 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.deleteColumn(column);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
+
   }
 
   public insertCell(cell: CellDto) {
-    let message = new MessageBuilder()
-      .sender(this.identifier.uuid)
+    let message = new PayloadBuilder()
       .action(Action.INSERT_CELL)
       .address(cell.address)
       .input(cell.input)
@@ -173,10 +164,10 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     }
     this.spreadsheetService.insertCell(cell);
     this.nodes.forEach(destination => {
-      message!.destination = destination;
-      this.communicationService.postMessage(message!);
+      this.communicationService.postMessage(message!, destination);
     })
-    this.messageList.unshift(message);
+    this.messageList.unshift([this.identifier.uuid, message]);
+
   }
 
   public deleteCell(cell: CellDto) {
@@ -204,12 +195,12 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     return this._currentCell;
   }
 
-  public onMessage(message: Message<Payload>) {
-    if (message.payload === undefined || !isPayload(message.payload)) {
+  public onMessage(message: Payload, source: string) {
+    if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
     }
-    this._messageList.push(message);
+    this._messageList.push([source,message]);
     this.performAction(message);
     this.applicationRef.tick();
   }
@@ -218,38 +209,38 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObs
     this.applicationRef.tick();
   }
 
-  private performAction(message: Message<Payload>) {
-    switch (message.payload?.action) {
+  private performAction(payload: Payload) {
+    switch (payload.action) {
       case Action.INSERT_CELL:
-        let address = new Address(message.payload.column!, message.payload.row!);
-        let cell = new CellDto(address, message.payload.input!);
+        let address = new Address(payload.column!, payload.row!);
+        let cell = new CellDto(address, payload.input!);
         this.spreadsheetService.insertCell(cell);
         break;
       case Action.ADD_ROW:
-        this.spreadsheetService.addRow(message.payload.input!);
+        this.spreadsheetService.addRow(payload.input!);
         break;
       case Action.INSERT_ROW:
-        this.spreadsheetService.insertRow(message.payload.input!, message.payload.row!)
+        this.spreadsheetService.insertRow(payload.input!, payload.row!)
         break;
       case Action.ADD_COLUMN:
-        this.spreadsheetService.addColumn(message.payload.input!);
+        this.spreadsheetService.addColumn(payload.input!);
         break;
       case Action.INSERT_COLUMN:
-        this.spreadsheetService.insertColumn(message.payload.input!, message.payload.column!);
+        this.spreadsheetService.insertColumn(payload.input!, payload.column!);
         break;
       case Action.DELETE_COLUMN:
-        this.spreadsheetService.deleteColumn(message.payload.column!);
+        this.spreadsheetService.deleteColumn(payload.column!);
         break;
       case Action.DELETE_ROW:
-        this.spreadsheetService.deleteRow(message.payload.row!)
+        this.spreadsheetService.deleteRow(payload.row!)
         break;
       default:
-        console.warn('Cant perform action for message: ', message);
+        console.warn('Cant perform action for payload: ', payload);
         break;
     }
   }
 
-  get messageList(): Message<Payload>[] {
+  get messageList(): [string, Payload][] {
     return this._messageList;
   }
 

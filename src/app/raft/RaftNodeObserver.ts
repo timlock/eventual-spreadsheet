@@ -1,7 +1,7 @@
 import {Log} from "./domain/Log";
 import {NodeId, RaftMessage} from "./domain/Types";
 
-export interface RaftObserver {
+export interface RaftNodeObserver {
   sendMessage(receiver: NodeId, message: RaftMessage): void;
 
   onLog(log: Log): void;

@@ -26,10 +26,9 @@
           style="height:250px;border:1px solid #ccc;overflow:auto;display: flex;flex-direction: column-reverse;">
           <div *ngFor="let message of messageList">
             <ion-label>
-              Sender: <span style="font-weight:bold;">{{message.sender}}:</span>
-              Action: <span style="color:blue;">{{message.payload?.action}}</span>
-              Address: <span style="color:red;">{{message.payload?.column}}|{{message.payload?.row}}</span>
-              Input: <span style="color:green;">{{message.payload?.input}}</span>
+              Action: <span style="color:blue;">{{message.action}}</span>
+              Address: <span style="color:red;">{{message.column}}|{{message.row}}</span>
+              Input: <span style="color:green;">{{message.input}}</span>
             </ion-label>
           </div>
         </div>

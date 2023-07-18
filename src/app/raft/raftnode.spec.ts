@@ -5,11 +5,11 @@ import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from ".
 import {RaftNode} from "./RaftNode";
 import {NodeId, RaftMessage} from "./domain/Types";
 import {AppendEntriesRequest, isAppendEntriesRequest, isAppendEntriesResponse} from "./domain/AppendEntriesRequest";
-import {RaftObserver} from "./RaftObserver";
+import {RaftNodeObserver} from "./RaftNodeObserver";
 import {Log} from "./domain/Log";
 
 
-function buildCluster(observer: RaftObserver, nodeIds: NodeId[]): Map<string, RaftNode> {
+function buildCluster(observer: RaftNodeObserver, nodeIds: NodeId[]): Map<string, RaftNode> {
   let cluster: Map<string, RaftNode> = new Map();
   for (const nodeId of nodeIds) {
     let node = new RaftNode(nodeId, observer);

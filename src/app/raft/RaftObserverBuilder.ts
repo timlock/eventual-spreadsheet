@@ -1,4 +1,4 @@
-import {RaftObserver} from "./RaftObserver";
+import {RaftNodeObserver} from "./RaftNodeObserver";
 import {NodeId, RaftMessage} from "./domain/Types";
 import {Log} from "./domain/Log";
 
@@ -29,12 +29,12 @@ export class RaftObserverBuilder {
     return this;
   }
 
-  public build(): RaftObserver {
+  public build(): RaftNodeObserver {
     let onLog = this._onLog;
     let restartElectionTimer = this._restartElectionTimer;
     let restartHearBeatTimer = this._restartHearBeatTimer;
     let sendMessage = this._sendMessage;
-    return new class implements RaftObserver {
+    return new class implements RaftNodeObserver {
       onLog(log: Log): void {
         if (onLog !== undefined) {
           onLog(log);

@@ -1,6 +1,4 @@
-import {Message} from "./Message";
-
 export interface RemoteObserver<T> {
-  onMessage(message: Message<T>): void;
+  onMessage(message: T, source: string): void;
   onNode(nodeId: string): void;
 }
