@@ -21,7 +21,7 @@ const routes: Routes = [
       },
       {
         path: '',
-        redirectTo: '/tabs/inconsistent',
+        redirectTo: '/inconsistent',
         pathMatch: 'full'
       }
     ]
