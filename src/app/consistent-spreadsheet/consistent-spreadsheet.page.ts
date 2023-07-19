@@ -1,5 +1,5 @@
-import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
+import {ApplicationRef, Component, OnInit} from '@angular/core';
+import {SpreadsheetService} from "../spreadsheet/crdt/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {RaftService} from "../communication/controller/raft.service";
 import {CommunicationService} from "../communication/controller/communication.service";
@@ -16,7 +16,7 @@ import {RaftServiceObserver} from "../communication/controller/RaftServiceObserv
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RaftServiceObserver<Payload> {
+export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';
@@ -37,10 +37,6 @@ export class ConsistentSpreadsheetPage implements OnInit, OnDestroy, RaftService
     this.raftService.openChannel(this.channelName, this);
   }
 
-  ngOnDestroy() {
-    this.raftService.closeChannel();
-    this.spreadsheetService.init();
-  }
 
 
   public selectCell(colId: string, rowId: string) {

@@ -1,16 +1,9 @@
 import {Address} from "./Address";
 
 export class Table<T> {
-  private _rows: string[];
-  private _columns: string[];
-  private readonly _tableMap: Map<string, Map<string, T>>;
-
-
-  constructor(rows?: string[], columns?: string[]) {
-    this._rows = rows || [];
-    this._columns = columns || [];
-    this._tableMap = new Map();
-  }
+  private readonly _rows: string[] = [];
+  private readonly _columns: string[] = [];
+  private readonly _cells: Map<string, Map<string, T>> = new Map();
 
   public addRow(id: string) {
     this._rows.push(id);
@@ -58,34 +51,26 @@ export class Table<T> {
 
 
   public deleteValue(columnId: string, rowId: string) {
-    this.tableMap.get(rowId)?.delete(columnId);
+    this.cells.get(rowId)?.delete(columnId);
   }
 
   public get(address: Address): T | undefined {
-    return this.tableMap.get(address.row)?.get(address.column);
+    return this.cells.get(address.row)?.get(address.column);
   }
-  // public get(columnId: string, rowId: string): T | undefined {
-  //   return this.tableMap.get(rowId)?.get(columnId);
-  // }
 
   public set(address: Address, value: T) {
-    let row = this.tableMap.get(address.row) || new Map();
+    let row = this.cells.get(address.row) || new Map();
     row.set(address.column, value);
-    this.tableMap.set(address.row, row);
+    this.cells.set(address.row, row);
   }
-  // public set(columnId: string, rowId: string, value: T) {
-  //   let row = this.tableMap.get(rowId) || new Map();
-  //   row.set(columnId, value);
-  //   this.tableMap.set(rowId, row);
-  // }
 
-  public getCellRange(range: [Address,Address]): T[] {
+  public getCellRange(range: [Address, Address]): T[] {
     return this.getAddressRange(range)
-      .filter(a => this.tableMap.get(a.row)?.get(a.column) != undefined)
-      .map(a => this.tableMap.get(a.row)!.get(a.column)!);
+      .filter(a => this.cells.get(a.row)?.get(a.column) != undefined)
+      .map(a => this.cells.get(a.row)!.get(a.column)!);
   }
 
-  public getAddressRange(range: [Address,Address]): Address[] {
+  public getAddressRange(range: [Address, Address]): Address[] {
     let beginCol = this._columns.indexOf(range[0].column);
     let beginRow = this._rows.indexOf(range[0].row);
     let endCol = this._columns.indexOf(range[1].column);
@@ -112,17 +97,7 @@ export class Table<T> {
     return this._columns;
   }
 
-  set rows(value: string[]) {
-    this._rows = value;
+  get cells(): Map<string, Map<string, T>> {
+    return this._cells;
   }
-
-  set columns(value: string[]) {
-    this._columns = value;
-  }
-
-  get tableMap(): Map<string, Map<string, T>> {
-    return this._tableMap;
-  }
-
-
 }

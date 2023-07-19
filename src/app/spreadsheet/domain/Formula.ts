@@ -1,8 +1,8 @@
 import {Address} from "./Address";
 
 export class Formula {
-  private _type: FormulaType;
-  private _range: [Address,Address];
+  private readonly _type: FormulaType;
+  private readonly _range: [Address,Address];
 
   public constructor(type: FormulaType, range: [Address,Address]) {
     this._type = type;

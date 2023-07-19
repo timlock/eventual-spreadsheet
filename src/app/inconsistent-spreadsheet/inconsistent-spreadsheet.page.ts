@@ -1,6 +1,6 @@
-import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
+import {ApplicationRef, Component, OnInit} from '@angular/core';
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
-import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
+import {SpreadsheetService} from "../spreadsheet/crdt/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/controller/communication.service";
 import {RaftService} from "../communication/controller/raft.service";
@@ -16,7 +16,7 @@ import {isPayload, Payload} from "../spreadsheet/util/Payload";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, CommunicationServiceObserver<Payload> {
+export class InconsistentSpreadsheetPage implements OnInit, CommunicationServiceObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';
@@ -36,10 +36,6 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, Communica
     this.communicationService.openChannel(this.channelName, this);
   }
 
-  ngOnDestroy() {
-    this.communicationService.closeChannel();
-    this.spreadsheetService.init();
-  }
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById(Address.of(colId, rowId));
@@ -200,7 +196,7 @@ export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, Communica
       console.warn('Invalid message', message);
       return;
     }
-    this._messageList.push([source,message]);
+    this._messageList.push([source, message]);
     this.performAction(message);
     this.applicationRef.tick();
   }

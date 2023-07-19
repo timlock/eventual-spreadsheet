@@ -11,9 +11,11 @@ describe('Table', () => {
 
   beforeEach(waitForAsync(() => {
     idGenerator = new Identifier('test');
-    let row = [idGenerator.next(), idGenerator.next(), idGenerator.next()];
-    let column = [idGenerator.next(), idGenerator.next(), idGenerator.next()];
-    table = new Table<Cell>(row, column);
+    let rows = [idGenerator.next(), idGenerator.next(), idGenerator.next()];
+    let columns = [idGenerator.next(), idGenerator.next(), idGenerator.next()];
+    table = new Table<Cell>();
+    rows.forEach(row => table.addRow(row));
+    columns.forEach(column => table.addColumn(column));
   }));
 
 
