@@ -1,22 +1,22 @@
-import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
+import {ApplicationRef, Component, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/controller/communication.service";
+import {isPayload, Payload} from "../spreadsheet/util/Payload";
 import {RaftService} from "../communication/controller/raft.service";
 import {Address} from "../spreadsheet/domain/Address";
 import {PayloadBuilder} from "../spreadsheet/util/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../Identifier";
-import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 
 @Component({
-  selector: 'app-crdt-spreadsheet',
-  templateUrl: './crdt-spreadsheet.page.html',
-  styleUrls: ['./crdt-spreadsheet.page.scss'],
+  selector: 'app-eventual-consistent-spreadsheet',
+  templateUrl: './eventual-consistent-spreadsheet.page.html',
+  styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
-export class CrdtSpreadsheetPage implements OnInit, OnDestroy, CommunicationServiceObserver<Payload> {
+export class EventualConsistentSpreadsheetPage implements OnInit , CommunicationServiceObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';
@@ -34,11 +34,6 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, CommunicationServ
 
   ngOnInit() {
     this.communicationService.openChannel(this.channelName, this);
-  }
-
-  ngOnDestroy() {
-    this.communicationService.closeChannel();
-    this.spreadsheetService.init();
   }
 
   public selectCell(colId: string, rowId: string) {
@@ -264,4 +259,3 @@ export class CrdtSpreadsheetPage implements OnInit, OnDestroy, CommunicationServ
     this.communicationService.connected = enabled;
   }
 }
-
