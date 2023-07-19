@@ -2,18 +2,15 @@ import {LogIndex, Term} from "../Types";
 import {Log} from "../message/Log";
 
 export class ServerState {
-  private _currentTerm: Term;
+  private _currentTerm: Term = 0;
   private _votedFor: string | undefined;
   private _log: Log[];
-  private _commitIndex: LogIndex;
-  private lastApplied: LogIndex;
+  private _commitIndex: LogIndex = 0;
+  private lastApplied: LogIndex = 0;
 
 
   constructor(logs: Log[] = []) {
-    this._currentTerm = 0;
     this._log = logs;
-    this._commitIndex = 0;
-    this.lastApplied = 0;
   }
 
   public fetchCommittedLogs(): Log[] {

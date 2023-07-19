@@ -12,11 +12,10 @@ import {GraphSorter} from "../util/GraphSorter";
 })
 export class SpreadsheetService {
 
-  private table: Table<Cell>;
+  private table: Table<Cell> = new Table<Cell>();
   private renderedTable: Table<Cell> | undefined;
 
   public constructor() {
-    this.table = new Table<Cell>();
     this.init();
   }
 

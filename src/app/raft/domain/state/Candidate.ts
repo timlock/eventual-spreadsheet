@@ -1,11 +1,7 @@
 import {NodeId} from "../Types";
 
 export class Candidate {
-  private readonly votes: Set<NodeId>;
-
-  constructor() {
-    this.votes = new Set();
-  }
+  private readonly votes: Set<NodeId> = new Set();
 
   public addVote(nodeId: NodeId) {
     this.votes.add(nodeId);

@@ -22,19 +22,16 @@ import {RaftNodeObserver} from "./RaftNodeObserver";
 export class RaftNode {
   private readonly _nodeId: NodeId;
   private readonly observer: RaftNodeObserver;
-  private role: Leader | Candidate | Follower;
+  private role: Leader | Candidate | Follower = new Follower();
   private serverState: ServerState;
-  private _cluster: Set<NodeId>;
-  private commandBuffer: any[];
+  private _cluster: Set<NodeId> = new Set();
+  private commandBuffer: any[] = [];
 
 
   constructor(id: NodeId, observer: RaftNodeObserver, logs: Log[] = []) {
     this._nodeId = id;
     this.observer = observer;
-    this.role = new Follower();
     this.serverState = new ServerState(logs);
-    this._cluster = new Set();
-    this.commandBuffer = [];
   }
 
   public start() {

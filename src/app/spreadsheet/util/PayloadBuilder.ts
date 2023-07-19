@@ -7,9 +7,6 @@ export class PayloadBuilder {
   private _address: Address | undefined;
   private _input: string | undefined;
 
-  public constructor() {
-  }
-
   public action(value: Action | undefined): PayloadBuilder {
     this._action = value;
     return this;
