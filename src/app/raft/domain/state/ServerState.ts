@@ -1,5 +1,5 @@
-import {LogIndex, Term} from "./Types";
-import {Log} from "./Log";
+import {LogIndex, Term} from "../Types";
+import {Log} from "../message/Log";
 
 export class ServerState {
   private _currentTerm: Term;

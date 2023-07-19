@@ -1,4 +1,4 @@
-import {LogIndex, NodeId} from "./Types";
+import {LogIndex, NodeId} from "../Types";
 
 export class Leader {
   private readonly _nextIndex: Map<NodeId, LogIndex>;

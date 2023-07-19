@@ -1,11 +1,11 @@
 import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
-import {RemoteObserver} from "../communication/RemoteObserver";
+import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
-import {CommunicationService} from "../communication/communication.service";
-import {RaftService} from "../communication/raft.service";
+import {CommunicationService} from "../communication/controller/communication.service";
+import {RaftService} from "../communication/controller/raft.service";
 import {Address} from "../spreadsheet/domain/Address";
-import {PayloadBuilder} from "../spreadsheet/controller/PayloadBuilder";
+import {PayloadBuilder} from "../spreadsheet/util/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../Identifier";
@@ -16,7 +16,7 @@ import {isPayload, Payload} from "../spreadsheet/util/Payload";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, RemoteObserver<Payload> {
+export class InconsistentSpreadsheetPage implements OnInit, OnDestroy, CommunicationServiceObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';

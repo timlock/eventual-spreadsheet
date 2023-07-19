@@ -4,18 +4,18 @@ import {
   isRequestVoteResponse,
   RequestVoteRequest,
   RequestVoteResponse
-} from "./domain/RequestVoteRequest";
+} from "./domain/message/RequestVoteRequest";
 import {
   AppendEntriesRequest,
   AppendEntriesResponse,
   isAppendEntriesRequest,
   isAppendEntriesResponse
-} from "./domain/AppendEntriesRequest";
-import {Leader} from "./domain/Leader";
-import {Candidate} from "./domain/Candidate";
-import {Follower} from "./domain/Follower";
-import {ServerState} from "./domain/ServerState";
-import {isLog, Log} from "./domain/Log";
+} from "./domain/message/AppendEntriesRequest";
+import {Leader} from "./domain/state/Leader";
+import {Candidate} from "./domain/state/Candidate";
+import {Follower} from "./domain/state/Follower";
+import {ServerState} from "./domain/state/ServerState";
+import {isLog, Log} from "./domain/message/Log";
 import {RaftNodeObserver} from "./RaftNodeObserver";
 
 

@@ -1,4 +1,4 @@
-import {Log} from "./domain/Log";
+import {Log} from "./domain/message/Log";
 import {NodeId, RaftMessage} from "./domain/Types";
 
 export interface RaftNodeObserver {

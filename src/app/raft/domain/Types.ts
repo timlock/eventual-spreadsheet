@@ -1,6 +1,6 @@
-import {AppendEntriesRequest, AppendEntriesResponse} from "./AppendEntriesRequest";
-import {RequestVoteRequest, RequestVoteResponse} from "./RequestVoteRequest";
-import {Log} from "./Log";
+import {AppendEntriesRequest, AppendEntriesResponse} from "./message/AppendEntriesRequest";
+import {RequestVoteRequest, RequestVoteResponse} from "./message/RequestVoteRequest";
+import {Log} from "./message/Log";
 
 export type Term = number;
 export type LogIndex = number;

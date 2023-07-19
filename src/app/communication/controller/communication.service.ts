@@ -1,10 +1,10 @@
 import {Injectable} from '@angular/core';
-import {RemoteObserver} from "./RemoteObserver";
-import {Message} from "./Message";
-import {Identifier} from "../Identifier";
-import {VersionVectorManager} from "./VersionVectorManager";
-import {MessageBuffer} from "./MessageBuffer";
-import {VersionVector} from "./VersionVector";
+import {CommunicationServiceObserver} from "./CommunicationServiceObserver";
+import {Message} from "../Message";
+import {Identifier} from "../../Identifier";
+import {VersionVectorManager} from "../util/VersionVectorManager";
+import {MessageBuffer} from "../util/MessageBuffer";
+import {VersionVector} from "../VersionVector";
 
 @Injectable({
   providedIn: 'root'
@@ -12,14 +12,13 @@ import {VersionVector} from "./VersionVector";
 export class CommunicationService<T> {
   private readonly _identifier: Identifier = Identifier.generate();
   private channel: BroadcastChannel | undefined;
-  private observer: RemoteObserver<T> | undefined;
+  private observer: CommunicationServiceObserver<T> | undefined;
   private _nodes: Set<string> = new Set<string>();
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
   private _connected: boolean = true;
 
-  private postMessage(message: Message<any>){
-    console.log('SENT MESSAGE ', message);
+  private postMessage(message: Message<any>) {
     this.channel?.postMessage(message);
   }
 
@@ -28,16 +27,15 @@ export class CommunicationService<T> {
       return;
     }
     let message = event.data as Message<T>;
-    console.log('RECEIVED MESSAGE ', message);
-    this.onNode(message.sender);
+    this.onNode(message.source);
     if (message.versionVector !== undefined) {
-      this.sendMissingMessages(message.sender, message.versionVector);
+      this.sendMissingMessages(message.source, message.versionVector);
+    }
+    if (message.timestamp !== undefined) {
+      this.versionVectorManager.update(message.source, message.timestamp);
     }
     if (message.destination === this._identifier.uuid && message.payload !== undefined) {
-      if (message.timestamp !== undefined) {
-        this.versionVectorManager.update(message.sender, message.timestamp);
-      }
-      this.observer?.onMessage(message.payload, message.sender);
+      this.observer?.onMessage(message.payload, message.source);
     }
   }
 
@@ -46,7 +44,7 @@ export class CommunicationService<T> {
     this.messageBuffer.getMissingMessages(destination, timestamp).forEach(message => this.postMessage(message));
   }
 
-  public openChannel(channelName: string, observer: RemoteObserver<T>) {
+  public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
     if (this.channel !== undefined) {
       this.channel.close();
     }
@@ -64,13 +62,12 @@ export class CommunicationService<T> {
   }
 
 
-
   public send(payload: T, destination: string): boolean {
     if (this.channel === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
       return false;
     }
-    let message: Message<T> = {sender: this._identifier.uuid, destination: destination, payload: payload};
+    let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
     message = this.messageBuffer.add(message, this._connected)!;
     if (this._connected) {
       this.postMessage(message);
@@ -93,7 +90,7 @@ export class CommunicationService<T> {
 
   private advertiseSelf() {
     let message: Message<undefined> = {
-      sender: this._identifier.uuid,
+      source: this._identifier.uuid,
       versionVector: this.versionVectorManager.versionVector
     }
     if (this.channel === undefined) {

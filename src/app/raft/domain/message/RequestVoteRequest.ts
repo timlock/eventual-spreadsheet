@@ -1,4 +1,4 @@
-import {LogIndex, NodeId, RaftMessage, Term} from "./Types";
+import {LogIndex, NodeId, RaftMessage, Term} from "../Types";
 
 export interface RequestVoteRequest {
   term: Term;

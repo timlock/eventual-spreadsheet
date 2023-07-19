@@ -1,5 +1,5 @@
 import {Log} from "./Log";
-import {LogIndex, NodeId, RaftMessage, Term} from "./Types";
+import {LogIndex, NodeId, RaftMessage, Term} from "../Types";
 
 export interface AppendEntriesRequest {
   term: Term;

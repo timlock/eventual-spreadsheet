@@ -1,4 +1,4 @@
-import {VersionVector} from "./VersionVector";
+import {VersionVector} from "../VersionVector";
 
 export class VersionVectorManager {
   private _versionVector: VersionVector = {};

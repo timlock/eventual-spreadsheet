@@ -1,6 +1,6 @@
 import {RaftNodeObserver} from "./RaftNodeObserver";
 import {NodeId, RaftMessage} from "./domain/Types";
-import {Log} from "./domain/Log";
+import {Log} from "./domain/message/Log";
 
 export class RaftObserverBuilder {
   private _sendMessage: ((receiver: NodeId, message: RaftMessage) => void) | undefined;

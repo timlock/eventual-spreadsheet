@@ -1,15 +1,15 @@
 import {ApplicationRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
-import {RaftService} from "../communication/raft.service";
-import {CommunicationService} from "../communication/communication.service";
+import {RaftService} from "../communication/controller/raft.service";
+import {CommunicationService} from "../communication/controller/communication.service";
 import {Address} from "../spreadsheet/domain/Address";
-import {PayloadBuilder} from "../spreadsheet/controller/PayloadBuilder";
+import {PayloadBuilder} from "../spreadsheet/util/PayloadBuilder";
 import {Action} from "../spreadsheet/domain/Action";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../Identifier";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
-import {RaftServiceObserver} from "../communication/RaftServiceObserver";
+import {RaftServiceObserver} from "../communication/controller/RaftServiceObserver";
 
 @Component({
   selector: 'app-consistent-spreadsheet',

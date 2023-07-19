@@ -1,12 +1,12 @@
 import {Identifier} from "../Identifier";
 import {TestBed} from "@angular/core/testing";
 import {RaftObserverBuilder} from "./RaftObserverBuilder";
-import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "./domain/RequestVoteRequest";
+import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "./domain/message/RequestVoteRequest";
 import {RaftNode} from "./RaftNode";
 import {NodeId, RaftMessage} from "./domain/Types";
-import {AppendEntriesRequest, isAppendEntriesRequest, isAppendEntriesResponse} from "./domain/AppendEntriesRequest";
+import {AppendEntriesRequest, isAppendEntriesRequest, isAppendEntriesResponse} from "./domain/message/AppendEntriesRequest";
 import {RaftNodeObserver} from "./RaftNodeObserver";
-import {Log} from "./domain/Log";
+import {Log} from "./domain/message/Log";
 
 
 function buildCluster(observer: RaftNodeObserver, nodeIds: NodeId[]): Map<string, RaftNode> {

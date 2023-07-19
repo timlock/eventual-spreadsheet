@@ -1,5 +1,5 @@
-import {Message} from "./Message";
-import {LogicalClock} from "../LogicalClock";
+import {Message} from "../Message";
+import {LogicalClock} from "../../LogicalClock";
 
 
 class Entry<T> {

@@ -1,4 +1,4 @@
-import {NodeId} from "./Types";
+import {NodeId} from "../Types";
 
 export class Follower {
   private _leaderId: NodeId | undefined;

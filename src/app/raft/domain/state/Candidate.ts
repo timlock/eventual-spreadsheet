@@ -1,4 +1,4 @@
-import {NodeId} from "./Types";
+import {NodeId} from "../Types";
 
 export class Candidate {
   private readonly votes: Set<NodeId>;

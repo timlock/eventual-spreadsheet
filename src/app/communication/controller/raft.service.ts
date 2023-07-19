@@ -1,20 +1,20 @@
 import {Injectable} from '@angular/core';
 import {CommunicationService} from "./communication.service";
-import {NodeId, RaftMessage} from "../raft/domain/Types";
-import {RemoteObserver} from "./RemoteObserver";
-import {Timer} from "../raft/Timer";
-import {RaftNode} from "../raft/RaftNode";
-import {Identifier} from "../Identifier";
-import {RaftNodeObserver} from "../raft/RaftNodeObserver";
-import {Log} from "../raft/domain/Log";
-import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {NodeId, RaftMessage} from "../../raft/domain/Types";
+import {CommunicationServiceObserver} from "./CommunicationServiceObserver";
+import {Timer} from "../../raft/Timer";
+import {RaftNode} from "../../raft/RaftNode";
+import {Identifier} from "../../Identifier";
+import {RaftNodeObserver} from "../../raft/RaftNodeObserver";
+import {Log} from "../../raft/domain/message/Log";
+import {isPayload, Payload} from "../../spreadsheet/util/Payload";
 import {RaftServiceObserver} from "./RaftServiceObserver";
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class RaftService implements RaftNodeObserver, RemoteObserver<RaftMessage> {
+export class RaftService implements RaftNodeObserver, CommunicationServiceObserver<RaftMessage> {
   private readonly communicationService: CommunicationService<RaftMessage>;
   private readonly timer: Timer;
   private readonly node: RaftNode;

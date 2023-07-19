@@ -1,4 +1,4 @@
-import {RaftMessage, Term} from "./Types";
+import {RaftMessage, Term} from "../Types";
 
 export interface Log {
   content: any;

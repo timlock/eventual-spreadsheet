@@ -1,6 +1,6 @@
 import {Action} from "../domain/Action";
 import {Address} from "../domain/Address";
-import {Payload} from "../util/Payload";
+import {Payload} from "./Payload";
 
 export class PayloadBuilder {
   private _action: Action | undefined;
