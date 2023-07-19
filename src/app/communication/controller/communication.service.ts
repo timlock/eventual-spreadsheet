@@ -62,12 +62,22 @@ export class CommunicationService<T> {
   }
 
 
-  public send(payload: T, destination: string): boolean {
+  public send(payload: T, destination?: string): boolean {
     if (this.channel === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
       return false;
     }
     let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
+    if(destination === undefined){
+      this._nodes.forEach(dest => {
+        message.destination = dest;
+        message = this.messageBuffer.add(message, this._connected)!;
+        if (this._connected) {
+          this.postMessage(message);
+        }
+      });
+      return true;
+    }
     message = this.messageBuffer.add(message, this._connected)!;
     if (this._connected) {
       this.postMessage(message);

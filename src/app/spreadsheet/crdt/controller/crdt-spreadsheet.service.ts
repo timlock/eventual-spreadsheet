@@ -1,75 +1,112 @@
 import {Injectable} from '@angular/core';
-import {Table} from "../domain/Table";
-import {Cell} from "../domain/Cell";
-import {CellDto} from "./CellDto";
-import {CellParser} from "../util/CellParser";
-import {Address} from "../domain/Address";
-import {Formula, FormulaType} from "../domain/Formula";
-import {GraphSorter} from "../util/GraphSorter";
+import {Table} from "../../domain/Table";
+import {Cell} from "../../domain/Cell";
+import {CellDto} from "../../controller/CellDto";
+import {CellParser} from "../../util/CellParser";
+import {Address} from "../../domain/Address";
+import {Formula, FormulaType} from "../../domain/Formula";
+import {GraphSorter} from "../../util/GraphSorter";
+import {CrdtTable} from "../domain/CrdtTable";
 
 @Injectable({
   providedIn: 'root'
 })
-export class SpreadsheetService {
-  private table: Table<Cell> = new Table<Cell>();
+export class CrdtSpreadsheetService {
+  private table: CrdtTable<Cell> = new CrdtTable<Cell>();
   private renderedTable: Table<Cell> | undefined;
 
   public constructor() {
-    let counter = 0;
-    let tag = 'init';
-    this.addRow(tag + counter++);
-    this.addRow(tag + counter++);
-    this.addRow(tag + counter++);
-    this.addColumn(tag + counter++);
-    this.addColumn(tag + counter++);
-    this.addColumn(tag + counter++);
+    // let counter = 0;
+    // let tag = 'init';
+    // this.addRow(tag + counter++);
+    // this.addRow(tag + counter++);
+    // this.addRow(tag + counter++);
+    // this.addColumn(tag + counter++);
+    // this.addColumn(tag + counter++);
+    // this.addColumn(tag + counter++);
     this.renderedTable = undefined;
   }
 
-
-  public addRow(id: string) {
-    this.table.addRow(id);
-    this.renderedTable = undefined;
+  public applyUpdate(update: Uint8Array) {
+    this.table.applyUpdate(update);
   }
 
-  public insertRow(id: string, row: string) {
-    this.table.insertRow(id, row);
+
+  public addRow(id: string): Uint8Array | undefined {
+    let update = this.table.addRow(id);
     this.renderedTable = undefined;
+    return update;
   }
 
-  public deleteRow(id: string) {
-    this.table.deleteRow(id);
+  public insertRow(id: string, row: string): Uint8Array | undefined {
+    let update = this.table.insertRow(id, row);
     this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+    }
+    return update;
   }
 
-  public addColumn(id: string) {
-    this.table.addColumn(id);
+  public deleteRow(id: string): Uint8Array | undefined {
+    let update = this.table.deleteRow(id);
     this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+    }
+    return update;
   }
 
-  public insertColumn(id: string, column: string) {
-    this.table.insertColumn(id, column);
+  public addColumn(id: string): Uint8Array | undefined {
+    let update = this.table.addColumn(id);
     this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+    }
+    return update;
   }
 
-  public deleteColumn(id: string) {
-    this.table.deleteColumn(id);
+  public insertColumn(id: string, column: string): Uint8Array | undefined {
+    let update = this.table.insertColumn(id, column);
     this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+    }
+    return update;
   }
 
-  public insertCell(cellDto: CellDto) {
+  public deleteColumn(id: string): Uint8Array | undefined {
+    let update = this.table.deleteColumn(id);
+    this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+    }
+    return update;
+  }
+
+  public insertCell(cellDto: CellDto): Uint8Array | undefined {
     if (cellDto.input.trim().length === 0) {
       this.deleteCell(cellDto);
-    } else {
-      let cell = CellParser.parseCell(cellDto.input);
-      this.table.set(cellDto.address, cell);
+      return;
     }
+    let cell = CellParser.parseCell(cellDto.input);
+    let update = this.table.set(cellDto.address, cell);
     this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+      return update;
+    }
+    return update;
+
   }
 
-  public deleteCell(cellDto: CellDto) {
-    this.table.deleteValue(cellDto.column, cellDto.row);
+  public deleteCell(cellDto: CellDto): Uint8Array | undefined {
+    let update = this.table.deleteValue(cellDto.column, cellDto.row);
     this.renderedTable = undefined;
+    if (update === undefined) {
+      console.warn('Update is undefined');
+      return update;
+    }
+    return update;
   }
 
   public renderTable(): Table<Cell> {
@@ -99,7 +136,7 @@ export class SpreadsheetService {
     }
   }
 
-  private collectFormulas(table: Table<Cell>): [Address, Address[]][] {
+  private collectFormulas(table: CrdtTable<Cell>): [Address, Address[]][] {
     let formulas: [Address, Address[]][] = [];
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
@@ -159,5 +196,9 @@ export class SpreadsheetService {
 
   get columns(): string[] {
     return this.table.columns;
+  }
+
+  public getEncodedState(): Uint8Array | undefined {
+    return this.table.getEncodedState();
   }
 }

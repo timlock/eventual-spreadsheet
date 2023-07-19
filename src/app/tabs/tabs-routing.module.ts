@@ -16,8 +16,8 @@ const routes: Routes = [
         loadChildren: () => import('../consistent-spreadsheet/consistent-spreadsheet.module').then(m => m.ConsistentSpreadsheetPageModule)
       },
       {
-        path: 'crdt',
-        loadChildren: () => import('../crdt-spreadsheet/crdt-spreadsheet.module').then(m => m.CrdtSpreadsheetPageModule)
+        path: 'eventual-consistent',
+        loadChildren: () => import('../eventual-consistent-spreadsheet/eventual-consistent-spreadsheet.module').then(m => m.EventualConsistentSpreadsheetPageModule)
       },
       {
         path: '',

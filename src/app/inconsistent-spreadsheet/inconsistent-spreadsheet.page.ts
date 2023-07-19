@@ -1,6 +1,6 @@
 import {ApplicationRef, Component, OnInit} from '@angular/core';
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
-import {SpreadsheetService} from "../spreadsheet/crdt/controller/spreadsheet.service";
+import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/controller/communication.service";
 import {RaftService} from "../communication/controller/raft.service";
