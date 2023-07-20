@@ -15,17 +15,6 @@ export class CrdtSpreadsheetService {
   private table: CrdtTable<Cell> = new CrdtTable<Cell>();
   private renderedTable: Table<Cell> | undefined;
 
-  public constructor() {
-    // let counter = 0;
-    // let tag = 'init';
-    // this.addRow(tag + counter++);
-    // this.addRow(tag + counter++);
-    // this.addRow(tag + counter++);
-    // this.addColumn(tag + counter++);
-    // this.addColumn(tag + counter++);
-    // this.addColumn(tag + counter++);
-    this.renderedTable = undefined;
-  }
 
   public applyUpdate(update: Uint8Array) {
     this.table.applyUpdate(update);

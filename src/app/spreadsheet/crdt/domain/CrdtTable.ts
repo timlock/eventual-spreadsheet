@@ -1,13 +1,17 @@
 import * as Y from 'yjs'
 import {Address} from "../../domain/Address";
 
+interface Wrapper<T> {
+  t: T
+}
+
 export class CrdtTable<T> {
   private readonly ydoc = new Y.Doc;
-  private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
+  private readonly _cells: Y.Map<Y.Map<Wrapper<T>>> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
-  // private readonly keepRows: Y.Map<Y.Map<string>> = this.ydoc.getMap('keepRows');
-  // private readonly keepColumns: Y.Map<Y.Map<string>> = this.ydoc.getMap('keepColumns');
+  private readonly keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
+  private readonly keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
   // private readonly undoRows: Y.UndoManager = new Y.UndoManager(this._rows);
   // private readonly undoColumns: Y.UndoManager = new Y.UndoManager(this._columns);
 
@@ -34,6 +38,7 @@ export class CrdtTable<T> {
 
   public addRow(id: string): Uint8Array | undefined {
     this._rows.push([id]);
+    this.keepRows.set(id, this.ydoc.clientID);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
@@ -44,9 +49,7 @@ export class CrdtTable<T> {
       return undefined;
     }
     this._rows.insert(index, [id]);
-    // let keepEntry: Y.Map<string> = new Y.Map();
-    // keepEntry.set(id, id);
-    // this.keepRows.set(id, keepEntry);
+    this.keepRows.set(id, this.ydoc.clientID);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
@@ -58,11 +61,13 @@ export class CrdtTable<T> {
       return;
     }
     this._rows.delete(index, 1);
+    this.keepRows.delete(id);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
   public addColumn(id: string): Uint8Array | undefined {
     this._columns.push([id]);
+    this.keepColumns.set(id, this.ydoc.clientID);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
@@ -74,6 +79,7 @@ export class CrdtTable<T> {
       return;
     }
     this._columns.insert(index, [id]);
+    this.keepColumns.set(id, this.ydoc.clientID);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
@@ -84,6 +90,7 @@ export class CrdtTable<T> {
       return;
     }
     this._columns.delete(index, 1);
+    this.keepColumns.delete(id);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
@@ -94,20 +101,20 @@ export class CrdtTable<T> {
   }
 
   public get(address: Address): T | undefined {
-    return this._cells.get(address.row)?.get(address.column);
+    return this._cells.get(address.row)?.get(address.column)?.t;
   }
 
   public set(address: Address, value: T): Uint8Array | undefined {
     let row = this._cells.get(address.row) || new Y.Map();
-    row.set(address.column, value);
+    row.set(address.column, {t: value});
     this._cells.set(address.row, row);
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
   public getCellRange(range: [Address, Address]): T[] {
     return this.getAddressRange(range)
-      .filter(a => this._cells.get(a.row)?.get(a.column) != undefined)
-      .map(a => this._cells.get(a.row)!.get(a.column)!);
+      .filter(a => this._cells.get(a.row)?.get(a.column)?.t != undefined)
+      .map(a => this._cells.get(a.row)!.get(a.column)!.t);
   }
 
   public getAddressRange(range: [Address, Address]): Address[] {
@@ -130,7 +137,7 @@ export class CrdtTable<T> {
   }
 
   get rows(): string[] {
-    return this._rows.toArray()
+    return this._rows.toArray();
   }
 
   get columns(): string[] {
