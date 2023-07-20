@@ -32,7 +32,6 @@ export class GraphSorter {
     if (vertices.visited) {
       vertices.cyclical = true;
       return;
-      // throw Error("Cycle detected");
     }
     vertices.visited = true;
     for (const address of vertices.neighbours) {
@@ -45,9 +44,6 @@ export class GraphSorter {
     let currentComponent = this.sortedVertices.pop() ||[];
     currentComponent.push(vertices.address);
     this.sortedVertices.push(currentComponent);
-    // let currentComponent = this.sortedVertices.shift() || [];
-    // currentComponent.splice(0, 0, vertices.address);
-    // this.sortedVertices.splice(0, 0, currentComponent);
   }
 }
 

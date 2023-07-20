@@ -83,7 +83,7 @@ export class Table<T> {
     let result: Address[] = [];
     for (const r of rowIds) {
       for (const c of colIds) {
-        result.push(new Address(c, r));
+        result.push({column: c, row: r});
       }
     }
     return result;

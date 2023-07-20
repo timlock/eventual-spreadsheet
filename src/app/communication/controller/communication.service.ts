@@ -19,6 +19,7 @@ export class CommunicationService<T> {
   private _connected: boolean = true;
 
   private postMessage(message: Message<any>) {
+    // console.log('SEND MESSAGE ', message);
     this.channel?.postMessage(message);
   }
 
@@ -27,6 +28,7 @@ export class CommunicationService<T> {
       return;
     }
     let message = event.data as Message<T>;
+    // console.log('RECEIVE MESSAGE ', message);
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);

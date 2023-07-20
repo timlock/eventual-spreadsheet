@@ -1,17 +1,18 @@
 import {Injectable} from '@angular/core';
-import {Table} from "../domain/Table";
-import {Cell} from "../domain/Cell";
 import {CellDto} from "./CellDto";
 import {CellParser} from "../util/CellParser";
-import {Address} from "../domain/Address";
-import {Formula, FormulaType} from "../domain/Formula";
 import {GraphSorter} from "../util/GraphSorter";
+import {emptyCell, Cell} from "../domain/Cell";
+import {Formula, isFormula} from "../domain/Formula";
+import {Address} from "../domain/Address";
+import {Table} from "../domain/Table";
+import {FormulaType} from "../domain/FormulaType";
 
 @Injectable({
   providedIn: 'root'
 })
 export class SpreadsheetService {
-  private table: Table<Cell> = new Table<Cell>();
+  private table: Table<Cell> = new Table();
   private renderedTable: Table<Cell> | undefined;
 
   public constructor() {
@@ -88,10 +89,10 @@ export class SpreadsheetService {
   private renderSimpleCells(renderedTable: Table<Cell>) {
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
-        let address = new Address(colId, rowId);
+        let address: Address = {column: colId, row: rowId};
         let cell = this.table.get(address)!;
         if (cell === undefined) {
-          renderedTable.set(address, Cell.empty());
+          renderedTable.set(address, emptyCell());
         } else if (typeof (cell.content) === 'number') {
           renderedTable.set(address, cell);
         }
@@ -103,11 +104,11 @@ export class SpreadsheetService {
     let formulas: [Address, Address[]][] = [];
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
-        let address = new Address(colId, rowId);
+        let address: Address = {column: colId, row: rowId};
         let cell = table.get(address)!;
-        if (cell != undefined && cell.content instanceof Formula) {
+        if (cell != undefined && cell.content !== undefined && isFormula(cell.content)) {
           let addressRange = this.table.getAddressRange(cell.content.range);
-          formulas.push([new Address(colId, rowId), addressRange]);
+          formulas.push([{column: colId, row: rowId}, addressRange]);
         }
       }
     }
@@ -120,8 +121,8 @@ export class SpreadsheetService {
     for (const group of sorter.sort()) {
       for (const address of group) {
         let formulaCell = this.table.get(address)!;
-        let result = this.computeFormula(<Formula>formulaCell.content);
-        renderedTable.set(address, new Cell(formulaCell.rawInput, result));
+        let result = this.computeFormula(formulaCell.content as Formula);
+        renderedTable.set(address, {rawInput: formulaCell.rawInput, content: result});
       }
     }
   }
@@ -150,7 +151,7 @@ export class SpreadsheetService {
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
     let column = this.columns[columnIndex];
     let row = this.rows[rowIndex];
-    return this.getCellById(Address.of(column, row));
+    return this.getCellById({column: column, row: row});
   }
 
   get rows(): string[] {

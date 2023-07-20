@@ -3,11 +3,10 @@ import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/controller/communication.service";
 import {Payload} from "../spreadsheet/util/Payload";
 import {RaftService} from "../communication/controller/raft.service";
-import {Address} from "../spreadsheet/domain/Address";
-import {Cell} from "../spreadsheet/domain/Cell";
 import {Identifier} from "../Identifier";
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 import {CrdtSpreadsheetService} from "../spreadsheet/crdt/controller/crdt-spreadsheet.service";
+import {Cell} from "../spreadsheet/domain/Cell";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
@@ -35,7 +34,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   }
 
   public selectCell(colId: string, rowId: string) {
-    this._currentCell = this.spreadsheetService.getCellById(Address.of(colId, rowId));
+    this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
   }
 
 
@@ -113,7 +112,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   }
 
   public getCell(column: string, row: string): Cell | undefined {
-    return this.spreadsheetService.renderTable().get(Address.of(column, row));
+    return this.spreadsheetService.renderTable().get({column: column, row: row});
   }
 
 
@@ -139,7 +138,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
 
   public onNode(nodeId: string) {
     let update = this.spreadsheetService.getEncodedState();
-    if(update === undefined){
+    if (update === undefined) {
       console.warn('Update is undefined');
       return;
     }

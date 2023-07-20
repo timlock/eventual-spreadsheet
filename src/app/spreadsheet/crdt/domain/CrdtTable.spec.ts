@@ -1,7 +1,7 @@
-import {Cell} from "../../domain/Cell";
 import {Identifier} from "../../../Identifier";
 import {waitForAsync} from "@angular/core/testing";
 import {CrdtTable} from "./CrdtTable";
+import {Cell} from "../../domain/Cell";
 import {Address} from "../../domain/Address";
 
 
@@ -31,10 +31,16 @@ describe('CRDT Table', () => {
   });
 
   it('set', () => {
-    let expected = new Cell('1', 1);
-    let address = Address.of(columns[0], rows[0]);
+    let expected: Cell = {rawInput: '1', content: 1};
+    let address: Address = {column: columns[0], row: rows[0]};
     table.set(address, expected);
     let actual = table.get(address);
+    expect(actual).toBeDefined();
+    expect(actual).toEqual(expected);
+    expected = {rawInput: '2', content: 2};
+    address = {column: columns[1], row: rows[0]}
+    table.set(address, expected);
+    actual = table.get(address);
     expect(actual).toBeDefined();
     expect(actual).toEqual(expected);
   });

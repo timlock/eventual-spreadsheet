@@ -1,23 +1,25 @@
 import {Injectable} from '@angular/core';
-import {Table} from "../../domain/Table";
-import {Cell} from "../../domain/Cell";
 import {CellDto} from "../../controller/CellDto";
 import {CellParser} from "../../util/CellParser";
-import {Address} from "../../domain/Address";
-import {Formula, FormulaType} from "../../domain/Formula";
-import {GraphSorter} from "../../util/GraphSorter";
 import {CrdtTable} from "../domain/CrdtTable";
+import {emptyCell, Cell} from "../../domain/Cell";
+import {Address} from "../../domain/Address";
+import {Formula, isFormula} from "../../domain/Formula";
+import {Table} from "../../domain/Table";
+import {FormulaType} from "../../domain/FormulaType";
+import {GraphSorter} from "../../util/GraphSorter";
 
 @Injectable({
   providedIn: 'root'
 })
 export class CrdtSpreadsheetService {
-  private table: CrdtTable<Cell> = new CrdtTable<Cell>();
+  private table: CrdtTable<Cell> = new CrdtTable();
   private renderedTable: Table<Cell> | undefined;
 
 
   public applyUpdate(update: Uint8Array) {
     this.table.applyUpdate(update);
+    this.renderedTable = undefined;
   }
 
 
@@ -74,8 +76,7 @@ export class CrdtSpreadsheetService {
 
   public insertCell(cellDto: CellDto): Uint8Array | undefined {
     if (cellDto.input.trim().length === 0) {
-      this.deleteCell(cellDto);
-      return;
+      return this.deleteCell(cellDto);
     }
     let cell = CellParser.parseCell(cellDto.input);
     let update = this.table.set(cellDto.address, cell);
@@ -114,12 +115,12 @@ export class CrdtSpreadsheetService {
   private renderSimpleCells(renderedTable: Table<Cell>) {
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
-        let address = new Address(colId, rowId);
-        let cell = this.table.get(address)!;
-        if (cell === undefined) {
-          renderedTable.set(address, Cell.empty());
-        } else if (typeof (cell.content) === 'number') {
-          renderedTable.set(address, cell);
+        let address: Address = {column: colId, row: rowId};
+        let iCell = this.table.get(address);
+        if (iCell === undefined) {
+          renderedTable.set(address, emptyCell());
+        } else if (typeof (iCell.content) === 'number') {
+          renderedTable.set(address, iCell);
         }
       }
     }
@@ -129,12 +130,13 @@ export class CrdtSpreadsheetService {
     let formulas: [Address, Address[]][] = [];
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
-        let address = new Address(colId, rowId);
-        let cell = table.get(address)!;
-        if (cell != undefined && cell.content instanceof Formula) {
-          let addressRange = this.table.getAddressRange(cell.content.range);
-          formulas.push([new Address(colId, rowId), addressRange]);
+        let address: Address = {column: colId, row: rowId};
+        let iCell = table.get(address);
+        if (iCell !== undefined && iCell.content !== undefined && isFormula(iCell.content)) {
+          let addressRange = this.table.getAddressRange(iCell.content.range);
+          formulas.push([{column: colId, row: rowId}, addressRange]);
         }
+
       }
     }
     return formulas;
@@ -146,8 +148,8 @@ export class CrdtSpreadsheetService {
     for (const group of sorter.sort()) {
       for (const address of group) {
         let formulaCell = this.table.get(address)!;
-        let result = this.computeFormula(<Formula>formulaCell.content);
-        renderedTable.set(address, new Cell(formulaCell.rawInput, result));
+        let result = this.computeFormula(formulaCell.content as Formula);
+        renderedTable.set(address, {rawInput: formulaCell.rawInput, content: result});
       }
     }
   }
@@ -176,7 +178,7 @@ export class CrdtSpreadsheetService {
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
     let column = this.columns[columnIndex];
     let row = this.rows[rowIndex];
-    return this.getCellById(Address.of(column, row));
+    return this.getCellById({column: column, row: row});
   }
 
   get rows(): string[] {

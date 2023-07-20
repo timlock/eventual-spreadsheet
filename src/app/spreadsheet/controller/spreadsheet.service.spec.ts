@@ -1,9 +1,9 @@
 import {TestBed, waitForAsync} from '@angular/core/testing';
 
-import { SpreadsheetService } from './spreadsheet.service';
+import {SpreadsheetService} from './spreadsheet.service';
 import {Identifier} from "../../Identifier";
-import {Address} from "../domain/Address";
 import {CellDto} from "./CellDto";
+import {Address} from "../domain/Address";
 
 describe('SpreadsheetService', () => {
   let table: SpreadsheetService;
@@ -17,7 +17,7 @@ describe('SpreadsheetService', () => {
 
 
   it('insert value', () => {
-    let address = new Address(table.columns[0],table.rows[0]);
+    let address: Address = {column: table.columns[0], row: table.rows[0]};
     let expected = new CellDto(address, '1');
     table.insertCell(expected);
     table.renderTable();
@@ -44,13 +44,13 @@ describe('SpreadsheetService', () => {
   });
 
   it('add formula vertical', () => {
-    let firstAddress = new Address(table.columns[0],table.rows[0]);
-    let secondAddress = new Address(table.columns[0], table.rows[1]);
+    let firstAddress: Address = {column: table.columns[0], row: table.rows[0]};
+    let secondAddress: Address = {column: table.columns[0], row: table.rows[1]};
     let firstCell = new CellDto(firstAddress, '2');
     let secondCell = new CellDto(secondAddress, '2');
     let range = firstCell.column + '|' + firstCell.row + ':' + secondCell.column + '|' + secondCell.row;
     let rawFormula = '=SUM(' + range + ')';
-    let formula = new CellDto(Address.of(table.columns[0], table.rows[2]), rawFormula);
+    let formula = new CellDto({column: table.columns[0], row: table.rows[2]}, rawFormula);
     table.insertCell(firstCell);
     table.insertCell(secondCell);
     table.insertCell(formula);
@@ -60,13 +60,13 @@ describe('SpreadsheetService', () => {
   });
 
   it('add formula horizontal', () => {
-    let firstAddress = new Address(table.columns[0],table.rows[0]);
-    let secondAddress = new Address(table.columns[1], table.rows[0]);
+    let firstAddress: Address = {column: table.columns[0], row: table.rows[0]};
+    let secondAddress: Address = {column: table.columns[1], row: table.rows[0]};
     let firstCell = new CellDto(firstAddress, '2');
     let secondCell = new CellDto(secondAddress, '2');
     let range = firstCell.column + '|' + firstCell.row + ':' + secondCell.column + '|' + secondCell.row;
     let rawFormula = '=SUM(' + range + ')';
-    let formula = new CellDto(Address.of(table.columns[2], table.rows[0]), rawFormula);
+    let formula = new CellDto({column: table.columns[2], row: table.rows[0]}, rawFormula);
     table.insertCell(firstCell);
     table.insertCell(secondCell);
     table.insertCell(formula);
@@ -75,15 +75,15 @@ describe('SpreadsheetService', () => {
     expect(actualRenderedCell!.content).toEqual(4);
   });
 
-  it('add formula over formula', () =>{
-    let firstCell = new CellDto(Address.of(table.columns[0],table.rows[1]), '2');
-    let secondCell = new CellDto(Address.of(table.columns[1], table.rows[1]), '2');
+  it('add formula over formula', () => {
+    let firstCell = new CellDto({column: table.columns[0], row: table.rows[1]}, '2');
+    let secondCell = new CellDto({column: table.columns[1], row: table.rows[1]}, '2');
     let range = firstCell.address.toString() + ':' + secondCell.address.toString();
     let rawFormula = '=SUM(' + range + ')';
-    let firstFormula = new CellDto(Address.of(table.columns[2],table.rows[1]), rawFormula);
+    let firstFormula = new CellDto({column: table.columns[2], row: table.rows[1]}, rawFormula);
     range = firstFormula.address.toString() + ':' + firstFormula.address.toString();
     rawFormula = '=SUM(' + range + ')';
-    let secondFormula = new CellDto(Address.of(table.columns[0],table.rows[0]),rawFormula);
+    let secondFormula = new CellDto({column: table.columns[0], row: table.rows[0]}, rawFormula);
     table.insertCell(firstCell);
     table.insertCell(secondCell);
     table.insertCell(secondFormula);
@@ -93,22 +93,22 @@ describe('SpreadsheetService', () => {
     expect(actual!.content).toEqual(4);
   });
 
-  it('resolve self referencing formula', () =>{
-    let address = new Address(table.columns[0],table.rows[0]);
+  it('resolve self referencing formula', () => {
+    let address: Address = {column: table.columns[0], row: table.rows[0]};
     let rawFormula = '=SUM(' + address.toString() + ':' + address.toString() + ')';
-    let firstFormula = new CellDto(Address.of(table.columns[0],table.rows[0]), rawFormula);
+    let firstFormula = new CellDto({column: table.columns[0], row: table.rows[0]}, rawFormula);
     table.insertCell(firstFormula);
     let actual = table.renderTable().get(address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(0);
   });
 
-  it('resolve small formula cycle', () =>{
-    let address = new Address(table.columns[0],table.rows[1]);
+  it('resolve small formula cycle', () => {
+    let address: Address = {column: table.columns[0], row: table.rows[1]};
     let rawFormula = '=SUM(' + address.toString() + ':' + address.toString() + ')';
-    let firstFormula = new CellDto(Address.of(table.columns[0],table.rows[0]), rawFormula);
+    let firstFormula = new CellDto({column: table.columns[0], row: table.rows[0]}, rawFormula);
     rawFormula = '=SUM(' + firstFormula.address.toString() + ':' + firstFormula.address.toString() + ')';
-    let secondFormula = new CellDto(address,rawFormula);
+    let secondFormula = new CellDto(address, rawFormula);
     table.insertCell(firstFormula);
     table.insertCell(secondFormula);
     let actual = table.renderTable().get(address);

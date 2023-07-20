@@ -1,8 +1,8 @@
 import {waitForAsync} from '@angular/core/testing';
-import {Cell} from "./Cell";
-import {Table} from "./Table";
 import {Identifier} from "../../Identifier";
+import {Table} from "./Table";
 import {Address} from "./Address";
+import {Cell} from "./Cell";
 
 
 describe('Table', () => {
@@ -20,11 +20,11 @@ describe('Table', () => {
 
 
   it('getCellRange', () => {
-    let firstCell = new Cell('first');
-    let secondCell = new Cell('second');
-    let firstAddress = new Address(table.columns[0], table.rows[0]);
-    let secondAddress = new Address(table.columns[0], table.rows[1]);
-    let range: [Address, Address] = [firstAddress, Address.of(table.columns[0], table.rows[2])];
+    let firstCell: Cell = {rawInput: 'first', content: undefined};
+    let secondCell: Cell = {rawInput: 'second', content: undefined};
+    let firstAddress: Address = {column: table.columns[0], row: table.rows[0]};
+    let secondAddress: Address = {column: table.columns[0], row: table.rows[1]};
+    let range: [Address, Address] = [firstAddress, {column: table.columns[0], row: table.rows[2]}];
 
     table.set(firstAddress, firstCell);
     table.set(secondAddress, secondCell);

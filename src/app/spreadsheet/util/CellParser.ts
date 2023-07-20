@@ -1,20 +1,20 @@
-import {Cell} from '../domain/Cell';
-import {Formula, FormulaType} from '../domain/Formula';
+import {Cell} from "../domain/Cell";
+import {Formula} from "../domain/Formula";
 import {Address} from "../domain/Address";
+import {FormulaType} from "../domain/FormulaType";
 
 export class CellParser {
 
   public static parseCell(rawInput: string): Cell {
     let value = +rawInput;
     if (!Number.isNaN(value)) {
-      return new Cell(rawInput, value);
+      return {rawInput: rawInput, content: value}
     }
     let formula = this.parseFormula(rawInput);
     if (formula !== undefined) {
-      return new Cell(rawInput, formula);
+      return {rawInput: rawInput, content: formula}
     }
-    return new Cell(rawInput);
-
+    return {rawInput: rawInput, content: undefined}
   }
 
   private static parseFormula(rawInput: string): Formula | undefined {
@@ -29,10 +29,10 @@ export class CellParser {
     if (range === undefined) {
       return undefined;
     }
-    return new Formula(formulaType, range);
+    return {type: formulaType, range: range}
   }
 
-  public static parseRange(addrStr: string): [Address,Address] | undefined {
+  public static parseRange(addrStr: string): [Address, Address] | undefined {
     let addrPair = addrStr.split(':');
     if (addrPair.length != 2) {
       return undefined;
@@ -50,7 +50,7 @@ export class CellParser {
     if (addressStr.length != 2) {
       return undefined;
     }
-    return new Address(addressStr[0], addressStr[1]);
+    return {column: addressStr[0], row: addressStr[1]}
   }
 
 }

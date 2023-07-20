@@ -4,12 +4,12 @@ import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service"
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../communication/controller/communication.service";
 import {RaftService} from "../communication/controller/raft.service";
-import {Address} from "../spreadsheet/domain/Address";
 import {PayloadBuilder} from "../spreadsheet/util/PayloadBuilder";
-import {Action} from "../spreadsheet/domain/Action";
-import {Cell} from "../spreadsheet/domain/Cell";
+import {Action} from "../communication/Action";
 import {Identifier} from "../Identifier";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {Cell} from "../spreadsheet/domain/Cell";
+import {Address} from "../spreadsheet/domain/Address";
 
 @Component({
   selector: 'app-inconsistent-spreadsheet',
@@ -38,7 +38,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
 
 
   public selectCell(colId: string, rowId: string) {
-    this._currentCell = this.spreadsheetService.getCellById(Address.of(colId, rowId));
+    this._currentCell = this.spreadsheetService.getCellById({column: colId, row:rowId});
   }
 
   public addRow() {
@@ -62,7 +62,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let id = this.identifier.next();
     let message = new PayloadBuilder()
       .action(Action.INSERT_ROW)
-      .address(Address.of('', row))
+      .address({column:'', row: row})
       .input(id)
       .build();
     if (message === undefined) {
@@ -80,7 +80,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   public deleteRow(row: string) {
     let message = new PayloadBuilder()
       .action(Action.DELETE_ROW)
-      .address(Address.of('', row))
+      .address({column:'', row: row})
       .build();
     if (message === undefined) {
       console.warn('deleteRow cant build message')
@@ -116,7 +116,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let id = this.identifier.next();
     let message = new PayloadBuilder()
       .action(Action.INSERT_COLUMN)
-      .address(Address.of(column, ''))
+      .address({column: column, row: ''})
       .input(id)
       .build();
     if (message === undefined) {
@@ -134,7 +134,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   public deleteColumn(column: string) {
     let message = new PayloadBuilder()
       .action(Action.DELETE_COLUMN)
-      .address(Address.of(column, ''))
+      .address({column: column, row: ''})
       .build();
     if (message === undefined) {
       console.warn('deleteColumn cant build message')
@@ -172,7 +172,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   }
 
   public getCell(column: string, row: string): Cell | undefined {
-    return this.spreadsheetService.renderTable().get(Address.of(column, row));
+    return this.spreadsheetService.renderTable().get({column: column, row: row});
   }
 
 
@@ -208,7 +208,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   private performAction(payload: Payload) {
     switch (payload.action) {
       case Action.INSERT_CELL:
-        let address = new Address(payload.column!, payload.row!);
+        let address : Address = {column: payload.column!, row: payload.row!};
         let cell = new CellDto(address, payload.input!);
         this.spreadsheetService.insertCell(cell);
         break;

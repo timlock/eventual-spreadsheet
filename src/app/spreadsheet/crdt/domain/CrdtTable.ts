@@ -105,9 +105,14 @@ export class CrdtTable<T> {
   }
 
   public set(address: Address, value: T): Uint8Array | undefined {
-    let row = this._cells.get(address.row) || new Y.Map();
-    row.set(address.column, {t: value});
-    this._cells.set(address.row, row);
+    let row = this._cells.get(address.row)
+    if(row === undefined) {
+      row = new Y.Map<Wrapper<T>>();
+      row.set(address.column, {t: value});
+      this._cells.set(address.row, row);
+    }else{
+      row.set(address.column, {t: value});
+    }
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
@@ -130,7 +135,7 @@ export class CrdtTable<T> {
     let result: Address[] = [];
     for (const r of rowIds) {
       for (const c of colIds) {
-        result.push(new Address(c, r));
+        result.push({column:c, row:r});
       }
     }
     return result;
