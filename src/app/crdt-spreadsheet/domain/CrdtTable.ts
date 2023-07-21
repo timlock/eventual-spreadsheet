@@ -1,13 +1,10 @@
 import * as Y from 'yjs'
 import {Address} from "../../spreadsheet/domain/Address";
 
-interface Wrapper<T> {
-  t: T
-}
 
 export class CrdtTable<T> {
   private readonly ydoc = new Y.Doc;
-  private readonly _cells: Y.Map<Y.Map<Wrapper<T>>> = this.ydoc.getMap('cells');
+  private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
   private readonly keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
@@ -16,24 +13,24 @@ export class CrdtTable<T> {
   private readonly undoColumns: Y.UndoManager = new Y.UndoManager(this._columns);
 
   constructor() {
-    // this.keepRows.observe(event => {
-    //   if(event.transaction.origin){
-    //     this.keepRows.forEach((operations, id) => {
-    //       if(this.rows.indexOf(id) < 0){
-    //         this.undoRows.undo();
-    //       }
-    //     })
-    //   }
-    // });
-    // this.keepColumns.observe(event => {
-    //   if(event.transaction.origin){
-    //     this.keepColumns.forEach((operations, id) => {
-    //       if(this.columns.indexOf(id) < 0){
-    //         this.undoColumns.undo();
-    //       }
-    //     })
-    //   }
-    // });
+    this.keepRows.observe(event => {
+      if(event.transaction.origin){
+        this.keepRows.forEach((operations, id) => {
+          if(this.rows.indexOf(id) < 0){
+            this.undoRows.undo();
+          }
+        })
+      }
+    });
+    this.keepColumns.observe(event => {
+      if(event.transaction.origin){
+        this.keepColumns.forEach((operations, id) => {
+          if(this.columns.indexOf(id) < 0){
+            this.undoColumns.undo();
+          }
+        })
+      }
+    });
   }
 
   public addRow(id: string): Uint8Array | undefined {
@@ -101,25 +98,25 @@ export class CrdtTable<T> {
   }
 
   public get(address: Address): T | undefined {
-    return this._cells.get(address.row)?.get(address.column)?.t;
+    return this._cells.get(address.row)?.get(address.column);
   }
 
   public set(address: Address, value: T): Uint8Array | undefined {
     let row = this._cells.get(address.row)
     if(row === undefined) {
-      row = new Y.Map<Wrapper<T>>();
-      row.set(address.column, {t: value});
+      row = new Y.Map<T>();
+      row.set(address.column, value);
       this._cells.set(address.row, row);
     }else{
-      row.set(address.column, {t: value});
+      row.set(address.column, value);
     }
     return Y.encodeStateAsUpdate(this.ydoc);
   }
 
   public getCellRange(range: [Address, Address]): T[] {
     return this.getAddressRange(range)
-      .filter(a => this._cells.get(a.row)?.get(a.column)?.t != undefined)
-      .map(a => this._cells.get(a.row)!.get(a.column)!.t);
+      .filter(a => this._cells.get(a.row)?.get(a.column) != undefined)
+      .map(a => this._cells.get(a.row)!.get(a.column)!);
   }
 
   public getAddressRange(range: [Address, Address]): Address[] {
