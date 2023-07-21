@@ -1,12 +1,11 @@
 import {Identifier} from "../../Identifier";
 import {waitForAsync} from "@angular/core/testing";
 import {CrdtTable} from "./CrdtTable";
-import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 
 
 describe('CRDT Table', () => {
-  let table: CrdtTable<Cell>;
+  let table: CrdtTable<number>;
   let idGenerator: Identifier;
   let rows: string[];
   let columns: string[];
@@ -31,17 +30,36 @@ describe('CRDT Table', () => {
   });
 
   it('set', () => {
-    let expected: Cell = {rawInput: '1', content: 1};
+    let expected = 1;
     let address: Address = {column: columns[0], row: rows[0]};
     table.set(address, expected);
     let actual = table.get(address);
     expect(actual).toBeDefined();
     expect(actual).toEqual(expected);
-    expected = {rawInput: '2', content: 2};
+    expected = 2;
     address = {column: columns[1], row: rows[0]}
     table.set(address, expected);
     actual = table.get(address);
     expect(actual).toBeDefined();
     expect(actual).toEqual(expected);
   });
+
+  it('concurrent removeColumn and insertCell', () => {
+    let remoteTable: CrdtTable<number> = new CrdtTable();
+    let update = table.getEncodedState()!;
+    remoteTable.applyUpdate(update);
+    let address: Address = {column: table.columns[1], row: table.rows[0]};
+    update = table.set(address, 1)!;
+    let remoteUpdate = remoteTable.deleteColumn(address.column)!;
+    table.applyUpdate(remoteUpdate);
+    remoteTable.applyUpdate(update);
+    expect(table.get(address)).toBeDefined();
+    expect(remoteTable.get(address)).toBeDefined();
+    expect(table.columns.length).toEqual(3);
+    expect(remoteTable.columns.length).toEqual(3);
+  });
 });
+
+export function logState(name: string, table: CrdtTable<number>) {
+  console.log(name, ' rows: ', table.rows, ' columns: ', table.columns, ' keepRows: ', table.keepRows, ' keepColumns: ', table.keepColumns);
+}
