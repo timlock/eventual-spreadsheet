@@ -35,6 +35,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    this.applicationRef.tick();
   }
 
 

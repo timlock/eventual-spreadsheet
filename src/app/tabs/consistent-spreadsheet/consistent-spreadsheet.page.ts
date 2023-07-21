@@ -3,13 +3,13 @@ import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.servi
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../communication/controller/raft.service";
 import {CommunicationService} from "../../communication/controller/communication.service";
-import {PayloadBuilder} from "../../spreadsheet/util/PayloadBuilder";
 import {Action} from "../../communication/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
 import {RaftServiceObserver} from "../../communication/controller/RaftServiceObserver";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
+import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
@@ -44,98 +44,46 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
 
   public addRow() {
     let id = this.identifier.next();
-    let message = new PayloadBuilder()
-      .action(Action.ADD_ROW)
-      .input(id)
-      .build();
-    if (message === undefined) {
-      console.warn('addRow cant build message')
-      return
-    }
+    let message = PayloadFactory.addRow(id);
     this.raftService.postMessage(message);
     return;
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
-    let message = new PayloadBuilder()
-      .action(Action.INSERT_ROW)
-      .address({column: '', row: row})
-      .input(id)
-      .build();
-    if (message === undefined) {
-      console.warn('insertRow cant build message')
-      return
-    }
+    let message = PayloadFactory.insertRow(id, row);
     this.raftService.postMessage(message);
     return;
   }
 
   public deleteRow(row: string) {
-    let message = new PayloadBuilder()
-      .action(Action.DELETE_ROW)
-      .address({column: '', row: row})
-      .build();
-    if (message === undefined) {
-      console.warn('deleteRow cant build message')
-      return
-    }
+    let message = PayloadFactory.deleteRow(row);
     this.raftService.postMessage(message);
     return;
   }
 
   public addColumn() {
     let id = this.identifier.next();
-    let message = new PayloadBuilder()
-      .action(Action.ADD_COLUMN)
-      .input(id)
-      .build();
-    if (message === undefined) {
-      console.warn('addColumn cant build message')
-      return
-    }
+    let message = PayloadFactory.addColumn(id);
     this.raftService.postMessage(message);
     return;
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
-    let message = new PayloadBuilder()
-      .action(Action.INSERT_COLUMN)
-      .address({column: column, row: ''})
-      .input(id)
-      .build();
-    if (message === undefined) {
-      console.warn('insertColumn cant build message')
-      return
-    }
+    let message = PayloadFactory.insertColumn(id, column);
     this.raftService.postMessage(message);
     return;
   }
 
   public deleteColumn(column: string) {
-    let message = new PayloadBuilder()
-      .action(Action.DELETE_COLUMN)
-      .address({column: column, row: ''})
-      .build();
-    if (message === undefined) {
-      console.warn('deleteColumn cant build message')
-      return
-    }
+    let message = PayloadFactory.deleteColumn(column);
     this.raftService.postMessage(message);
     return;
   }
 
   public insertCell(cell: CellDto) {
-    let message = new PayloadBuilder()
-      .action(Action.INSERT_CELL)
-      .address(cell.address)
-      .input(cell.input)
-      .build();
-    if (message === undefined) {
-      console.warn('insertCell cant build message')
-      return
-    }
+    let message = PayloadFactory.insertCell(cell.address, cell.input);
     this.raftService.postMessage(message);
     return;
   }
