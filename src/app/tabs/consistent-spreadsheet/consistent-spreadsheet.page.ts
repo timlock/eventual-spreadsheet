@@ -1,15 +1,15 @@
 import {ApplicationRef, Component, OnInit} from '@angular/core';
-import {SpreadsheetService} from "../spreadsheet/controller/spreadsheet.service";
-import {CellDto} from "../spreadsheet/controller/CellDto";
-import {RaftService} from "../communication/controller/raft.service";
-import {CommunicationService} from "../communication/controller/communication.service";
-import {PayloadBuilder} from "../spreadsheet/util/PayloadBuilder";
-import {Action} from "../communication/Action";
-import {Identifier} from "../Identifier";
-import {isPayload, Payload} from "../spreadsheet/util/Payload";
-import {RaftServiceObserver} from "../communication/controller/RaftServiceObserver";
-import {Cell} from "../spreadsheet/domain/Cell";
-import {Address} from "../spreadsheet/domain/Address";
+import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
+import {CellDto} from "../../spreadsheet/controller/CellDto";
+import {RaftService} from "../../communication/controller/raft.service";
+import {CommunicationService} from "../../communication/controller/communication.service";
+import {PayloadBuilder} from "../../spreadsheet/util/PayloadBuilder";
+import {Action} from "../../communication/Action";
+import {Identifier} from "../../Identifier";
+import {isPayload, Payload} from "../../spreadsheet/util/Payload";
+import {RaftServiceObserver} from "../../communication/controller/RaftServiceObserver";
+import {Cell} from "../../spreadsheet/domain/Cell";
+import {Address} from "../../spreadsheet/domain/Address";
 
 @Component({
   selector: 'app-consistent-spreadsheet',

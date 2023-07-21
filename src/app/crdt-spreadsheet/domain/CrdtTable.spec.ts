@@ -1,8 +1,8 @@
-import {Identifier} from "../../../Identifier";
+import {Identifier} from "../../Identifier";
 import {waitForAsync} from "@angular/core/testing";
 import {CrdtTable} from "./CrdtTable";
-import {Cell} from "../../domain/Cell";
-import {Address} from "../../domain/Address";
+import {Cell} from "../../spreadsheet/domain/Cell";
+import {Address} from "../../spreadsheet/domain/Address";
 
 
 describe('CRDT Table', () => {

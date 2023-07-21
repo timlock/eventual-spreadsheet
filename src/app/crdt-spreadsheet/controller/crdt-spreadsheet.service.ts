@@ -1,13 +1,13 @@
 import {Injectable} from '@angular/core';
-import {CellDto} from "../../controller/CellDto";
-import {CellParser} from "../../util/CellParser";
+import {CellDto} from "../../spreadsheet/controller/CellDto";
+import {CellParser} from "../../spreadsheet/util/CellParser";
 import {CrdtTable} from "../domain/CrdtTable";
-import {emptyCell, Cell} from "../../domain/Cell";
-import {Address} from "../../domain/Address";
-import {Formula, isFormula} from "../../domain/Formula";
-import {Table} from "../../domain/Table";
-import {FormulaType} from "../../domain/FormulaType";
-import {GraphSorter} from "../../util/GraphSorter";
+import {emptyCell, Cell} from "../../spreadsheet/domain/Cell";
+import {Address} from "../../spreadsheet/domain/Address";
+import {Formula, isFormula} from "../../spreadsheet/domain/Formula";
+import {Table} from "../../spreadsheet/domain/Table";
+import {FormulaType} from "../../spreadsheet/domain/FormulaType";
+import {GraphSorter} from "../../spreadsheet/util/GraphSorter";
 
 @Injectable({
   providedIn: 'root'
@@ -116,11 +116,11 @@ export class CrdtSpreadsheetService {
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
         let address: Address = {column: colId, row: rowId};
-        let iCell = this.table.get(address);
-        if (iCell === undefined) {
+        let cell = this.table.get(address);
+        if (cell === undefined) {
           renderedTable.set(address, emptyCell());
-        } else if (typeof (iCell.content) === 'number') {
-          renderedTable.set(address, iCell);
+        } else if (typeof cell.content === 'number' || typeof cell.content === 'string') {
+          renderedTable.set(address, cell);
         }
       }
     }
@@ -131,9 +131,9 @@ export class CrdtSpreadsheetService {
     for (const rowId of this.rows) {
       for (const colId of this.columns) {
         let address: Address = {column: colId, row: rowId};
-        let iCell = table.get(address);
-        if (iCell !== undefined && iCell.content !== undefined && isFormula(iCell.content)) {
-          let addressRange = this.table.getAddressRange(iCell.content.range);
+        let cell = table.get(address);
+        if (cell !== undefined && cell.content !== undefined && isFormula(cell.content)) {
+          let addressRange = this.table.getAddressRange(cell.content.range);
           formulas.push([{column: colId, row: rowId}, addressRange]);
         }
 
@@ -156,7 +156,11 @@ export class CrdtSpreadsheetService {
 
 
   private computeFormula(formula: Formula): number {
-    let cells = this.renderedTable!.getCellRange(formula.range).map(c => <number>c.content);
+    // let cells = this.renderedTable!.getCellRange(formula.range).map(c => <number>c.content);
+    let cells = this.renderedTable!.getCellRange(formula.range)
+      .map(c => c.content)
+      .filter(cell => typeof cell === 'number')
+      .map(cell => cell as number);
     switch (formula.type) {
       case FormulaType.SUM:
         return cells.length != 0 ? cells.reduce((acc, i) => acc + i) : 0;

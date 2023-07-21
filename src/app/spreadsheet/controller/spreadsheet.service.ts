@@ -93,7 +93,7 @@ export class SpreadsheetService {
         let cell = this.table.get(address)!;
         if (cell === undefined) {
           renderedTable.set(address, emptyCell());
-        } else if (typeof (cell.content) === 'number') {
+        } else if (typeof cell.content === 'number' || typeof cell.content === 'string') {
           renderedTable.set(address, cell);
         }
       }
@@ -129,7 +129,10 @@ export class SpreadsheetService {
 
 
   private computeFormula(formula: Formula): number {
-    let cells = this.renderedTable!.getCellRange(formula.range).map(c => <number>c.content);
+    let cells = this.renderedTable!.getCellRange(formula.range)
+      .map(c => c.content)
+      .filter(cell => typeof cell === 'number')
+      .map(cell => cell as number);
     switch (formula.type) {
       case FormulaType.SUM:
         return cells.length != 0 ? cells.reduce((acc, i) => acc + i) : 0;

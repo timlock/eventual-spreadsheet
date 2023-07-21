@@ -14,7 +14,7 @@ export class CellParser {
     if (formula !== undefined) {
       return {rawInput: rawInput, content: formula}
     }
-    return {rawInput: rawInput, content: undefined}
+    return {rawInput: rawInput, content: rawInput}
   }
 
   private static parseFormula(rawInput: string): Formula | undefined {

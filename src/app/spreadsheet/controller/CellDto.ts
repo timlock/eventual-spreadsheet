@@ -33,5 +33,4 @@ export class CellDto {
     this._input = value;
   }
 
-
 }

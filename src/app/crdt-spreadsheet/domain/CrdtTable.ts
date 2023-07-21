@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import {Address} from "../../domain/Address";
+import {Address} from "../../spreadsheet/domain/Address";
 
 interface Wrapper<T> {
   t: T
@@ -12,8 +12,8 @@ export class CrdtTable<T> {
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
   private readonly keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
   private readonly keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
-  // private readonly undoRows: Y.UndoManager = new Y.UndoManager(this._rows);
-  // private readonly undoColumns: Y.UndoManager = new Y.UndoManager(this._columns);
+  private readonly undoRows: Y.UndoManager = new Y.UndoManager(this._rows);
+  private readonly undoColumns: Y.UndoManager = new Y.UndoManager(this._columns);
 
   constructor() {
     // this.keepRows.observe(event => {

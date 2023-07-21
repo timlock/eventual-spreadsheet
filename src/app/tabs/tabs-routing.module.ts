@@ -9,15 +9,15 @@ const routes: Routes = [
     children: [
       {
         path: 'inconsistent',
-        loadChildren: () => import('../inconsistent-spreadsheet/inconsistent-spreadsheet.module').then(m => m.InconsistentSpreadsheetPageModule)
+        loadChildren: () => import('./inconsistent-spreadsheet/inconsistent-spreadsheet.module').then(m => m.InconsistentSpreadsheetPageModule)
       },
       {
         path: 'consistent',
-        loadChildren: () => import('../consistent-spreadsheet/consistent-spreadsheet.module').then(m => m.ConsistentSpreadsheetPageModule)
+        loadChildren: () => import('./consistent-spreadsheet/consistent-spreadsheet.module').then(m => m.ConsistentSpreadsheetPageModule)
       },
       {
         path: 'eventual-consistent',
-        loadChildren: () => import('../eventual-consistent-spreadsheet/eventual-consistent-spreadsheet.module').then(m => m.EventualConsistentSpreadsheetPageModule)
+        loadChildren: () => import('./eventual-consistent-spreadsheet/eventual-consistent-spreadsheet.module').then(m => m.EventualConsistentSpreadsheetPageModule)
       },
       {
         path: '',

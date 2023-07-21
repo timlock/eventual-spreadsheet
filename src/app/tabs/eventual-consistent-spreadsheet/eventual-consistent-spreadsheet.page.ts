@@ -1,12 +1,12 @@
 import {ApplicationRef, Component, OnInit} from '@angular/core';
-import {CellDto} from "../spreadsheet/controller/CellDto";
-import {CommunicationService} from "../communication/controller/communication.service";
-import {Payload} from "../spreadsheet/util/Payload";
-import {RaftService} from "../communication/controller/raft.service";
-import {Identifier} from "../Identifier";
-import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
-import {CrdtSpreadsheetService} from "../spreadsheet/crdt/controller/crdt-spreadsheet.service";
-import {Cell} from "../spreadsheet/domain/Cell";
+import {CellDto} from "../../spreadsheet/controller/CellDto";
+import {CommunicationService} from "../../communication/controller/communication.service";
+import {Payload} from "../../spreadsheet/util/Payload";
+import {RaftService} from "../../communication/controller/raft.service";
+import {Identifier} from "../../Identifier";
+import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
+import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
+import {Cell} from "../../spreadsheet/domain/Cell";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
