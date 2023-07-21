@@ -194,6 +194,6 @@ export class CrdtSpreadsheetService {
   }
 
   public getEncodedState(): Uint8Array | undefined {
-    return this.table.getEncodedState();
+    return this.table.encodeStateAsUpdate();
   }
 }

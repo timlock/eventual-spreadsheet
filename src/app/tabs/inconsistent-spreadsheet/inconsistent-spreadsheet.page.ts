@@ -39,7 +39,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    this.applicationRef.tick();
+    // this.applicationRef.tick();
   }
 
   public addRow() {

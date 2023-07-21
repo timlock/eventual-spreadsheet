@@ -1,12 +1,12 @@
 import {Identifier} from "../../Identifier";
 import {waitForAsync} from "@angular/core/testing";
 import {CrdtTable} from "./CrdtTable";
-import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 
 
 describe('CRDT Table', () => {
-  let table: CrdtTable<Cell>;
+  let table: CrdtTable<number>;
+  let remoteTable: CrdtTable<number>;
   let idGenerator: Identifier;
   let rows: string[];
   let columns: string[];
@@ -18,30 +18,64 @@ describe('CRDT Table', () => {
     table = new CrdtTable();
     rows.forEach(row => table.addRow(row));
     columns.forEach(column => table.addColumn(column));
+    remoteTable = new CrdtTable();
+    let update = table.encodeStateAsUpdate()!;
+    remoteTable.applyUpdate(update);
   }));
 
 
   it('addRow', () => {
     let expected = 'addRow';
     let before = rows[1];
-    table.insertRow(expected, before);
+    let update = table.insertRow(expected, before)!;
+    remoteTable.applyUpdate(update);
     expect(table.rows.length).toEqual(4);
     expect(table.rows[1]).toEqual(expected);
     expect(table.rows[2]).toEqual(before);
+    expect(remoteTable.rows.length).toEqual(4);
+    expect(remoteTable.rows[1]).toEqual(expected);
+    expect(remoteTable.rows[2]).toEqual(before);
   });
 
   it('set', () => {
-    let expected: Cell = {rawInput: '1', content: 1};
+    let expected = 1;
     let address: Address = {column: columns[0], row: rows[0]};
     table.set(address, expected);
     let actual = table.get(address);
     expect(actual).toBeDefined();
     expect(actual).toEqual(expected);
-    expected = {rawInput: '2', content: 2};
+    expected = 2;
     address = {column: columns[1], row: rows[0]}
     table.set(address, expected);
     actual = table.get(address);
     expect(actual).toBeDefined();
     expect(actual).toEqual(expected);
+  });
+
+  it('concurrent removeColumn and insertCell', () => {
+    let address: Address = {column: table.columns[1], row: table.rows[0]};
+    let update = table.set(address, 1)!;
+    let remoteUpdate = remoteTable.deleteColumn(address.column)!;
+    table.applyUpdate(remoteUpdate);
+    remoteTable.applyUpdate(update);
+    expect(table.get(address)).toBeDefined();
+    expect(remoteTable.get(address)).toBeDefined();
+    expect(table.columns.length).toEqual(3);
+    expect(remoteTable.columns.length).toEqual(3);
+  });
+
+  it('concurrent insert', () => {
+    let address: Address = {column: table.columns[0], row: table.rows[0]};
+    let update = table.set(address, 1)!;
+    let remoteUpdate = remoteTable.set(address, 2)!;
+    table.applyUpdate(remoteUpdate);
+    remoteTable.applyUpdate(update);
+    if(table.yjsId > remoteTable.yjsId){
+      expect(table.get(address)).toEqual(1);
+      expect(remoteTable.get(address)).toEqual(1);
+    }else{
+      expect(table.get(address)).toEqual(2);
+      expect(remoteTable.get(address)).toEqual(2);
+    }
   });
 });
