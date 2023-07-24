@@ -2,7 +2,6 @@ import {ApplicationRef, Component, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../communication/controller/raft.service";
-import {CommunicationService} from "../../communication/controller/communication.service";
 import {Action} from "../../communication/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
@@ -25,7 +24,7 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
   private _messageList: Payload[] = [];
   private _role: string = '';
 
-  constructor(communicationService: CommunicationService<Payload>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
+  constructor(raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
     this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
     this.applicationRef = applicationRef;

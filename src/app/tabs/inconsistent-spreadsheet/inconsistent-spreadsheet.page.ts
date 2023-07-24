@@ -46,9 +46,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let id = this.identifier.next();
     let message = PayloadFactory.addRow(id);
     this.spreadsheetService.addRow(id);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
     this.messageList.unshift([this.identifier.uuid, message]);
   }
 
@@ -56,9 +54,8 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let id = this.identifier.next();
     let message = PayloadFactory.insertRow(id, row);
     this.spreadsheetService.insertRow(id, row);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
+
     this.messageList.unshift([this.identifier.uuid, message]);
 
   }
@@ -66,9 +63,8 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   public deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
     this.spreadsheetService.deleteRow(row);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
+
     this.messageList.unshift([this.identifier.uuid, message]);
 
   }
@@ -77,9 +73,8 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let id = this.identifier.next();
     let message = PayloadFactory.addColumn(id);
     this.spreadsheetService.addColumn(id);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
+
     this.messageList.unshift([this.identifier.uuid, message]);
 
   }
@@ -88,9 +83,8 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let id = this.identifier.next();
     let message = PayloadFactory.insertColumn(id, column);
     this.spreadsheetService.insertColumn(id, column);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
+
     this.messageList.unshift([this.identifier.uuid, message]);
 
   }
@@ -98,9 +92,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   public deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
     this.spreadsheetService.deleteColumn(column);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
     this.messageList.unshift([this.identifier.uuid, message]);
 
   }
@@ -108,9 +100,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   public insertCell(cell: CellDto) {
     let message = PayloadFactory.insertCell(cell.address, cell.input);
     this.spreadsheetService.insertCell(cell);
-    this.nodes.forEach(destination => {
-      this.communicationService.send(message!, destination);
-    })
+    this.communicationService.send(message!);
     this.messageList.unshift([this.identifier.uuid, message]);
 
   }
@@ -202,11 +192,11 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   }
 
   get connectionEnabled(): boolean {
-    return this.communicationService.connected;
+    return this.communicationService.isConnected;
   }
 
   set connectionEnabled(enabled: boolean) {
-    this.communicationService.connected = enabled;
+    this.communicationService.isConnected = enabled;
   }
 }
 

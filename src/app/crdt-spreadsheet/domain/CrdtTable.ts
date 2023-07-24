@@ -36,8 +36,9 @@ export class CrdtTable<T> {
     }
     if (this._keepRows.has(id)) {
       this._keepRows.delete(id);
+      return Y.encodeStateAsUpdateV2(this.ydoc);
     }
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+    return undefined;
   }
 
   public addColumn(id: string): Uint8Array | undefined {
@@ -66,8 +67,9 @@ export class CrdtTable<T> {
     }
     if (this._keepColumns.has(id)) {
       this._keepColumns.delete(id);
+      return Y.encodeStateAsUpdateV2(this.ydoc);
     }
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+    return undefined;
   }
 
 
@@ -84,11 +86,9 @@ export class CrdtTable<T> {
     let row = this._cells.get(address.row)
     if (row === undefined) {
       row = new Y.Map<T>();
-      row.set(address.column, value);
       this._cells.set(address.row, row);
-    } else {
-      row.set(address.column, value);
     }
+    row.set(address.column, value);
     this._keepRows.set(address.row, this.ydoc.clientID);
     this._keepColumns.set(address.column, this.ydoc.clientID);
     return Y.encodeStateAsUpdateV2(this.ydoc);
@@ -123,8 +123,8 @@ export class CrdtTable<T> {
     Y.applyUpdateV2(this.ydoc, update, this);
   }
 
-  public encodeStateAsUpdate(): Uint8Array | undefined {
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+  public encodeStateAsUpdate(encodedStateVector?: Uint8Array): Uint8Array | undefined {
+    return Y.encodeStateAsUpdateV2(this.ydoc, encodedStateVector);
   }
 
   get rows(): string[] {

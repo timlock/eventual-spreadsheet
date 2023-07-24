@@ -54,10 +54,10 @@ describe('CRDT Table', () => {
 
   it('concurrent removeColumn and insertCell', () => {
     let address: Address = {column: table.columns[1], row: table.rows[0]};
-    let update = table.set(address, 1)!;
-    let remoteUpdate = remoteTable.deleteColumn(address.column)!;
-    table.applyUpdate(remoteUpdate);
-    remoteTable.applyUpdate(update);
+    let update = table.set(address, 1);
+    let remoteUpdate = remoteTable.deleteColumn(address.column);
+    table.applyUpdate(remoteUpdate!);
+    remoteTable.applyUpdate(update!);
     expect(table.get(address)).toBeDefined();
     expect(remoteTable.get(address)).toBeDefined();
     expect(table.columns.length).toEqual(3);

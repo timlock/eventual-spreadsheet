@@ -1,59 +1,38 @@
 import {Message} from "../Message";
-import {LogicalClock} from "../../LogicalClock";
 
-
-class Entry<T> {
-  private _messages: Message<T>[] = [];
-  private clock: LogicalClock = new LogicalClock();
-  private lastSent: number = -1;
-
-  public add(message: Message<T>, sent: boolean): Message<T> {
-    message.timestamp = this.clock.next();
-    this._messages.push(message);
-    if (sent) {
-      this.lastSent = this.clock.current();
-    }
-    return message;
-  }
-
-  public messages(timestamp?: number): Message<T>[] {
-    if(timestamp === undefined){
-      return this._messages.slice();
-    }
-    return this._messages.slice(timestamp + 1);
-  }
-
-  public unsentMessages(): Message<T>[] {
-    let start = this.lastSent === -1 ? 0 : this.lastSent;
-    let end = this.clock.current() + 1
-    let unsent= this._messages.slice(start , end);
-    this.lastSent = this.clock.current();
-    return unsent;
-  }
-}
 
 export class MessageBuffer<T> {
-  private buffer: Map<string, Entry<T>> = new Map();
+  private records: Map<string, number> = new Map();
+  private buffer: Message<T>[] = [];
 
-  public add(message: Message<T>, sent: boolean): Message<T> | undefined {
-    if (message.destination === undefined) {
-      console.warn('Message is missing destination and/or timestamp ', message);
-      return undefined;
-    }
-    let entry = this.buffer.get(message.destination) || new Entry<T>();
-    this.buffer.set(message.destination, entry);
-    message = entry.add(message, sent);
+  public add(message: Message<T>): Message<T> {
+    message.timestamp = this.buffer.length;
+    this.buffer.push(message);
     return message;
   }
 
-  public getMissingMessages(destination: string, timestamp?: number): Message<T>[] {
-    return this.buffer.get(destination)?.messages(timestamp) || [];
+  public addNode(destination: string, timestamp = -1) {
+    this.records.set(destination, timestamp);
+  }
+
+  public getMissingMessages(destination: string, timestamp = -1): Message<T>[] {
+    return this.buffer.slice(timestamp + 1).map(message => this.copyMessage(message, destination));
+  }
+
+  private copyMessage(message: Message<T>, destination: string): Message<T> {
+    return {
+      source: message.source,
+      destination: destination,
+      payload: message.payload,
+      timestamp: message.timestamp
+    }
   }
 
   public getUnsentMessages(): Message<T>[] {
-    let unsent: Message<T>[] = [];
-    this.buffer.forEach(entry => unsent.push(...entry.unsentMessages()));
-    return unsent;
+    let result = Array.from(this.records).flatMap(record => this.getMissingMessages(record[0], record[1]));
+    for (const record of this.records) {
+      this.records.set(record[0], this.buffer.length);
+    }
+    return result;
   }
 }
-

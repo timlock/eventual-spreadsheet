@@ -16,19 +16,19 @@ export class CommunicationService<T> {
   private _nodes: Set<string> = new Set<string>();
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
-  private _connected: boolean = true;
+  private _isConnected: boolean = true;
 
   private postMessage(message: Message<any>) {
-    // console.log('SEND MESSAGE ', message);
+    console.log('SEND MESSAGE ', message);
     this.channel?.postMessage(message);
   }
 
-  private onMessage = (event: MessageEvent<any>): any => {
-    if (!this._connected) {
+  private onMessage = (event: MessageEvent): any => {
+    if (!this._isConnected) {
       return;
     }
     let message = event.data as Message<T>;
-    // console.log('RECEIVE MESSAGE ', message);
+    console.log('RECEIVE MESSAGE ', message);
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -70,18 +70,17 @@ export class CommunicationService<T> {
       return false;
     }
     let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
-    if(destination === undefined){
+    message = this.messageBuffer.add(message);
+    if (destination === undefined) {
       this._nodes.forEach(dest => {
         message.destination = dest;
-        message = this.messageBuffer.add(message, this._connected)!;
-        if (this._connected) {
+        if (this._isConnected) {
           this.postMessage(message);
         }
       });
       return true;
     }
-    message = this.messageBuffer.add(message, this._connected)!;
-    if (this._connected) {
+    if (this._isConnected) {
       this.postMessage(message);
     }
     return true;
@@ -96,6 +95,7 @@ export class CommunicationService<T> {
         return;
       }
       this.observer.onNode(nodeId);
+      this.messageBuffer.addNode(nodeId);
       this.advertiseSelf();
     }
   }
@@ -112,6 +112,14 @@ export class CommunicationService<T> {
     this.postMessage(message);
   }
 
+  set isConnected(value: boolean) {
+    this._isConnected = value;
+    if (this._isConnected) {
+      this.messageBuffer.getUnsentMessages().forEach(message => this.postMessage(message));
+      this.advertiseSelf();
+    }
+  }
+
   get nodes(): Set<string> {
     return this._nodes;
   }
@@ -122,15 +130,8 @@ export class CommunicationService<T> {
   }
 
 
-  get connected(): boolean {
-    return this._connected;
+  get isConnected(): boolean {
+    return this._isConnected;
   }
 
-  set connected(value: boolean) {
-    this._connected = value;
-    if (this._connected) {
-      this.advertiseSelf();
-      this.messageBuffer.getUnsentMessages().forEach(message => this.postMessage(message));
-    }
-  }
 }

@@ -193,7 +193,7 @@ export class CrdtSpreadsheetService {
     return this.table.columns;
   }
 
-  public getEncodedState(): Uint8Array | undefined {
-    return this.table.encodeStateAsUpdate();
+  public getEncodedState(encodedStateVector?: Uint8Array): Uint8Array | undefined {
+    return this.table.encodeStateAsUpdate(encodedStateVector);
   }
 }
