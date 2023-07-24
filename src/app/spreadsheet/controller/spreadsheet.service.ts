@@ -117,7 +117,8 @@ export class SpreadsheetService {
 
   private renderFormulas(formulas: [Address, Address[]][], renderedTable: Table<Cell>) {
     let sorter = new GraphSorter();
-    formulas.filter(formula => this.renderedTable?.get(formula[0]) === undefined).forEach(v => sorter.addCell(v));
+    formulas = formulas.filter(formula => this.renderedTable?.get(formula[0]) === undefined);
+    formulas.forEach(v => sorter.addCell(v));
     for (const group of sorter.sort()) {
       for (const address of group) {
         let formulaCell = this.table.get(address)!;

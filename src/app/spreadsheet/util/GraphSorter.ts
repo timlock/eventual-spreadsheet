@@ -5,7 +5,7 @@ export class GraphSorter {
   private vertices: Map<string, Vertices> = new Map();
 
   public addCell(cell: [Address, Address[]]) {
-    this.vertices.set(cell[0].toString(),
+    this.vertices.set(cell[0].column + '|' + cell[0].row,
       {
         address: cell[0],
         neighbours: cell[1],
@@ -35,7 +35,7 @@ export class GraphSorter {
     }
     vertices.visited = true;
     for (const address of vertices.neighbours) {
-      let neighbour = this.vertices.get(address.toString());
+      let neighbour = this.vertices.get(address.column + '|' + address.row);
       if(neighbour != undefined){
         this.visit(neighbour);
       }

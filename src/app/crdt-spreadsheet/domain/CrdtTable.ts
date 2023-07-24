@@ -13,7 +13,7 @@ export class CrdtTable<T> {
   public addRow(id: string): Uint8Array | undefined {
     this._rows.push([id]);
     this._keepRows.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
   public insertRow(id: string, before: string): Uint8Array | undefined {
@@ -24,7 +24,7 @@ export class CrdtTable<T> {
     }
     this._rows.insert(index, [id]);
     this._keepRows.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
 
@@ -37,13 +37,13 @@ export class CrdtTable<T> {
     if (this._keepRows.has(id)) {
       this._keepRows.delete(id);
     }
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
   public addColumn(id: string): Uint8Array | undefined {
     this._columns.push([id]);
     this._keepColumns.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
 
@@ -55,7 +55,7 @@ export class CrdtTable<T> {
     }
     this._columns.insert(index, [id]);
     this._keepColumns.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
   public deleteColumn(id: string): Uint8Array | undefined {
@@ -67,13 +67,13 @@ export class CrdtTable<T> {
     if (this._keepColumns.has(id)) {
       this._keepColumns.delete(id);
     }
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
 
   public deleteValue(columnId: string, rowId: string): Uint8Array | undefined {
     this._cells.get(rowId)?.delete(columnId);
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
   public get(address: Address): T | undefined {
@@ -91,7 +91,7 @@ export class CrdtTable<T> {
     }
     this._keepRows.set(address.row, this.ydoc.clientID);
     this._keepColumns.set(address.column, this.ydoc.clientID);
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
   public getCellRange(range: [Address, Address]): T[] {
@@ -124,7 +124,7 @@ export class CrdtTable<T> {
   }
 
   public encodeStateAsUpdate(): Uint8Array | undefined {
-    return Y.encodeStateAsUpdate(this.ydoc);
+    return Y.encodeStateAsUpdateV2(this.ydoc);
   }
 
   get rows(): string[] {
