@@ -70,12 +70,25 @@ describe('CRDT Table', () => {
     let remoteUpdate = remoteTable.set(address, 2)!;
     table.applyUpdate(remoteUpdate);
     remoteTable.applyUpdate(update);
-    if(table.yjsId > remoteTable.yjsId){
+    if (table.yjsId > remoteTable.yjsId) {
       expect(table.get(address)).toEqual(1);
       expect(remoteTable.get(address)).toEqual(1);
-    }else{
+    } else {
       expect(table.get(address)).toEqual(2);
       expect(remoteTable.get(address)).toEqual(2);
     }
+  });
+
+  it('concurrent row insert and delete', () => {
+    let update = table.insertRow(idGenerator.next(), rows[2]);
+    expect(table.rows.length).toEqual(4);
+    let remoteUpdate = remoteTable.deleteRow(rows[2]);
+    expect(remoteTable.rows.find(value => value === rows[2])).toBeUndefined();
+    table.applyUpdate(remoteUpdate!);
+    remoteTable.applyUpdate(update!);
+    expect(table.rows.length).toEqual(3);
+    expect(remoteTable.rows.length).toEqual(3);
+    expect(table.rows[2]).toEqual(idGenerator.getLastId());
+    expect(remoteTable.rows[2]).toEqual(idGenerator.getLastId());
   });
 });

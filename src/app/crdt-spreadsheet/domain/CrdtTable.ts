@@ -32,7 +32,7 @@ export class CrdtTable<T> {
     let index = this.rows.indexOf(id);
     if (index == -1) {
       console.log("Failed to remove id:" + id + " in rows: " + this._rows);
-      return;
+      return undefined;
     }
     if (this._keepRows.has(id)) {
       this._keepRows.delete(id);
@@ -120,7 +120,7 @@ export class CrdtTable<T> {
   }
 
   public applyUpdate(update: Uint8Array) {
-    Y.applyUpdate(this.ydoc, update, this);
+    Y.applyUpdateV2(this.ydoc, update, this);
   }
 
   public encodeStateAsUpdate(): Uint8Array | undefined {
