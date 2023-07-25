@@ -1,5 +1,6 @@
 import * as Y from 'yjs'
 import {Address} from "../../spreadsheet/domain/Address";
+import {Transaction} from "yjs";
 
 
 export class CrdtTable<T> {
@@ -9,11 +10,24 @@ export class CrdtTable<T> {
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
   private readonly _keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
   private readonly _keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
+  private static UPDATE_MODE = 'updateV2';
 
-  public addRow(id: string): Uint8Array | undefined {
-    this._rows.push([id]);
-    this._keepRows.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+  private catchUpdate(action: () => void): Uint8Array {
+    let updates: Uint8Array[] = [];
+    this.ydoc.on(CrdtTable.UPDATE_MODE, (update: Uint8Array, origin: any, doc: Y.Doc, tr: Transaction) => {
+      updates.push(update);
+    });
+    action();
+    this.ydoc.off(CrdtTable.UPDATE_MODE, () => {});
+    updates.forEach(update => Y.logUpdateV2(update));
+    return Y.mergeUpdatesV2(updates);
+  }
+
+  public addRow(id: string): Uint8Array {
+    return this.catchUpdate(() => {
+      this._rows.push([id]);
+      this._keepRows.set(id, this.ydoc.clientID)
+    })
   }
 
   public insertRow(id: string, before: string): Uint8Array | undefined {
@@ -22,9 +36,10 @@ export class CrdtTable<T> {
       console.log("Failed to insert id:" + id + " before id: " + before + " in rows: " + this._rows);
       return undefined;
     }
-    this._rows.insert(index, [id]);
-    this._keepRows.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+    return this.catchUpdate(() =>{
+      this._rows.insert(index, [id]);
+      this._keepRows.set(id, this.ydoc.clientID);
+    });
   }
 
 
@@ -35,16 +50,18 @@ export class CrdtTable<T> {
       return undefined;
     }
     if (this._keepRows.has(id)) {
-      this._keepRows.delete(id);
-      return Y.encodeStateAsUpdateV2(this.ydoc);
+      return this.catchUpdate(() =>{
+        this._keepRows.delete(id);
+      });
     }
     return undefined;
   }
 
-  public addColumn(id: string): Uint8Array | undefined {
-    this._columns.push([id]);
-    this._keepColumns.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+  public addColumn(id: string): Uint8Array {
+    return this.catchUpdate(() =>{
+      this._columns.push([id]);
+      this._keepColumns.set(id, this.ydoc.clientID);
+    });
   }
 
 
@@ -52,11 +69,12 @@ export class CrdtTable<T> {
     let index = this.columns.indexOf(column);
     if (index == -1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);
-      return;
+      return undefined;
     }
-    this._columns.insert(index, [id]);
-    this._keepColumns.set(id, this.ydoc.clientID);
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+    return this.catchUpdate(() =>{
+      this._columns.insert(index, [id]);
+      this._keepColumns.set(id, this.ydoc.clientID);
+    });
   }
 
   public deleteColumn(id: string): Uint8Array | undefined {
@@ -66,16 +84,18 @@ export class CrdtTable<T> {
       return;
     }
     if (this._keepColumns.has(id)) {
-      this._keepColumns.delete(id);
-      return Y.encodeStateAsUpdateV2(this.ydoc);
+      return this.catchUpdate(() =>{
+        this._keepColumns.delete(id);
+      });
     }
     return undefined;
   }
 
 
-  public deleteValue(columnId: string, rowId: string): Uint8Array | undefined {
-    this._cells.get(rowId)?.delete(columnId);
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+  public deleteValue(columnId: string, rowId: string): Uint8Array {
+    return this.catchUpdate(() =>{
+      this._cells.get(rowId)?.delete(columnId);
+    });
   }
 
   public get(address: Address): T | undefined {
@@ -84,14 +104,15 @@ export class CrdtTable<T> {
 
   public set(address: Address, value: T): Uint8Array | undefined {
     let row = this._cells.get(address.row)
-    if (row === undefined) {
-      row = new Y.Map<T>();
-      this._cells.set(address.row, row);
-    }
-    row.set(address.column, value);
-    this._keepRows.set(address.row, this.ydoc.clientID);
-    this._keepColumns.set(address.column, this.ydoc.clientID);
-    return Y.encodeStateAsUpdateV2(this.ydoc);
+    return this.catchUpdate(() =>{
+      if (row === undefined) {
+        row = new Y.Map<T>();
+        this._cells.set(address.row, row);
+      }
+      row.set(address.column, value);
+      this._keepRows.set(address.row, this.ydoc.clientID);
+      this._keepColumns.set(address.column, this.ydoc.clientID);
+    });
   }
 
   public getCellRange(range: [Address, Address]): T[] {

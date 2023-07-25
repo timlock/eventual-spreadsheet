@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CellParser} from "../../spreadsheet/util/CellParser";
 import {CrdtTable} from "../domain/CrdtTable";
-import {emptyCell, Cell} from "../../spreadsheet/domain/Cell";
+import {Cell, emptyCell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {Formula, isFormula} from "../../spreadsheet/domain/Formula";
 import {Table} from "../../spreadsheet/domain/Table";
