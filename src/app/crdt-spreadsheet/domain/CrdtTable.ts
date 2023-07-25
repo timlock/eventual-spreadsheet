@@ -1,9 +1,10 @@
 import * as Y from 'yjs'
 import {Address} from "../../spreadsheet/domain/Address";
 import {Transaction} from "yjs";
+import {Spreadsheet} from "../../spreadsheet/controller/Spreadsheet";
 
 
-export class CrdtTable<T> {
+export class CrdtTable<T> implements Spreadsheet<T>{
   private readonly ydoc = new Y.Doc;
   private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');

@@ -1,6 +1,7 @@
 import {Address} from "./Address";
+import {Spreadsheet} from "../controller/Spreadsheet";
 
-export class Table<T> {
+export class Table<T> implements Spreadsheet<T>{
   private readonly _rows: string[] = [];
   private readonly _columns: string[] = [];
   private readonly _cells: Map<string, Map<string, T>> = new Map();

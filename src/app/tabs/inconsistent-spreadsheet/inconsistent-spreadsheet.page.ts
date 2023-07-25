@@ -111,7 +111,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   }
 
   public getCell(column: string, row: string): Cell | undefined {
-    return this.spreadsheetService.renderTable().get({column: column, row: row});
+    return this.spreadsheetService.getTable().get({column: column, row: row});
   }
 
 

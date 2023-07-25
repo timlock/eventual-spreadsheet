@@ -20,7 +20,7 @@ describe('SpreadsheetService', () => {
     let address: Address = {column: table.columns[0], row: table.rows[0]};
     let expected = new CellDto(address, '1');
     table.insertCell(expected);
-    table.renderTable();
+    table.getTable();
     let actualDto = table.getCellById(address);
     expect(actualDto).toBeDefined();
     expect(actualDto).toEqual(expected);
@@ -30,7 +30,7 @@ describe('SpreadsheetService', () => {
   it('add row', () => {
     let rowId = idGenerator.next();
     table.addRow(rowId);
-    let actual = table.renderTable();
+    let actual = table.getTable();
     expect(actual.rows.length).toEqual(4);
     expect(table.rows[3]).toEqual(rowId);
   });
@@ -38,7 +38,7 @@ describe('SpreadsheetService', () => {
   it('delete row', () => {
     let rowId = table.rows[0];
     table.deleteRow(rowId);
-    let actual = table.renderTable();
+    let actual = table.getTable();
     expect(actual.rows.length).toEqual(2);
     expect(actual.rows[0]).not.toEqual(rowId);
   });
@@ -54,7 +54,7 @@ describe('SpreadsheetService', () => {
     table.insertCell(firstCell);
     table.insertCell(secondCell);
     table.insertCell(formula);
-    let actualRenderedCell = table.renderTable().get(formula.address);
+    let actualRenderedCell = table.getTable().get(formula.address);
     expect(actualRenderedCell).toBeDefined();
     expect(actualRenderedCell!.content).toEqual(4);
   });
@@ -70,7 +70,7 @@ describe('SpreadsheetService', () => {
     table.insertCell(firstCell);
     table.insertCell(secondCell);
     table.insertCell(formula);
-    let actualRenderedCell = table.renderTable().get(formula.address);
+    let actualRenderedCell = table.getTable().get(formula.address);
     expect(actualRenderedCell).toBeDefined();
     expect(actualRenderedCell!.content).toEqual(4);
   });
@@ -88,7 +88,7 @@ describe('SpreadsheetService', () => {
     table.insertCell(secondCell);
     table.insertCell(secondFormula);
     table.insertCell(firstFormula);
-    let actual = table.renderTable().get(secondFormula.address);
+    let actual = table.getTable().get(secondFormula.address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(4);
   });
@@ -98,7 +98,7 @@ describe('SpreadsheetService', () => {
     let rawFormula = '=SUM(' + address.column + '|' + address.row + ':' + address.column + '|' + address.row + ')';
     let firstFormula = new CellDto({column: table.columns[0], row: table.rows[0]}, rawFormula);
     table.insertCell(firstFormula);
-    let actual = table.renderTable().get(address);
+    let actual = table.getTable().get(address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(0);
   });
@@ -111,7 +111,7 @@ describe('SpreadsheetService', () => {
     let secondFormula = new CellDto(address, rawFormula);
     table.insertCell(firstFormula);
     table.insertCell(secondFormula);
-    let actual = table.renderTable().get(address);
+    let actual = table.getTable().get(address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(0);
   });
