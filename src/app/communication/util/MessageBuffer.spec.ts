@@ -1,5 +1,5 @@
 import {MessageBuffer} from "./MessageBuffer";
-import {Message} from "../Message";
+import {Message} from "../domain/Message";
 import {Identifier} from "../../Identifier";
 
 

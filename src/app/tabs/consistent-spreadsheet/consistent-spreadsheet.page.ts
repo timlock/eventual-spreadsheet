@@ -2,7 +2,7 @@ import {ApplicationRef, Component, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../communication/controller/raft.service";
-import {Action} from "../../communication/Action";
+import {Action} from "../../spreadsheet/util/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
 import {RaftServiceObserver} from "../../communication/controller/RaftServiceObserver";

@@ -1,4 +1,4 @@
-import {Message} from "../Message";
+import {Message} from "../domain/Message";
 
 
 export class MessageBuffer<T> {

@@ -4,7 +4,7 @@ import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.servi
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
 import {RaftService} from "../../communication/controller/raft.service";
-import {Action} from "../../communication/Action";
+import {Action} from "../../spreadsheet/util/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
 import {Cell} from "../../spreadsheet/domain/Cell";

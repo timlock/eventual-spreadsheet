@@ -1,5 +1,5 @@
 import {Payload} from "./Payload";
-import {Action} from "../../communication/Action";
+import {Action} from "./Action";
 import {Address} from "../domain/Address";
 
 export class PayloadFactory{

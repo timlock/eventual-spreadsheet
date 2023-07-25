@@ -7,5 +7,3 @@ export interface Message<T> {
   timestamp?: number;
   versionVector?: VersionVector;
 }
-
-

@@ -1,4 +1,4 @@
-import {Action} from "../../communication/Action";
+import {Action} from "./Action";
 
 export interface Payload {
   action: string;

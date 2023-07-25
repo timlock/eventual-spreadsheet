@@ -1,10 +1,10 @@
 import {Injectable} from '@angular/core';
 import {CommunicationServiceObserver} from "./CommunicationServiceObserver";
-import {Message} from "../Message";
+import {Message} from "../domain/Message";
 import {Identifier} from "../../Identifier";
 import {VersionVectorManager} from "../util/VersionVectorManager";
 import {MessageBuffer} from "../util/MessageBuffer";
-import {VersionVector} from "../VersionVector";
+import {VersionVector} from "../domain/VersionVector";
 
 @Injectable({
   providedIn: 'root'
@@ -18,9 +18,31 @@ export class CommunicationService<T> {
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
   private _isConnected: boolean = true;
 
+  public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
+    if (this.channel !== undefined) {
+      this.channel.close();
+    }
+    this.observer = observer;
+    this.channel = new BroadcastChannel(channelName);
+    this.channel.onmessage = this.onMessage;
+    this.advertiseSelf();
+  }
+
+  public closeChannel() {
+    if (this.channel !== undefined) {
+      this.channel.close();
+    }
+    this.channel = undefined;
+  }
+
+
   private postMessage(message: Message<any>) {
+    if (this.channel === undefined || this.observer === undefined) {
+      console.warn('Cant post message, channel is undefined');
+      return;
+    }
     // console.log('SEND MESSAGE ', message);
-    this.channel?.postMessage(message);
+    this.channel.postMessage(message);
   }
 
   private onMessage = (event: MessageEvent): any => {
@@ -46,29 +68,7 @@ export class CommunicationService<T> {
     this.messageBuffer.getMissingMessages(destination, timestamp).forEach(message => this.postMessage(message));
   }
 
-  public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
-    if (this.channel !== undefined) {
-      this.channel.close();
-    }
-    this.observer = observer;
-    this.channel = new BroadcastChannel(channelName);
-    this.channel.onmessage = this.onMessage;
-    this.advertiseSelf();
-  }
-
-  public closeChannel() {
-    if (this.channel !== undefined) {
-      this.channel.close();
-    }
-    this.channel = undefined;
-  }
-
-
   public send(payload: T, destination?: string): boolean {
-    if (this.channel === undefined || this.observer === undefined) {
-      console.warn('Cant post message, channel is undefined');
-      return false;
-    }
     let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
     message = this.messageBuffer.add(message);
     if (destination === undefined) {
@@ -105,10 +105,6 @@ export class CommunicationService<T> {
       source: this._identifier.uuid,
       versionVector: this.versionVectorManager.versionVector
     }
-    if (this.channel === undefined) {
-      console.warn('Channel is undefined');
-      return;
-    }
     this.postMessage(message);
   }
 
@@ -124,14 +120,11 @@ export class CommunicationService<T> {
     return this._nodes;
   }
 
-
   get identifier(): Identifier {
     return this._identifier;
   }
 
-
   get isConnected(): boolean {
     return this._isConnected;
   }
-
 }
