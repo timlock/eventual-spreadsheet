@@ -19,7 +19,7 @@ export class CommunicationService<T> {
   private _isConnected: boolean = true;
 
   private postMessage(message: Message<any>) {
-    console.log('SEND MESSAGE ', message);
+    // console.log('SEND MESSAGE ', message);
     this.channel?.postMessage(message);
   }
 
@@ -28,7 +28,7 @@ export class CommunicationService<T> {
       return;
     }
     let message = event.data as Message<T>;
-    console.log('RECEIVE MESSAGE ', message);
+    // console.log('RECEIVE MESSAGE ', message);
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -52,7 +52,7 @@ export class CommunicationService<T> {
     }
     this.observer = observer;
     this.channel = new BroadcastChannel(channelName);
-    this.channel.onmessage = this.onMessage
+    this.channel.onmessage = this.onMessage;
     this.advertiseSelf();
   }
 

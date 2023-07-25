@@ -171,5 +171,4 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   set connectionEnabled(enabled: boolean) {
     this.communicationService.isConnected = enabled;
   }
-
 }

@@ -127,13 +127,13 @@ describe('Raft Node', () => {
       {content: 'D', term: 6}
     ];
     let ids = identifier.multiple(2);
-    cluster.set(ids[0], new RaftNode(ids[0], observer, correctLog));
+    cluster.set(ids[0], new RaftNode(ids[0], observer,false, correctLog));
     let incorrectLog: Log[] = [
       {content: 'A', term: 1},
       {content: 'E', term: 3},
       {content: 'F', term: 4}
     ];
-    cluster.set(ids[1], new RaftNode(ids[1], observer, incorrectLog));
+    cluster.set(ids[1], new RaftNode(ids[1], observer,false, incorrectLog));
     connectCluster(cluster);
     cluster.get(ids[0])?.timeout();
     expect(cluster.get(ids[0])?.allLogs.length).toEqual(correctLog.length);
@@ -150,13 +150,13 @@ describe('Raft Node', () => {
       {content: 'D', term: 6}
     ];
     let ids = identifier.multiple(2);
-    cluster.set(ids[0], new RaftNode(ids[0], observer, correctLog));
+    cluster.set(ids[0], new RaftNode(ids[0], observer,false, correctLog));
     let incorrectLog: Log[] = [
       {content: 'A', term: 2},
       {content: 'E', term: 3},
       {content: 'F', term: 4}
     ];
-    cluster.set(ids[1], new RaftNode(ids[1], observer, incorrectLog));
+    cluster.set(ids[1], new RaftNode(ids[1], observer,false, incorrectLog));
     connectCluster(cluster);
     cluster.get(ids[0])?.timeout();
     expect(cluster.get(ids[0])?.allLogs.length).toEqual(correctLog.length);

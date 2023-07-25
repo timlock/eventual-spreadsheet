@@ -4,7 +4,7 @@ export class Timer {
   private readonly fixed: number;
   private end: number | undefined;
 
-  constructor(min = 3000, max = 6000, fixed = 1500) {
+  constructor(min = 150, max = 300, fixed = 50) {
     this.min = min;
     this.max = max;
     this.fixed = fixed;

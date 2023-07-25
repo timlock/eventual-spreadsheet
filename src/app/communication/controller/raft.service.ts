@@ -24,7 +24,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   constructor(communicationService: CommunicationService<RaftMessage>) {
     this.communicationService = communicationService;
     this.timer = new Timer();
-    this.node = new RaftNode(this.identifier.uuid, this);
+    this.node = new RaftNode(this.identifier.uuid, this, false);
   }
 
   public openChannel(channelName: string, observer: RaftServiceObserver<Payload>) {
@@ -66,7 +66,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     let result = this.node.addNode(nodeId);
     if (result) {
       console.log('Added node: ', nodeId, ' to cluster');
-      if (this.node.clusterSize > 3) {
+      if (this.node.clusterSize > 2) {
         this.node.start();
       }
       this.observer?.onNode(nodeId);
@@ -78,20 +78,15 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     if (this.timer.isTimeUp()) {
       this.node.timeout();
     } else if (remaining !== undefined) {
-      let self = this;
-      setTimeout(() => self.checkTime(), remaining);
+      setTimeout(() => this.checkTime(), remaining);
     }
   }
 
   public restartElectionTimer(): void {
     this.timer.randomDuration();
-    if (this.timer === undefined) {
-      console.log('Found');
-    }
     let remaining = this.timer.remainingTime();
     if (remaining !== undefined) {
-      let self = this;
-      setTimeout(() => self.checkTime(), remaining);
+      setTimeout(() => this.checkTime(), remaining);
     }
   }
 
@@ -100,8 +95,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     this.timer.fixedDuration();
     let remaining = this.timer.remainingTime();
     if (remaining !== undefined) {
-      let self = this;
-      setTimeout(() => self.checkTime(), remaining);
+      setTimeout(() => this.checkTime(), remaining);
     }
   }
 

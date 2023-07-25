@@ -15,7 +15,7 @@ export class ServerState {
 
   public fetchCommittedLogs(): Log[] {
     if (this.lastApplied < this.commitIndex) {
-      let result = this._log.slice(this.lastApplied - 1, this.commitIndex);
+      let result = this._log.slice(this.lastApplied, this.commitIndex);
       this.lastApplied = this.commitIndex;
       return result;
     }
@@ -71,10 +71,10 @@ export class ServerState {
     return this._log[this._log.length - 1]?.term;
   }
 
-  public isUpToDate(logIndex: LogIndex, term?: Term): boolean {
-    return (term !== undefined && this.lastLogTerm !== undefined && term >= this.lastLogTerm)
-      || (term == this.lastLogTerm && logIndex >= this.lastLogIndex)
-      || (term !== undefined && this.lastLogTerm === undefined);
+  public isUpToDate(lastLogIndex: LogIndex, lastLogTerm?: Term): boolean {
+    return (lastLogTerm !== undefined && this.lastLogTerm !== undefined && lastLogTerm >= this.lastLogTerm)
+      || (lastLogTerm === this.lastLogTerm && lastLogIndex >= this.lastLogIndex)
+      || (lastLogTerm !== undefined && this.lastLogTerm === undefined);
   }
 
 }
