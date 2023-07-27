@@ -22,10 +22,6 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
   private channelName: string = 'spreadsheet';
   private communicationService: CommunicationService<Payload>;
   private applicationRef: ApplicationRef;
-  public isEditingColumn = false;
-  private currentColumn = '';
-  public isEditingRow = false;
-  private currentRow = '';
 
   // private ionInput: HTMLIonInputElement | undefined;
 
@@ -34,49 +30,6 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
     this.applicationRef = applicationRef;
     this.communicationService = communicationService;
-  }
-
-  public handleOperation(ev: any, id: string){
-    console.log(ev.detail, id);
-  }
-
-  public editColumn(column: string){
-    if(this.isEditingColumn){
-      this.isEditingColumn = false;
-      return;
-    }
-    this.isEditingColumn = true;
-    this.currentColumn = column;
-  }
-
-  public submitColumnEdit(action?: Action){
-    this.isEditingColumn = false;
-    switch (action){
-      case Action.ADD_COLUMN: this.insertColumn(this.currentColumn);
-      break;
-      case Action.DELETE_COLUMN: this.deleteColumn(this.currentColumn);
-      break;
-    }
-  }
-  public editRow(row: string){
-    if(this.isEditingRow){
-      this.isEditingRow = false;
-      return;
-    }
-    this.isEditingRow = true;
-    this.currentRow = row;
-  }
-
-  public submitRowEdit(action?: Action){
-    console.log(this.currentRow);
-    console.log(action)
-    this.isEditingRow = false;
-    switch (action){
-      case Action.ADD_ROW: this.insertRow(this.currentRow);
-      break;
-      case Action.DELETE_COLUMN: this.deleteRow(this.currentRow);
-      break;
-    }
   }
 
   public ngOnInit() {
@@ -90,6 +43,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    console.log(colId, rowId)
     // this.ionInput?.setFocus();
   }
 
@@ -131,8 +85,6 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     let message = PayloadFactory.deleteColumn(column);
     this.spreadsheetService.deleteColumn(column);
     this.communicationService.send(message!);
-
-
   }
 
   public insertCell(cell: CellDto) {
@@ -207,6 +159,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
         console.warn('Cant perform action for payload: ', payload);
         break;
     }
+    this.applicationRef.tick();
   }
 
 

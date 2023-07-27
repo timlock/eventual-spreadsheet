@@ -92,9 +92,9 @@ export class CrdtTable<T> implements Spreadsheet<T>{
   }
 
 
-  public deleteValue(columnId: string, rowId: string): Uint8Array {
+  public deleteValue(addres: Address): Uint8Array {
     return this.catchUpdate(() =>{
-      this._cells.get(rowId)?.delete(columnId);
+      this._cells.get(addres.row)?.delete(addres.column);
     });
   }
 

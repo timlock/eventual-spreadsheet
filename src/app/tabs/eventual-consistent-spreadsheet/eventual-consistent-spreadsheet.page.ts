@@ -23,7 +23,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
 
   constructor(communicationService: CommunicationService<Uint8Array>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: CrdtSpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
-    this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
+    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
     this.applicationRef = applicationRef;
     this.communicationService = communicationService;
   }
@@ -99,7 +99,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   }
 
   public insertCell(cell: CellDto) {
-    let update = this.spreadsheetService.insertCell(cell);
+    let update = this.spreadsheetService.insertCellById(cell.address, cell.input);
     if (update === undefined) {
       console.warn('Update is undefined');
       return;

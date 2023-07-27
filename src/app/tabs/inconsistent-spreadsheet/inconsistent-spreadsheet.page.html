@@ -34,10 +34,6 @@
       </ion-col>
     </ion-row>
   </ion-grid>
-  <ion-button color="success" (click)="insertRow(currentCell.row)">
-    Insert row
-  </ion-button>
-
   <div class="spreadsheet">
     <table>
       <thead>
@@ -98,60 +94,6 @@
   <ion-button color="primary" (click)=addRow()>
     <ion-icon name="add"></ion-icon>
   </ion-button>
-
-
-  <!--  <ion-list>-->
-  <!--    <ion-item>-->
-  <!--      <ion-select interface="popover" (ionChange)="handleOperation($event)">-->
-  <!--        <ion-select-option value="apples">Apples</ion-select-option>-->
-  <!--        <ion-select-option value="oranges">Oranges</ion-select-option>-->
-  <!--        <ion-select-option value="bananas">Bananas</ion-select-option>-->
-  <!--      </ion-select>-->
-  <!--    </ion-item>-->
-  <!--  </ion-list>-->
-
-  <ion-modal [isOpen]="isEditingColumn">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Column Action</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="submitColumnEdit()">Close</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content>
-        <ion-button expand="block" color="success" (click)="submitColumnEdit(Action.INSERT_COLUMN)">
-          Insert column
-        </ion-button>
-        <ion-button expand="block" color="danger" (click)="submitColumnEdit(Action.INSERT_COLUMN)">
-          Delete column
-        </ion-button>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
-
-  <ion-modal [isOpen]="isEditingRow">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Row Action</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="submitRowEdit()">Close</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content>
-        <ion-button expand="block" color="success" (click)="submitRowEdit(Action.INSERT_ROW)">
-          Insert Row
-        </ion-button>
-        <ion-button expand="block" color="danger" (click)="submitRowEdit(Action.DELETE_ROW)">
-          Delete Row
-        </ion-button>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
-
 
   <!--  <ion-grid class="ion-spreadsheet">-->
   <!--    <ion-row>-->
