@@ -16,6 +16,7 @@ export class CrdtSpreadsheetService {
 
   public applyUpdate(update: Uint8Array) {
     this.table.applyUpdate(update);
+    this.spreadsheetSolver.reset();
   }
 
 

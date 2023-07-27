@@ -20,7 +20,6 @@ export class CrdtTable<T> implements Spreadsheet<T>{
     });
     action();
     this.ydoc.off(CrdtTable.UPDATE_MODE, () => {});
-    updates.forEach(update => Y.logUpdateV2(update));
     return Y.mergeUpdatesV2(updates);
   }
 
