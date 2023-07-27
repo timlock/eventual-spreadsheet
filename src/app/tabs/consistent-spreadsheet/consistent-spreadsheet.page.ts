@@ -26,7 +26,7 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
 
   constructor(raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
-    this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
+    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
     this.applicationRef = applicationRef;
     this.raftService = raftService;
   }
@@ -135,8 +135,7 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
     switch (message.action) {
       case Action.INSERT_CELL:
         let address: Address = {column: message.column!, row: message.row!};
-        let cell = new CellDto(address, message.input!);
-        this.spreadsheetService.insertCell(cell);
+        this.spreadsheetService.insertCellById(address, message.input!);
         break;
       case Action.ADD_ROW:
         this.spreadsheetService.addRow(message.input!);

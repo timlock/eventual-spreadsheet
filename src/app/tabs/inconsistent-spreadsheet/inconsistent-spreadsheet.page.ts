@@ -1,4 +1,4 @@
-import {ApplicationRef, Component, OnInit} from '@angular/core';
+import {AfterViewInit, ApplicationRef, Component, OnInit} from '@angular/core';
 import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
@@ -16,30 +16,81 @@ import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage implements OnInit, CommunicationServiceObserver<Payload> {
+export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Payload> {
   private spreadsheetService: SpreadsheetService;
   private _currentCell: CellDto;
   private channelName: string = 'spreadsheet';
   private communicationService: CommunicationService<Payload>;
   private applicationRef: ApplicationRef;
-  private _messageList: [string, Payload][] = [];
+  public isEditingColumn = false;
+  private currentColumn = '';
+  public isEditingRow = false;
+  private currentRow = '';
+
+  // private ionInput: HTMLIonInputElement | undefined;
 
   constructor(communicationService: CommunicationService<Payload>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
     this.spreadsheetService = spreadsheetService;
-    this._currentCell = this.spreadsheetService.getCellByIndex(0, 0);
+    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
     this.applicationRef = applicationRef;
     this.communicationService = communicationService;
   }
 
+  public handleOperation(ev: any, id: string){
+    console.log(ev.detail, id);
+  }
 
-  ngOnInit() {
+  public editColumn(column: string){
+    if(this.isEditingColumn){
+      this.isEditingColumn = false;
+      return;
+    }
+    this.isEditingColumn = true;
+    this.currentColumn = column;
+  }
+
+  public submitColumnEdit(action?: Action){
+    this.isEditingColumn = false;
+    switch (action){
+      case Action.ADD_COLUMN: this.insertColumn(this.currentColumn);
+      break;
+      case Action.DELETE_COLUMN: this.deleteColumn(this.currentColumn);
+      break;
+    }
+  }
+  public editRow(row: string){
+    if(this.isEditingRow){
+      this.isEditingRow = false;
+      return;
+    }
+    this.isEditingRow = true;
+    this.currentRow = row;
+  }
+
+  public submitRowEdit(action?: Action){
+    console.log(this.currentRow);
+    console.log(action)
+    this.isEditingRow = false;
+    switch (action){
+      case Action.ADD_ROW: this.insertRow(this.currentRow);
+      break;
+      case Action.DELETE_COLUMN: this.deleteRow(this.currentRow);
+      break;
+    }
+  }
+
+  public ngOnInit() {
     this.communicationService.openChannel(this.channelName, this);
+  }
+
+  public ngAfterViewInit() {
+    // this.ionInput = document.getElementsByName('input')[0] as HTMLIonInputElement;
   }
 
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    // this.applicationRef.tick();
+    // this.ionInput?.setFocus();
   }
 
   public addRow() {
@@ -47,7 +98,6 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let message = PayloadFactory.addRow(id);
     this.spreadsheetService.addRow(id);
     this.communicationService.send(message!);
-    this.messageList.unshift([this.identifier.uuid, message]);
   }
 
   public insertRow(row: string) {
@@ -55,18 +105,12 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let message = PayloadFactory.insertRow(id, row);
     this.spreadsheetService.insertRow(id, row);
     this.communicationService.send(message!);
-
-    this.messageList.unshift([this.identifier.uuid, message]);
-
   }
 
   public deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
     this.spreadsheetService.deleteRow(row);
     this.communicationService.send(message!);
-
-    this.messageList.unshift([this.identifier.uuid, message]);
-
   }
 
   public addColumn() {
@@ -74,9 +118,6 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let message = PayloadFactory.addColumn(id);
     this.spreadsheetService.addColumn(id);
     this.communicationService.send(message!);
-
-    this.messageList.unshift([this.identifier.uuid, message]);
-
   }
 
   public insertColumn(column: string) {
@@ -84,25 +125,20 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     let message = PayloadFactory.insertColumn(id, column);
     this.spreadsheetService.insertColumn(id, column);
     this.communicationService.send(message!);
-
-    this.messageList.unshift([this.identifier.uuid, message]);
-
   }
 
   public deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
     this.spreadsheetService.deleteColumn(column);
     this.communicationService.send(message!);
-    this.messageList.unshift([this.identifier.uuid, message]);
+
 
   }
 
   public insertCell(cell: CellDto) {
     let message = PayloadFactory.insertCell(cell.address, cell.input);
-    this.spreadsheetService.insertCell(cell);
+    this.spreadsheetService.insertCellById(cell.address, cell.input);
     this.communicationService.send(message!);
-    this.messageList.unshift([this.identifier.uuid, message]);
-
   }
 
   public deleteCell(cell: CellDto) {
@@ -135,7 +171,6 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
       console.warn('Invalid message', message);
       return;
     }
-    this._messageList.push([source, message]);
     this.performAction(message);
     this.applicationRef.tick();
   }
@@ -148,8 +183,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     switch (payload.action) {
       case Action.INSERT_CELL:
         let address: Address = {column: payload.column!, row: payload.row!};
-        let cell = new CellDto(address, payload.input!);
-        this.spreadsheetService.insertCell(cell);
+        this.spreadsheetService.insertCellById(address, payload.input!);
         break;
       case Action.ADD_ROW:
         this.spreadsheetService.addRow(payload.input!);
@@ -175,9 +209,6 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
     }
   }
 
-  get messageList(): [string, Payload][] {
-    return this._messageList;
-  }
 
   get nodes(): Set<string> {
     return this.communicationService.nodes;
@@ -198,5 +229,7 @@ export class InconsistentSpreadsheetPage implements OnInit, CommunicationService
   set connectionEnabled(enabled: boolean) {
     this.communicationService.isConnected = enabled;
   }
+
+  protected readonly Action = Action;
 }
 

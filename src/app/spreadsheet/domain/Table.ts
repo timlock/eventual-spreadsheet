@@ -51,8 +51,8 @@ export class Table<T> implements Spreadsheet<T>{
   }
 
 
-  public deleteValue(columnId: string, rowId: string) {
-    this.cells.get(rowId)?.delete(columnId);
+  public deleteValue(address: Address) {
+    this.cells.get(address.row)?.delete(address.column);
   }
 
   public get(address: Address): T | undefined {

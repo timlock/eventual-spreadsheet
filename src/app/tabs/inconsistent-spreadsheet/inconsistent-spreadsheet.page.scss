@@ -1,9 +1,48 @@
-.cell {
-  border: solid 1px #000000;
-}
-
 .table-header {
-  background: #cdcfd6;
-  font-weight: bold;
+  color: grey;
   text-align: center;
 }
+
+.small-cell {
+  width: 120px;
+}
+
+.cell {
+  width: 150px;
+}
+
+.selected {
+  border: solid 5px black;
+  min-height: 30px;
+  min-width: 150px;
+}
+
+.spreadsheet {
+  overflow-x: auto;
+
+  table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  td, th {
+    border: solid 1px lightgray;
+    height: 30px;
+  }
+}
+
+.options {
+  border: solid 1px lightgray;
+}
+
+//.ion-spreadsheet {
+//  --ion-grid-columns: 26;
+//
+//  ion-row {
+//    ion-col {
+//      border: solid 1px lightgray;
+//    }
+//  }
+//}
+
+

@@ -16,12 +16,10 @@ export class SpreadsheetService {
   public constructor() {
     let counter = 0;
     let tag = 'init';
-    this.addRow(tag + counter++);
-    this.addRow(tag + counter++);
-    this.addRow(tag + counter++);
-    this.addColumn(tag + counter++);
-    this.addColumn(tag + counter++);
-    this.addColumn(tag + counter++);
+    for (let i = 0; i < 10; i++) {
+      this.addRow(tag + counter++);
+      this.addColumn(tag + counter++);
+    }
     this.spreadsheetSolver.reset();
   }
 
@@ -56,18 +54,18 @@ export class SpreadsheetService {
     this.spreadsheetSolver.reset();
   }
 
-  public insertCell(cellDto: CellDto) {
-    if (cellDto.input.trim().length === 0) {
-      this.deleteCell(cellDto);
+  public insertCellById(address: Address, input: string) {
+    if (input.trim().length === 0) {
+      this.deleteCell(address);
     } else {
-      let cell = CellParser.parseCell(cellDto.input);
-      this.table.set(cellDto.address, cell);
+      let cell = CellParser.parseCell(input);
+      this.table.set(address, cell);
     }
     this.spreadsheetSolver.reset();
   }
 
-  public deleteCell(cellDto: CellDto) {
-    this.table.deleteValue(cellDto.column, cellDto.row);
+  public deleteCell(address: Address) {
+    this.table.deleteValue(address);
     this.spreadsheetSolver.reset();
   }
 
@@ -75,88 +73,19 @@ export class SpreadsheetService {
     return this.spreadsheetSolver.solve();
   }
 
-  // public renderTable(): Table<Cell> {
-  //   if (this.renderedTable === undefined) {
-  //     this.renderedTable = new Table<Cell>();
-  //     this.rows.forEach(row => this.renderedTable?.addRow(row));
-  //     this.columns.forEach(column => this.renderedTable?.addColumn(column));
-  //     this.renderSimpleCells(this.renderedTable);
-  //     let formulas = this.collectFormulas(this.table);
-  //     this.renderFormulas(formulas, this.renderedTable);
-  //     console.log('Table rendered');
-  //   }
-  //   return this.renderedTable;
-  // }
-  //
-  // private renderSimpleCells(renderedTable: Table<Cell>) {
-  //   for (const rowId of this.rows) {
-  //     for (const colId of this.columns) {
-  //       let address: Address = {column: colId, row: rowId};
-  //       let cell = this.table.get(address)!;
-  //       if (cell === undefined) {
-  //         renderedTable.set(address, emptyCell());
-  //       } else if (typeof cell.content === 'number' || typeof cell.content === 'string') {
-  //         renderedTable.set(address, cell);
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // private collectFormulas(table: Table<Cell>): [Address, Address[]][] {
-  //   let formulas: [Address, Address[]][] = [];
-  //   for (const rowId of this.rows) {
-  //     for (const colId of this.columns) {
-  //       let address: Address = {column: colId, row: rowId};
-  //       let cell = table.get(address)!;
-  //       if (cell != undefined && cell.content !== undefined && isFormula(cell.content)) {
-  //         let addressRange = this.table.getAddressRange(cell.content.range);
-  //         formulas.push([{column: colId, row: rowId}, addressRange]);
-  //       }
-  //     }
-  //   }
-  //   return formulas;
-  // }
-  //
-  // private renderFormulas(formulas: [Address, Address[]][], renderedTable: Table<Cell>) {
-  //   let sorter = new GraphSorter();
-  //   formulas = formulas.filter(formula => this.renderedTable?.get(formula[0]) === undefined);
-  //   formulas.forEach(v => sorter.addCell(v));
-  //   for (const group of sorter.sort()) {
-  //     for (const address of group) {
-  //       let formulaCell = this.table.get(address)!;
-  //       let result = this.computeFormula(formulaCell.content as Formula);
-  //       renderedTable.set(address, {rawInput: formulaCell.rawInput, content: result});
-  //     }
-  //   }
-  // }
-  //
-  //
-  // private computeFormula(formula: Formula): number {
-  //   let cells = this.renderedTable!.getCellRange(formula.range)
-  //     .map(c => c.content)
-  //     .filter(cell => typeof cell === 'number')
-  //     .map(cell => cell as number);
-  //   switch (formula.type) {
-  //     case FormulaType.SUM:
-  //       return cells.length != 0 ? cells.reduce((acc, i) => acc + i) : 0;
-  //     case FormulaType.MAX:
-  //       return Math.max.apply(null, cells);
-  //     case FormulaType.MIN:
-  //       return Math.min.apply(null, cells);
-  //   }
-  // }
-
   public getCellById(address: Address): CellDto {
     let cell = this.getTable().get(address);
+    let colIndex = this.columns.indexOf(address.column) + 1;
+    let rowIndex = this.rows.indexOf(address.row) + 1;
     if (cell === undefined) {
-      return new CellDto(address, '');
+      return new CellDto(address, colIndex, rowIndex, '');
     }
-    return new CellDto(address, cell.rawInput);
+    return new CellDto(address, colIndex, rowIndex, cell.rawInput);
   }
 
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
-    let column = this.columns[columnIndex];
-    let row = this.rows[rowIndex];
+    let column = this.columns[columnIndex - 1];
+    let row = this.rows[rowIndex - 1];
     return this.getCellById({column: column, row: row});
   }
 

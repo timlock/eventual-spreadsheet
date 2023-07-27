@@ -175,9 +175,9 @@ export class CrdtSpreadsheetService {
   public getCellById(address: Address): CellDto {
     let cell = this.getTable().get(address);
     if (cell === undefined) {
-      return new CellDto(address, '');
+      return new CellDto(address, 1, 1, '');
     }
-    return new CellDto(address, cell.rawInput);
+    return new CellDto(address, 1, 1, cell.rawInput);
   }
 
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
