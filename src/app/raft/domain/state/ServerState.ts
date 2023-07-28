@@ -26,6 +26,14 @@ export class ServerState {
     return this._log.slice(lastReplicated);
   }
 
+  public replaceInvalidLogs(logIndex: LogIndex): boolean {
+    if (this._log[logIndex] === undefined) {
+      return false;
+    }
+    this._log.splice(logIndex);
+    return true;
+  }
+
   get currentTerm(): Term {
     return this._currentTerm;
   }

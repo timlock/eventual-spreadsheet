@@ -33,6 +33,9 @@ export class CommunicationService<T> {
       this.channel.close();
     }
     this.channel = undefined;
+    this._nodes.clear();
+    this.messageBuffer = new MessageBuffer<T>();
+    this.versionVectorManager = new VersionVectorManager();
   }
 
 
@@ -116,6 +119,10 @@ export class CommunicationService<T> {
     }
   }
 
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+
   get nodes(): Set<string> {
     return this._nodes;
   }
@@ -124,7 +131,5 @@ export class CommunicationService<T> {
     return this._identifier;
   }
 
-  get isConnected(): boolean {
-    return this._isConnected;
-  }
+
 }

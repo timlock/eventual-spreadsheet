@@ -20,6 +20,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'eventual-consistent';
+  private ionInput: any | undefined;
 
   constructor(
     communicationService: CommunicationService<Uint8Array>,
@@ -39,8 +40,13 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
     this.communicationService.openChannel(this.channelName, this);
   }
 
+  public ngAfterViewInit() {
+    this.ionInput = document.getElementsByName('input')[0];
+  }
+
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    this.ionInput?.setFocus();
   }
 
 

@@ -24,7 +24,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'inconsistent';
-  private ionInput: HTMLIonInputElement | undefined;
+  private ionInput: any | undefined;
 
   constructor(
     communicationService: CommunicationService<Payload>,
@@ -43,14 +43,13 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
   }
 
   public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('input')[0] as HTMLIonInputElement;
+    this.ionInput = document.getElementsByName('input')[0];
   }
 
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     this.ionInput?.setFocus();
-    console.log(this.ionInput)
   }
 
   public addRow() {

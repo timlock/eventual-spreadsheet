@@ -4,7 +4,11 @@ import {RaftObserverBuilder} from "./RaftObserverBuilder";
 import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "./domain/message/RequestVoteRequest";
 import {RaftNode} from "./RaftNode";
 import {NodeId, RaftMessage} from "./domain/Types";
-import {AppendEntriesRequest, isAppendEntriesRequest, isAppendEntriesResponse} from "./domain/message/AppendEntriesRequest";
+import {
+  AppendEntriesRequest,
+  isAppendEntriesRequest,
+  isAppendEntriesResponse
+} from "./domain/message/AppendEntriesRequest";
 import {RaftNodeObserver} from "./RaftNodeObserver";
 import {Log} from "./domain/message/Log";
 
@@ -127,13 +131,13 @@ describe('Raft Node', () => {
       {content: 'D', term: 6}
     ];
     let ids = identifier.multiple(2);
-    cluster.set(ids[0], new RaftNode(ids[0], observer,false, correctLog));
+    cluster.set(ids[0], new RaftNode(ids[0], observer, false, correctLog));
     let incorrectLog: Log[] = [
       {content: 'A', term: 1},
       {content: 'E', term: 3},
       {content: 'F', term: 4}
     ];
-    cluster.set(ids[1], new RaftNode(ids[1], observer,false, incorrectLog));
+    cluster.set(ids[1], new RaftNode(ids[1], observer, false, incorrectLog));
     connectCluster(cluster);
     cluster.get(ids[0])?.timeout();
     expect(cluster.get(ids[0])?.allLogs.length).toEqual(correctLog.length);
@@ -141,8 +145,10 @@ describe('Raft Node', () => {
   });
 
   it('AppendEntriesRequest correct all logs', () => {
+    let logsCorrectedCounter = 0;
     let sendMessage = (receiver: string, message: RaftMessage) => cluster.get(receiver)?.handleMessage(message);
-    let observer = new RaftObserverBuilder().sendMessage(sendMessage).build();
+    let onLogsCorrected = (log: Log[]) => logsCorrectedCounter++;
+    let observer = new RaftObserverBuilder().sendMessage(sendMessage).onLogsCorrected(onLogsCorrected).build();
     let correctLog: Log[] = [
       {content: 'A', term: 1},
       {content: 'B', term: 4},
@@ -150,17 +156,18 @@ describe('Raft Node', () => {
       {content: 'D', term: 6}
     ];
     let ids = identifier.multiple(2);
-    cluster.set(ids[0], new RaftNode(ids[0], observer,false, correctLog));
+    cluster.set(ids[0], new RaftNode(ids[0], observer, false, correctLog));
     let incorrectLog: Log[] = [
-      {content: 'A', term: 2},
+      {content: 'A', term: 1},
       {content: 'E', term: 3},
       {content: 'F', term: 4}
     ];
-    cluster.set(ids[1], new RaftNode(ids[1], observer,false, incorrectLog));
+    cluster.set(ids[1], new RaftNode(ids[1], observer, true, incorrectLog));
     connectCluster(cluster);
     cluster.get(ids[0])?.timeout();
     expect(cluster.get(ids[0])?.allLogs.length).toEqual(correctLog.length);
     expect(cluster.get(ids[0])?.allLogs).toEqual(correctLog);
+    expect(logsCorrectedCounter).toEqual(1);
   });
 
   it('Append first entry', () => {
@@ -192,5 +199,25 @@ describe('Raft Node', () => {
     expect(successCounter).toEqual(1);
     expect(failureCounter).toEqual(0);
     expect(lastLogIndex).toEqual(1);
+  });
+
+
+  it('requestVoteRequest failure old logs but higher term', () => {
+    let sendMessage = (receiver: string, message: RaftMessage) => {
+      expect(isRequestVoteResponse(message)).toBeTrue();
+      if (isRequestVoteResponse(message)) {
+        expect(message.voteGranted).toBeFalse();
+        expect(message.term).toEqual(3);
+      }
+    };
+    let observer = new RaftObserverBuilder().sendMessage(sendMessage).build();
+    let logs: Log[] = [
+      {content: 1, term: 2},
+      {content: 2, term: 2},
+      {content: 3, term: 2}
+    ]
+    let node = new RaftNode(identifier.next(), observer, true, logs);
+    let message: RequestVoteRequest = {term: 3, lastLogTerm: 2, lastLogIndex: 2, candidateId: 'test'};
+    node.handleMessage(message);
   });
 });

@@ -7,25 +7,28 @@
   <ion-grid>
     <ion-row>
       <ion-col size="auto">
-        <ion-item lines="none">
-          <!--          <ion-toggle [(ngModel)]="connectionEnabled">-->
-          <!--            <ion-title>Global coordination</ion-title>-->
-          <!--          </ion-toggle>-->
-        </ion-item>
+        <ion-toggle [(ngModel)]="connectionEnabled">
+          <ion-title>Global coordination</ion-title>
+        </ion-toggle>
       </ion-col>
       <ion-col>
-        <ion-item lines="none">
-          <ion-title>Remote nodes: {{clusterSize}}</ion-title>
-        </ion-item>
+        <ion-title>Remote nodes: {{clusterSize}}</ion-title>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col>
+        <ion-title>Current role: {{raftMetaData.role}}</ion-title>
+      </ion-col>
+      <ion-col>
+        <ion-title>Current term: {{raftMetaData.term}}</ion-title>
+      </ion-col>
+      <ion-col>
+        <ion-title>Last log index: {{raftMetaData.lastLogIndex}}</ion-title>
       </ion-col>
     </ion-row>
     <ion-row>
       <ion-col size="auto">
-        <ion-item lines="none">
-          <ion-label>
-            <ion-title>{{currentCell.colIndex}}|{{currentCell.rowIndex}}</ion-title>
-          </ion-label>
-        </ion-item>
+        <ion-title class="ion-padding-top">{{currentCell.colIndex}}|{{currentCell.rowIndex}}</ion-title>
       </ion-col>
       <ion-col>
         <form (submit)="insertCell(currentCell)">

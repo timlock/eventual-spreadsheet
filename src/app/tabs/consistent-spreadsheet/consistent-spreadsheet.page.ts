@@ -1,7 +1,7 @@
 import {Component, NgZone, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
-import {RaftService} from "../../communication/controller/raft.service";
+import {RaftService} from "../../raft/raft.service";
 import {Action} from "../../spreadsheet/util/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
@@ -10,6 +10,7 @@ import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 import {Table} from "../../spreadsheet/domain/Table";
+import {RaftMetaData} from "../../raft/RaftMetaData";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
@@ -24,7 +25,8 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'consistent';
-  private _role: string = '';
+  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
+  private ionInput: any | undefined;
 
   constructor(
     raftService: RaftService,
@@ -39,58 +41,62 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
   }
 
 
-  ngOnInit() {
+  public ngOnInit() {
     this.raftService.openChannel(this.channelName, this);
   }
 
+  public ngAfterViewInit() {
+    this.ionInput = document.getElementsByName('input')[0];
+  }
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    this.ionInput?.setFocus();
   }
 
   public addRow() {
     let id = this.identifier.next();
     let message = PayloadFactory.addRow(id);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertRow(id, row);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
   public deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
   public addColumn() {
     let id = this.identifier.next();
     let message = PayloadFactory.addColumn(id);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertColumn(id, column);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
   public deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
   public insertCell(cell: CellDto) {
     let message = PayloadFactory.insertCell(cell.address, cell.input);
-    this.raftService.postMessage(message);
+    this.raftService.performAction(message);
     return;
   }
 
@@ -124,8 +130,8 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
     this.ngZone.run(() => this._nodes = this.raftService.nodes);
   }
 
-  public onRoleChange(newRole: string) {
-    this.ngZone.run(() => this._role = newRole);
+  public onStateChange(state: RaftMetaData) {
+    this.ngZone.run(() => this._raftMetaData = state);
   }
 
   private performAction(message: Payload) {
@@ -181,17 +187,23 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
     return this.raftService.identifier;
   }
 
-  get role(): string {
-    return this._role;
+  get connectionEnabled(): boolean {
+    return this.raftService.isConnected;
   }
 
-  // get connectionEnabled(): boolean {
-  //   return this.raftService.isConnected;
-  // }
-  //
-  // set connectionEnabled(enabled: boolean) {
-  //   this.raftService.isConnected = enabled;
-  // }
+  set connectionEnabled(enabled: boolean) {
+    this.raftService.isConnected = enabled;
+  }
+
+  get raftMetaData(): RaftMetaData {
+    this._raftMetaData = this.raftService.getMetaData();
+    return this._raftMetaData;
+  }
+
+  public onLogsCorrected(log: Payload[]) {
+    this.spreadsheetService.reset();
+    log.forEach(l => this.onMessage(l));
+  }
 }
 
 

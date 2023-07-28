@@ -1,14 +1,15 @@
 import {Injectable} from '@angular/core';
-import {CommunicationService} from "./communication.service";
-import {NodeId, RaftMessage} from "../../raft/domain/Types";
-import {CommunicationServiceObserver} from "./CommunicationServiceObserver";
-import {Timer} from "../../raft/Timer";
-import {RaftNode} from "../../raft/RaftNode";
-import {Identifier} from "../../Identifier";
-import {RaftNodeObserver} from "../../raft/RaftNodeObserver";
-import {Log} from "../../raft/domain/message/Log";
-import {isPayload, Payload} from "../../spreadsheet/util/Payload";
-import {RaftServiceObserver} from "./RaftServiceObserver";
+import {CommunicationService} from "../communication/controller/communication.service";
+import {NodeId, RaftMessage} from "./domain/Types";
+import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
+import {Timer} from "./Timer";
+import {RaftNode} from "./RaftNode";
+import {Identifier} from "../Identifier";
+import {RaftNodeObserver} from "./RaftNodeObserver";
+import {Log} from "./domain/message/Log";
+import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {RaftServiceObserver} from "../communication/controller/RaftServiceObserver";
+import {RaftMetaData} from "./RaftMetaData";
 
 
 @Injectable({
@@ -20,11 +21,12 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   private readonly node: RaftNode;
   private observer: RaftServiceObserver<Payload> | undefined;
   private channelName: string = 'raft';
+  private _isConnected: boolean = true;
 
   constructor(communicationService: CommunicationService<RaftMessage>) {
     this.communicationService = communicationService;
     this.timer = new Timer();
-    this.node = new RaftNode(this.identifier.uuid, this, false);
+    this.node = new RaftNode(this.identifier.uuid, this, true);
   }
 
   public openChannel(channelName: string, observer: RaftServiceObserver<Payload>) {
@@ -38,13 +40,13 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     this.communicationService.closeChannel();
   }
 
-  public postMessage(message: Payload): boolean {
+  public performAction(message: Payload): boolean {
     this.node.command(message);
     return true;
   }
 
   public onLog(log: Log): void {
-    if(isPayload(log.content)){
+    if (isPayload(log.content)) {
       this.observer?.onMessage(log.content);
       console.log('Log applied: ', log);
       return;
@@ -53,12 +55,16 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   }
 
   public sendMessage(destination: NodeId, raftMessage: RaftMessage): void {
-    this.communicationService.send(raftMessage, destination);
+    if (this._isConnected) {
+      this.communicationService.send(raftMessage, destination);
+    }
   }
 
 
   public onMessage(message: RaftMessage, source: string): void {
-    this.node.handleMessage(message);
+    if (this._isConnected) {
+      this.node.handleMessage(message);
+    }
   }
 
 
@@ -105,5 +111,26 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   get identifier(): Identifier {
     return this.communicationService.identifier;
+  }
+
+  set isConnected(value: boolean) {
+    this._isConnected = value;
+  }
+
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  public onStateChange(state: RaftMetaData): void {
+    this.observer?.onStateChange(state);
+  }
+
+  public getMetaData(): RaftMetaData {
+    return this.node.getMetaData();
+  }
+
+  public onLogsCorrected(log: Log[]): void {
+    let operations = log.map(l => l.content);
+    this.observer?.onLogsCorrected(operations);
   }
 }

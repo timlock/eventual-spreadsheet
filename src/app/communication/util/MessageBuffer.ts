@@ -35,4 +35,5 @@ export class MessageBuffer<T> {
     }
     return result;
   }
+
 }
