@@ -72,7 +72,8 @@ export class ServerState {
   }
 
   public isUpToDate(lastLogIndex: LogIndex, lastLogTerm?: Term): boolean {
-    return (lastLogTerm !== undefined && this.lastLogTerm !== undefined && lastLogTerm >= this.lastLogTerm)
+    return (lastLogTerm !== undefined && this.lastLogTerm !== undefined &&
+        (lastLogTerm > this.lastLogTerm || lastLogTerm === this.lastLogTerm && lastLogIndex > this.lastLogIndex))
       || (lastLogTerm === this.lastLogTerm && lastLogIndex >= this.lastLogIndex)
       || (lastLogTerm !== undefined && this.lastLogTerm === undefined);
   }
