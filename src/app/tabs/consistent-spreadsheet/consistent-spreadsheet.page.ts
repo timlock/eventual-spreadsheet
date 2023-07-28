@@ -1,4 +1,4 @@
-import {ApplicationRef, Component, OnInit} from '@angular/core';
+import {Component, NgZone, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../communication/controller/raft.service";
@@ -9,6 +9,7 @@ import {RaftServiceObserver} from "../../communication/controller/RaftServiceObs
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
+import {Table} from "../../spreadsheet/domain/Table";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
@@ -16,19 +17,25 @@ import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
 export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Payload> {
-  private spreadsheetService: SpreadsheetService;
-  private _currentCell: CellDto;
-  private channelName: string = 'spreadsheet';
   private raftService: RaftService;
-  private applicationRef: ApplicationRef;
-  private _messageList: Payload[] = [];
+  private spreadsheetService: SpreadsheetService;
+  private ngZone: NgZone;
+  private _table: Table<Cell>;
+  private _currentCell: CellDto;
+  private _nodes: Set<string> = new Set<string>();
+  private channelName: string = 'consistent';
   private _role: string = '';
 
-  constructor(raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
-    this.spreadsheetService = spreadsheetService;
-    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
-    this.applicationRef = applicationRef;
+  constructor(
+    raftService: RaftService,
+    spreadsheetService: SpreadsheetService,
+    ngZone: NgZone
+  ) {
     this.raftService = raftService;
+    this.spreadsheetService = spreadsheetService;
+    this.ngZone = ngZone;
+    this._table = this.spreadsheetService.getTable();
+    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
 
 
@@ -96,18 +103,9 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
     return this.spreadsheetService.getTable().get({column: column, row: row});
   }
 
-
-  get rows(): string[] {
-    return this.spreadsheetService.rows;
-  }
-
-  get columns(): string[] {
-    return this.spreadsheetService.columns;
-  }
-
   get currentCell(): CellDto {
-    if (this.rows.indexOf(this._currentCell.row) === -1 || this.columns.indexOf(this._currentCell.column) === -1) {
-      this.selectCell(this.columns[0], this.rows[0]);
+    if (this._table.rows.indexOf(this._currentCell.row) === -1 || this._table.columns.indexOf(this._currentCell.column) === -1) {
+      this.selectCell(this._table.columns[0], this._table.rows[0]);
     }
     return this._currentCell;
   }
@@ -117,18 +115,17 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
       console.warn('Invalid message', message);
       return;
     }
-    this._messageList.push(message);
     this.performAction(message);
-    this.applicationRef.tick();
+    this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
   }
 
   public onNode(nodeId: string) {
-    this.applicationRef.tick();
+    this._nodes.add(nodeId);
+    this.ngZone.run(() => this._nodes = this.raftService.nodes);
   }
 
   public onRoleChange(newRole: string) {
-    this._role = newRole;
-    this.applicationRef.tick();
+    this.ngZone.run(() => this._role = newRole);
   }
 
   private performAction(message: Payload) {
@@ -162,12 +159,18 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
   }
 
 
-  get messageList(): Payload[] {
-    return this._messageList;
+  get table(): Table<Cell> {
+    this._table = this.spreadsheetService.getTable();
+    return this._table;
+  }
+
+  set table(value: Table<Cell>) {
+    this._table = value;
   }
 
   get nodes(): Set<string> {
-    return this.raftService.nodes;
+    this._nodes = this.raftService.nodes;
+    return this._nodes;
   }
 
   get clusterSize(): number {
@@ -178,10 +181,17 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
     return this.raftService.identifier;
   }
 
-
   get role(): string {
     return this._role;
   }
+
+  // get connectionEnabled(): boolean {
+  //   return this.raftService.isConnected;
+  // }
+  //
+  // set connectionEnabled(enabled: boolean) {
+  //   this.raftService.isConnected = enabled;
+  // }
 }
 
 

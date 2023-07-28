@@ -33,7 +33,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
   public insertRow(id: string, before: string): Uint8Array | undefined {
     let index = this.rows.indexOf(before);
     if (index == -1) {
-      console.log("Failed to insert id:" + id + " before id: " + before + " in rows: " + this._rows);
+      console.log("Failed to insert id:" + id + " before id: " + before + " in rows: " + this.rows);
       return undefined;
     }
     return this.catchUpdate(() =>{
@@ -46,7 +46,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
   public deleteRow(id: string): Uint8Array | undefined {
     let index = this.rows.indexOf(id);
     if (index == -1) {
-      console.log("Failed to remove id:" + id + " in rows: " + this._rows);
+      console.log("Failed to remove id:" + id + " in rows: " + this.rows);
       return undefined;
     }
     if (this._keepRows.has(id)) {
@@ -68,7 +68,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
   public insertColumn(id: string, column: string): Uint8Array | undefined {
     let index = this.columns.indexOf(column);
     if (index == -1) {
-      console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);
+      console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this.columns);
       return undefined;
     }
     return this.catchUpdate(() =>{
@@ -80,7 +80,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
   public deleteColumn(id: string): Uint8Array | undefined {
     let index = this.columns.indexOf(id);
     if (index == -1) {
-      console.log("Failed to remove id:" + id + " in columns: " + this._columns);
+      console.log("Failed to remove id:" + id + " in columns: " + this.columns);
       return;
     }
     if (this._keepColumns.has(id)) {

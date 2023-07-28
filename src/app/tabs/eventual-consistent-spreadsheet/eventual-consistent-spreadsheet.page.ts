@@ -1,12 +1,11 @@
-import {ApplicationRef, Component, OnInit} from '@angular/core';
+import {Component, NgZone, OnInit} from '@angular/core';
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
-import {Payload} from "../../spreadsheet/util/Payload";
-import {RaftService} from "../../communication/controller/raft.service";
 import {Identifier} from "../../Identifier";
 import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Cell} from "../../spreadsheet/domain/Cell";
+import {Table} from "../../spreadsheet/domain/Table";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
@@ -14,18 +13,25 @@ import {Cell} from "../../spreadsheet/domain/Cell";
   styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
 export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationServiceObserver<Uint8Array> {
-  private spreadsheetService: CrdtSpreadsheetService;
-  private _currentCell: CellDto;
-  private channelName: string = 'spreadsheet';
   private communicationService: CommunicationService<Uint8Array>;
-  private applicationRef: ApplicationRef;
-  private _messageList: [string, Payload][] = [];
+  private spreadsheetService: CrdtSpreadsheetService;
+  private ngZone: NgZone;
+  private _table: Table<Cell>;
+  private _currentCell: CellDto;
+  private _nodes: Set<string> = new Set<string>();
+  private channelName: string = 'eventual-consistent';
 
-  constructor(communicationService: CommunicationService<Uint8Array>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: CrdtSpreadsheetService) {
-    this.spreadsheetService = spreadsheetService;
-    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
-    this.applicationRef = applicationRef;
+  constructor(
+    communicationService: CommunicationService<Uint8Array>,
+    spreadsheetService: CrdtSpreadsheetService,
+    ngZone: NgZone
+  ) {
     this.communicationService = communicationService;
+    this.spreadsheetService = spreadsheetService;
+    this.ngZone = ngZone;
+    this._table = this.spreadsheetService.getTable();
+    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
+
   }
 
 
@@ -35,7 +41,6 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    // this.applicationRef.tick();
   }
 
 
@@ -112,29 +117,18 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
     this.insertCell(cell);
   }
 
-  public getCell(column: string, row: string): Cell | undefined {
-    return this.spreadsheetService.getTable().get({column: column, row: row});
-  }
-
-
-  get rows(): string[] {
-    return this.spreadsheetService.rows;
-  }
-
-  get columns(): string[] {
-    return this.spreadsheetService.columns;
-  }
 
   get currentCell(): CellDto {
-    if (this.rows.indexOf(this._currentCell.row) === -1 || this.columns.indexOf(this._currentCell.column) === -1) {
-      this.selectCell(this.columns[0], this.rows[0]);
+    if (this.table.rows.indexOf(this._currentCell.row) === -1 || this.table.columns.indexOf(this._currentCell.column) === -1) {
+      this.selectCell(this.table.columns[0], this.table.rows[0]);
     }
     return this._currentCell;
   }
 
   public onMessage(message: Uint8Array, source: string) {
+    console.log(message, source);
     this.spreadsheetService.applyUpdate(message);
-    this.applicationRef.tick();
+    this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
   }
 
   public onNode(nodeId: string) {
@@ -144,16 +138,12 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
       return;
     }
     this.communicationService.send(update, nodeId);
-    this.applicationRef.tick();
+    this.ngZone.run(() => this._nodes = this.communicationService.nodes);
   }
 
-
-  get messageList(): [string, Payload][] {
-    return this._messageList;
-  }
 
   get nodes(): Set<string> {
-    return this.communicationService.nodes;
+    return this._nodes;
   }
 
   get clusterSize(): number {
@@ -170,5 +160,10 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
 
   set connectionEnabled(enabled: boolean) {
     this.communicationService.isConnected = enabled;
+  }
+
+  get table(): Table<Cell> {
+    this._table = this.spreadsheetService.getTable();
+    return this._table;
   }
 }

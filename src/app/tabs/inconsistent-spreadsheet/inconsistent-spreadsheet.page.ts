@@ -1,15 +1,15 @@
-import {AfterViewInit, ApplicationRef, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
 import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
-import {RaftService} from "../../communication/controller/raft.service";
 import {Action} from "../../spreadsheet/util/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
+import {Table} from "../../spreadsheet/domain/Table";
 
 @Component({
   selector: 'app-inconsistent-spreadsheet',
@@ -17,19 +17,25 @@ import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
 export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Payload> {
-  private spreadsheetService: SpreadsheetService;
-  private _currentCell: CellDto;
-  private channelName: string = 'spreadsheet';
   private communicationService: CommunicationService<Payload>;
-  private applicationRef: ApplicationRef;
+  private spreadsheetService: SpreadsheetService;
+  private ngZone: NgZone;
+  private _table: Table<Cell>;
+  private _currentCell: CellDto;
+  private _nodes: Set<string> = new Set<string>();
+  private channelName: string = 'inconsistent';
+  private ionInput: HTMLIonInputElement | undefined;
 
-  // private ionInput: HTMLIonInputElement | undefined;
-
-  constructor(communicationService: CommunicationService<Payload>, raftService: RaftService, applicationRef: ApplicationRef, spreadsheetService: SpreadsheetService) {
-    this.spreadsheetService = spreadsheetService;
-    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
-    this.applicationRef = applicationRef;
+  constructor(
+    communicationService: CommunicationService<Payload>,
+    spreadsheetService: SpreadsheetService,
+    ngZone: NgZone
+  ) {
     this.communicationService = communicationService;
+    this.spreadsheetService = spreadsheetService;
+    this.ngZone = ngZone;
+    this._table = this.spreadsheetService.getTable();
+    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
 
   public ngOnInit() {
@@ -37,14 +43,14 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
   }
 
   public ngAfterViewInit() {
-    // this.ionInput = document.getElementsByName('input')[0] as HTMLIonInputElement;
+    this.ionInput = document.getElementsByName('input')[0] as HTMLIonInputElement;
   }
 
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    console.log(colId, rowId)
-    // this.ionInput?.setFocus();
+    this.ionInput?.setFocus();
+    console.log(this.ionInput)
   }
 
   public addRow() {
@@ -103,17 +109,9 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
   }
 
 
-  get rows(): string[] {
-    return this.spreadsheetService.rows;
-  }
-
-  get columns(): string[] {
-    return this.spreadsheetService.columns;
-  }
-
   get currentCell(): CellDto {
-    if (this.rows.indexOf(this._currentCell.row) === -1 || this.columns.indexOf(this._currentCell.column) === -1) {
-      this.selectCell(this.columns[0], this.rows[0]);
+    if (this.table.rows.indexOf(this._currentCell.row) === -1 || this.table.columns.indexOf(this._currentCell.column) === -1) {
+      this.selectCell(this.table.columns[0], this.table.rows[0]);
     }
     return this._currentCell;
   }
@@ -124,11 +122,12 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
       return;
     }
     this.performAction(message);
-    this.applicationRef.tick();
+    this.ngZone.run(() => this.table = this.spreadsheetService.getTable());
   }
 
   public onNode(nodeId: string) {
-    this.applicationRef.tick();
+    this._nodes.add(nodeId);
+    this.ngZone.run(() => this._nodes = this.communicationService.nodes);
   }
 
   private performAction(payload: Payload) {
@@ -159,12 +158,20 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
         console.warn('Cant perform action for payload: ', payload);
         break;
     }
-    this.applicationRef.tick();
+  }
+
+  get table(): Table<Cell> {
+    this._table = this.spreadsheetService.getTable();
+    return this._table;
+  }
+
+  set table(value: Table<Cell>) {
+    this._table = value;
   }
 
 
   get nodes(): Set<string> {
-    return this.communicationService.nodes;
+    return this._nodes;
   }
 
   get clusterSize(): number {
@@ -183,6 +190,5 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     this.communicationService.isConnected = enabled;
   }
 
-  protected readonly Action = Action;
 }
 
