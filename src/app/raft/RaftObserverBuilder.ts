@@ -2,7 +2,6 @@ import {RaftNodeObserver} from "./RaftNodeObserver";
 import {NodeId, RaftMessage} from "./domain/Types";
 import {Log} from "./domain/message/Log";
 import {RaftMetaData} from "./RaftMetaData";
-import {logoGithub} from "ionicons/icons";
 
 export class RaftObserverBuilder {
   private _sendMessage: ((receiver: NodeId, message: RaftMessage) => void) | undefined;
@@ -10,7 +9,6 @@ export class RaftObserverBuilder {
   private _restartHearBeatTimer: (() => void) | undefined;
   private _restartElectionTimer: (() => void) | undefined;
   private _onStateChange: ((state: RaftMetaData) => void) | undefined;
-  private _onLogsCorrected: ((log: Log[]) => void) | undefined;
 
   public sendMessage(value: ((receiver: NodeId, message: RaftMessage) => void)): RaftObserverBuilder {
     this._sendMessage = value;
@@ -37,10 +35,7 @@ export class RaftObserverBuilder {
     return this;
   }
 
-  public onLogsCorrected(value: (log: Log[]) => void): RaftObserverBuilder {
-    this._onLogsCorrected = value;
-    return this;
-  }
+
 
 
   public build(): RaftNodeObserver {
@@ -49,9 +44,7 @@ export class RaftObserverBuilder {
     let restartHearBeatTimer = this._restartHearBeatTimer;
     let sendMessage = this._sendMessage;
     let onStateChange = this._onStateChange;
-    let onLogsCorrected = this._onLogsCorrected;
 
-    this._onLogsCorrected;
     return new class implements RaftNodeObserver {
       onLog(log: Log): void {
         if (onLog !== undefined) {
@@ -83,11 +76,7 @@ export class RaftObserverBuilder {
         }
       }
 
-      onLogsCorrected(log: Log[]): void {
-        if (onLogsCorrected !== undefined) {
-          onLogsCorrected(log)
-        }
-      }
+
 
     }
   }

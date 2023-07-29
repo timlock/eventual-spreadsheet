@@ -145,10 +145,8 @@ describe('Raft Node', () => {
   });
 
   it('AppendEntriesRequest correct all logs', () => {
-    let logsCorrectedCounter = 0;
     let sendMessage = (receiver: string, message: RaftMessage) => cluster.get(receiver)?.handleMessage(message);
-    let onLogsCorrected = (log: Log[]) => logsCorrectedCounter++;
-    let observer = new RaftObserverBuilder().sendMessage(sendMessage).onLogsCorrected(onLogsCorrected).build();
+    let observer = new RaftObserverBuilder().sendMessage(sendMessage).build();
     let correctLog: Log[] = [
       {content: 'A', term: 1},
       {content: 'B', term: 4},
@@ -167,7 +165,6 @@ describe('Raft Node', () => {
     cluster.get(ids[0])?.timeout();
     expect(cluster.get(ids[0])?.allLogs.length).toEqual(correctLog.length);
     expect(cluster.get(ids[0])?.allLogs).toEqual(correctLog);
-    expect(logsCorrectedCounter).toEqual(1);
   });
 
   it('Append first entry', () => {

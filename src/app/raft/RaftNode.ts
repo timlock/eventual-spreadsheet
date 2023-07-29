@@ -124,7 +124,6 @@ export class RaftNode {
     let removedLogs = this.serverState.replaceInvalidLogs(request.prevLogIndex);
     if(removedLogs){
       this.print('Removed invalid logs after index ', request.prevLogIndex);
-      this.observer.onLogsCorrected(this.serverState.log);
     }
     this.serverState.log.push(...request.entries)
     if (request.leaderCommit > this.serverState.commitIndex) {

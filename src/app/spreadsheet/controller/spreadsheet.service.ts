@@ -14,10 +14,10 @@ export class SpreadsheetService {
   private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.table);
 
   public constructor() {
-   this.fillTable();
+    this.fillTable();
   }
 
-  private fillTable(){
+  private fillTable() {
     let counter = 0;
     let tag = 'init';
     for (let i = 0; i < 10; i++) {
@@ -101,8 +101,4 @@ export class SpreadsheetService {
     return this.table.columns;
   }
 
-  public reset() {
-    this.table = new Table<Cell>();
-    this.fillTable();
-  }
 }

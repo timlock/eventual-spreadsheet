@@ -1,11 +1,11 @@
-import {Component, NgZone, OnInit} from '@angular/core';
+import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../raft/raft.service";
 import {Action} from "../../spreadsheet/util/Action";
 import {Identifier} from "../../Identifier";
 import {isPayload, Payload} from "../../spreadsheet/util/Payload";
-import {RaftServiceObserver} from "../../communication/controller/RaftServiceObserver";
+import {RaftServiceObserver} from "../../raft/RaftServiceObserver";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
@@ -17,7 +17,7 @@ import {RaftMetaData} from "../../raft/RaftMetaData";
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Payload> {
+export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServiceObserver<Payload> {
   private raftService: RaftService;
   private spreadsheetService: SpreadsheetService;
   private ngZone: NgZone;
@@ -51,53 +51,47 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    this.ionInput?.setFocus();
-  }
+    if(this.table.rows.length > 0 && this.table.columns.length > 0){
+      this.ionInput?.setFocus();
+    }  }
 
   public addRow() {
     let id = this.identifier.next();
     let message = PayloadFactory.addRow(id);
     this.raftService.performAction(message);
-    return;
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertRow(id, row);
     this.raftService.performAction(message);
-    return;
   }
 
   public deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
     this.raftService.performAction(message);
-    return;
   }
 
   public addColumn() {
     let id = this.identifier.next();
     let message = PayloadFactory.addColumn(id);
     this.raftService.performAction(message);
-    return;
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertColumn(id, column);
     this.raftService.performAction(message);
-    return;
   }
 
   public deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
     this.raftService.performAction(message);
-    return;
   }
 
   public insertCell(cell: CellDto) {
     let message = PayloadFactory.insertCell(cell.address, cell.input);
     this.raftService.performAction(message);
-    return;
   }
 
   public deleteCell(cell: CellDto) {
@@ -198,11 +192,6 @@ export class ConsistentSpreadsheetPage implements OnInit, RaftServiceObserver<Pa
   get raftMetaData(): RaftMetaData {
     this._raftMetaData = this.raftService.getMetaData();
     return this._raftMetaData;
-  }
-
-  public onLogsCorrected(log: Payload[]) {
-    this.spreadsheetService.reset();
-    log.forEach(l => this.onMessage(l));
   }
 }
 

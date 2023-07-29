@@ -8,7 +8,7 @@ import {Identifier} from "../Identifier";
 import {RaftNodeObserver} from "./RaftNodeObserver";
 import {Log} from "./domain/message/Log";
 import {isPayload, Payload} from "../spreadsheet/util/Payload";
-import {RaftServiceObserver} from "../communication/controller/RaftServiceObserver";
+import {RaftServiceObserver} from "./RaftServiceObserver";
 import {RaftMetaData} from "./RaftMetaData";
 
 
@@ -127,10 +127,5 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   public getMetaData(): RaftMetaData {
     return this.node.getMetaData();
-  }
-
-  public onLogsCorrected(log: Log[]): void {
-    let operations = log.map(l => l.content);
-    this.observer?.onLogsCorrected(operations);
   }
 }

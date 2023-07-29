@@ -49,8 +49,9 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    this.ionInput?.setFocus();
-  }
+    if(this.table.rows.length > 0 && this.table.columns.length > 0){
+      this.ionInput?.setFocus();
+    }  }
 
   public addRow() {
     let id = this.identifier.next();

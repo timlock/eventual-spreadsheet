@@ -13,5 +13,4 @@ export interface RaftNodeObserver {
 
   onStateChange(state: RaftMetaData): void;
 
-  onLogsCorrected(log: Log[]): void;
 }

@@ -1,5 +1,4 @@
-import {RaftMetaData} from "../../raft/RaftMetaData";
-import {Log} from "../../raft/domain/message/Log";
+import {RaftMetaData} from "./RaftMetaData";
 
 export interface RaftServiceObserver<T> {
   onMessage(message: T): void;
@@ -7,7 +6,5 @@ export interface RaftServiceObserver<T> {
   onNode(nodeId: string): void;
 
   onStateChange(state: RaftMetaData): void;
-
-  onLogsCorrected(log: T[]): void;
 
 }
