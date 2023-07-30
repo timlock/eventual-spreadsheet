@@ -121,7 +121,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
       console.warn('Invalid message', message);
       return;
     }
-    this.performAction(message);
+    this.handleAction(message);
     this.ngZone.run(() => this.table = this.spreadsheetService.getTable());
   }
 
@@ -130,7 +130,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     this.ngZone.run(() => this._nodes = this.communicationService.nodes);
   }
 
-  private performAction(payload: Action) {
+  private handleAction(payload: Action) {
     switch (payload.action) {
       case ActionType.INSERT_CELL:
         let address: Address = {column: payload.column!, row: payload.row!};

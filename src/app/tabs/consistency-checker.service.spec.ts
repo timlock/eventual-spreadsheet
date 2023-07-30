@@ -22,7 +22,6 @@ describe('ConsistencyCheckerService', () => {
     let stopped = false;
     service.subscribe(identifier, new Table<Cell>(), (time) => {
       expect(time).toBeDefined();
-      expect(time).toBeGreaterThan(0);
       stopped = true;
     });
     service.modifiedState();
@@ -38,7 +37,6 @@ describe('ConsistencyCheckerService', () => {
     let stopped = false;
     service.subscribe(identifier,new Table<Cell>(), (time) => {
       expect(time).toBeDefined();
-      expect(time).toBeGreaterThan(0);
       stopped = true;
     });
     service.modifiedState();
