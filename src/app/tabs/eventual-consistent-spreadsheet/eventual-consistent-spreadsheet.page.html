@@ -76,7 +76,6 @@
             *ngFor="let column of table.columns; let c = index">
           <div *ngIf="currentCell.row === row && currentCell.column === column; else cellValue">
             <div class="selected">
-              <!--              {{currentCell.input}}-->
               {{ table.get({column: column, row: row})?.content }}
             </div>
           </div>
