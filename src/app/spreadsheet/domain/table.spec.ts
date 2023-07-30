@@ -1,5 +1,5 @@
 import {waitForAsync} from '@angular/core/testing';
-import {Identifier} from "../../Identifier";
+import {Identifier} from "../../identifier/Identifier";
 import {Table} from "./Table";
 import {Address} from "./Address";
 import {Cell} from "./Cell";

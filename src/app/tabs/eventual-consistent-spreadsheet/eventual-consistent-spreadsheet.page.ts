@@ -1,43 +1,51 @@
-import {Component, NgZone, OnInit} from '@angular/core';
+import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
-import {Identifier} from "../../Identifier";
+import {Identifier} from "../../identifier/Identifier";
 import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
+import {ConsistencyCheckerService} from "../consistency-checker.service";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
   templateUrl: './eventual-consistent-spreadsheet.page.html',
   styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
-export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationServiceObserver<Uint8Array> {
+export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Uint8Array> {
   private communicationService: CommunicationService<Uint8Array>;
   private spreadsheetService: CrdtSpreadsheetService;
   private ngZone: NgZone;
+  private consistencyChecker: ConsistencyCheckerService;
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'eventual-consistent';
   private ionInput: any | undefined;
+  private _trackedTime: number | undefined;
 
   constructor(
     communicationService: CommunicationService<Uint8Array>,
     spreadsheetService: CrdtSpreadsheetService,
-    ngZone: NgZone
+    ngZone: NgZone,
+    consistencyChecker: ConsistencyCheckerService
   ) {
     this.communicationService = communicationService;
     this.spreadsheetService = spreadsheetService;
     this.ngZone = ngZone;
+    this.consistencyChecker = consistencyChecker;
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
-
   }
 
 
-  ngOnInit() {
+  public ngOnInit() {
     this.communicationService.openChannel(this.channelName, this);
+    this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
+      console.log('All updates applied ', time);
+      this.ngZone.run(() => this._trackedTime = time);
+    });
   }
 
   public ngAfterViewInit() {
@@ -54,65 +62,41 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
 
   public addRow() {
     let id = this.identifier.next();
-    let update = this.spreadsheetService.addRow(id);
-    if (update === undefined) {
-      console.warn('Update is undefined');
-      return;
-    }
-    this.communicationService.send(update);
+    this.performAction(() => this.spreadsheetService.addRow(id));
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
-    let update = this.spreadsheetService.insertRow(id, row);
-    if (update === undefined) {
-      console.warn('Update is undefined');
-      return;
-    }
-    this.communicationService.send(update);
-
+    this.performAction(() => this.spreadsheetService.insertRow(id, row));
   }
 
   public deleteRow(row: string) {
-    let update = this.spreadsheetService.deleteRow(row);
-    if (update === undefined) {
-      console.warn('Update is undefined');
-      return;
-    }
-    this.communicationService.send(update);
+    this.performAction(() => this.spreadsheetService.deleteRow(row));
   }
 
   public addColumn() {
     let id = this.identifier.next();
-    let update = this.spreadsheetService.addColumn(id);
-    if (update === undefined) {
-      console.warn('Update is undefined');
-      return;
-    }
-    this.communicationService.send(update);
+    this.performAction(() => this.spreadsheetService.addColumn(id));
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
-    let update = this.spreadsheetService.insertColumn(id, column);
-    if (update === undefined) {
-      console.warn('Update is undefined');
-      return;
-    }
-    this.communicationService.send(update);
+    this.performAction(() => this.spreadsheetService.insertColumn(id, column));
   }
 
   public deleteColumn(column: string) {
-    let update = this.spreadsheetService.deleteColumn(column);
-    if (update === undefined) {
-      console.warn('Update is undefined');
-      return;
-    }
-    this.communicationService.send(update);
+    this.performAction(() => this.spreadsheetService.deleteColumn(column));
   }
 
   public insertCell(cell: CellDto) {
-    let update = this.spreadsheetService.insertCellById(cell.address, cell.input);
+    this.performAction(() => this.spreadsheetService.insertCellById(cell.address, cell.input));
+  }
+
+  private performAction(action: () => Uint8Array | undefined) {
+    this.consistencyChecker.modifiedState();
+    this.ngZone.run(() => this._trackedTime = undefined);
+    let update = action();
+    this.consistencyChecker.updateApplied(this.table);
     if (update === undefined) {
       console.warn('Update is undefined');
       return;
@@ -134,8 +118,9 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   }
 
   public onMessage(message: Uint8Array, source: string) {
-    console.log(message, source);
+    this.consistencyChecker.modifiedState();
     this.spreadsheetService.applyUpdate(message);
+    this.consistencyChecker.updateApplied(this.spreadsheetService.getTable());
     this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
   }
 
@@ -147,6 +132,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
     }
     this.communicationService.send(update, nodeId);
     this.ngZone.run(() => this._nodes = this.communicationService.nodes);
+    this.consistencyChecker.addNodes(nodeId);
   }
 
 
@@ -173,5 +159,9 @@ export class EventualConsistentSpreadsheetPage implements OnInit, CommunicationS
   get table(): Table<Cell> {
     this._table = this.spreadsheetService.getTable();
     return this._table;
+  }
+
+  get trackedTime(): number | undefined {
+    return this._trackedTime;
   }
 }

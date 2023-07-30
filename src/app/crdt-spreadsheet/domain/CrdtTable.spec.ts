@@ -1,4 +1,4 @@
-import {Identifier} from "../../Identifier";
+import {Identifier} from "../../identifier/Identifier";
 import {waitForAsync} from "@angular/core/testing";
 import {CrdtTable} from "./CrdtTable";
 import {Address} from "../../spreadsheet/domain/Address";

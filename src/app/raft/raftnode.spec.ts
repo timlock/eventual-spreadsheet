@@ -1,4 +1,4 @@
-import {Identifier} from "../Identifier";
+import {Identifier} from "../identifier/Identifier";
 import {TestBed} from "@angular/core/testing";
 import {RaftObserverBuilder} from "./RaftObserverBuilder";
 import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "./domain/message/RequestVoteRequest";

@@ -3,9 +3,9 @@ import {CommunicationServiceObserver} from "../../communication/controller/Commu
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
-import {Action} from "../../spreadsheet/util/Action";
-import {Identifier} from "../../Identifier";
-import {isPayload, Payload} from "../../spreadsheet/util/Payload";
+import {ActionType} from "../../spreadsheet/domain/ActionType";
+import {Identifier} from "../../identifier/Identifier";
+import {isPayload, Action} from "../../spreadsheet/util/Action";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
@@ -16,8 +16,8 @@ import {Table} from "../../spreadsheet/domain/Table";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Payload> {
-  private communicationService: CommunicationService<Payload>;
+export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Action> {
+  private communicationService: CommunicationService<Action>;
   private spreadsheetService: SpreadsheetService;
   private ngZone: NgZone;
   private _table: Table<Cell>;
@@ -27,7 +27,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
   private ionInput: any | undefined;
 
   constructor(
-    communicationService: CommunicationService<Payload>,
+    communicationService: CommunicationService<Action>,
     spreadsheetService: SpreadsheetService,
     ngZone: NgZone
   ) {
@@ -116,7 +116,7 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     return this._currentCell;
   }
 
-  public onMessage(message: Payload, source: string) {
+  public onMessage(message: Action, source: string) {
     if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
@@ -130,28 +130,28 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     this.ngZone.run(() => this._nodes = this.communicationService.nodes);
   }
 
-  private performAction(payload: Payload) {
+  private performAction(payload: Action) {
     switch (payload.action) {
-      case Action.INSERT_CELL:
+      case ActionType.INSERT_CELL:
         let address: Address = {column: payload.column!, row: payload.row!};
         this.spreadsheetService.insertCellById(address, payload.input!);
         break;
-      case Action.ADD_ROW:
+      case ActionType.ADD_ROW:
         this.spreadsheetService.addRow(payload.input!);
         break;
-      case Action.INSERT_ROW:
+      case ActionType.INSERT_ROW:
         this.spreadsheetService.insertRow(payload.input!, payload.row!)
         break;
-      case Action.ADD_COLUMN:
+      case ActionType.ADD_COLUMN:
         this.spreadsheetService.addColumn(payload.input!);
         break;
-      case Action.INSERT_COLUMN:
+      case ActionType.INSERT_COLUMN:
         this.spreadsheetService.insertColumn(payload.input!, payload.column!);
         break;
-      case Action.DELETE_COLUMN:
+      case ActionType.DELETE_COLUMN:
         this.spreadsheetService.deleteColumn(payload.column!);
         break;
-      case Action.DELETE_ROW:
+      case ActionType.DELETE_ROW:
         this.spreadsheetService.deleteRow(payload.row!)
         break;
       default:

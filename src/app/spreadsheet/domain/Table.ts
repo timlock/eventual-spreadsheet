@@ -1,7 +1,7 @@
 import {Address} from "./Address";
 import {Spreadsheet} from "../controller/Spreadsheet";
 
-export class Table<T> implements Spreadsheet<T>{
+export class Table<T> implements Spreadsheet<T> {
   private readonly _rows: string[] = [];
   private readonly _columns: string[] = [];
   private readonly _cells: Map<string, Map<string, T>> = new Map();
@@ -100,5 +100,11 @@ export class Table<T> implements Spreadsheet<T>{
 
   get cells(): Map<string, Map<string, T>> {
     return this._cells;
+  }
+
+  public equals(other: Table<T>): boolean {
+    return JSON.stringify(this._columns) === JSON.stringify(other._columns)
+      && JSON.stringify(this._rows) === JSON.stringify(other._rows)
+      && JSON.stringify(this._cells) === JSON.stringify(other._cells)
   }
 }

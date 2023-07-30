@@ -2,40 +2,46 @@ import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../raft/raft.service";
-import {Action} from "../../spreadsheet/util/Action";
-import {Identifier} from "../../Identifier";
-import {isPayload, Payload} from "../../spreadsheet/util/Payload";
+import {ActionType} from "../../spreadsheet/domain/ActionType";
+import {Identifier} from "../../identifier/Identifier";
+import {isPayload, Action} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/RaftServiceObserver";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 import {Table} from "../../spreadsheet/domain/Table";
 import {RaftMetaData} from "../../raft/RaftMetaData";
+import {ConsistencyCheckerService} from "../consistency-checker.service";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServiceObserver<Payload> {
+export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftServiceObserver<Action> {
   private raftService: RaftService;
   private spreadsheetService: SpreadsheetService;
   private ngZone: NgZone;
+  private consistencyChecker: ConsistencyCheckerService;
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'consistent';
   private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
   private ionInput: any | undefined;
+  private _trackedTime: number | undefined;
+
 
   constructor(
     raftService: RaftService,
     spreadsheetService: SpreadsheetService,
-    ngZone: NgZone
+    ngZone: NgZone,
+    consistencyChecker: ConsistencyCheckerService
   ) {
     this.raftService = raftService;
     this.spreadsheetService = spreadsheetService;
     this.ngZone = ngZone;
+    this.consistencyChecker = consistencyChecker;
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
@@ -43,6 +49,10 @@ export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServ
 
   public ngOnInit() {
     this.raftService.openChannel(this.channelName, this);
+    this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
+      console.log('All updates applied ', time);
+      this.ngZone.run(() => this._trackedTime = time);
+    });
   }
 
   public ngAfterViewInit() {
@@ -51,47 +61,54 @@ export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServ
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    if(this.table.rows.length > 0 && this.table.columns.length > 0){
+    if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
-    }  }
+    }
+  }
 
   public addRow() {
     let id = this.identifier.next();
     let message = PayloadFactory.addRow(id);
-    this.raftService.performAction(message);
+    this.performAction(message);
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertRow(id, row);
-    this.raftService.performAction(message);
+    this.performAction(message);
   }
 
   public deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
-    this.raftService.performAction(message);
+    this.performAction(message);
   }
 
   public addColumn() {
     let id = this.identifier.next();
     let message = PayloadFactory.addColumn(id);
-    this.raftService.performAction(message);
+    this.performAction(message);
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertColumn(id, column);
-    this.raftService.performAction(message);
+    this.performAction(message);
   }
 
   public deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
-    this.raftService.performAction(message);
+    this.performAction(message);
   }
 
   public insertCell(cell: CellDto) {
     let message = PayloadFactory.insertCell(cell.address, cell.input);
-    this.raftService.performAction(message);
+    this.performAction(message)
+  }
+
+  private performAction(action: Action) {
+    this.consistencyChecker.modifiedState();
+    this.ngZone.run(() => this._trackedTime = undefined);
+    this.raftService.performAction(action);
   }
 
   public deleteCell(cell: CellDto) {
@@ -110,13 +127,14 @@ export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServ
     return this._currentCell;
   }
 
-  public onMessage(message: Payload) {
+  public onMessage(message: Action) {
     if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
     }
-    this.performAction(message);
+    this.handleAction(message);
     this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
+    this.consistencyChecker.updateApplied(this.table);
   }
 
   public onNode(nodeId: string) {
@@ -128,28 +146,28 @@ export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServ
     this.ngZone.run(() => this._raftMetaData = state);
   }
 
-  private performAction(message: Payload) {
+  private handleAction(message: Action) {
     switch (message.action) {
-      case Action.INSERT_CELL:
+      case ActionType.INSERT_CELL:
         let address: Address = {column: message.column!, row: message.row!};
         this.spreadsheetService.insertCellById(address, message.input!);
         break;
-      case Action.ADD_ROW:
+      case ActionType.ADD_ROW:
         this.spreadsheetService.addRow(message.input!);
         break;
-      case Action.INSERT_ROW:
+      case ActionType.INSERT_ROW:
         this.spreadsheetService.insertRow(message.input!, message.row!)
         break;
-      case Action.ADD_COLUMN:
+      case ActionType.ADD_COLUMN:
         this.spreadsheetService.addColumn(message.input!);
         break;
-      case Action.INSERT_COLUMN:
+      case ActionType.INSERT_COLUMN:
         this.spreadsheetService.insertColumn(message.input!, message.column!);
         break;
-      case Action.DELETE_COLUMN:
+      case ActionType.DELETE_COLUMN:
         this.spreadsheetService.deleteColumn(message.column!);
         break;
-      case Action.DELETE_ROW:
+      case ActionType.DELETE_ROW:
         this.spreadsheetService.deleteRow(message.row!)
         break;
       default:
@@ -192,6 +210,10 @@ export class ConsistentSpreadsheetPage implements OnInit,AfterViewInit, RaftServ
   get raftMetaData(): RaftMetaData {
     this._raftMetaData = this.raftService.getMetaData();
     return this._raftMetaData;
+  }
+
+  get trackedTime(): number | undefined {
+    return this._trackedTime;
   }
 }
 

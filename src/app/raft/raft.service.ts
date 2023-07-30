@@ -4,10 +4,10 @@ import {NodeId, RaftMessage} from "./domain/Types";
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 import {Timer} from "./Timer";
 import {RaftNode} from "./RaftNode";
-import {Identifier} from "../Identifier";
+import {Identifier} from "../identifier/Identifier";
 import {RaftNodeObserver} from "./RaftNodeObserver";
 import {Log} from "./domain/message/Log";
-import {isPayload, Payload} from "../spreadsheet/util/Payload";
+import {isPayload, Action} from "../spreadsheet/util/Action";
 import {RaftServiceObserver} from "./RaftServiceObserver";
 import {RaftMetaData} from "./RaftMetaData";
 
@@ -19,7 +19,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   private readonly communicationService: CommunicationService<RaftMessage>;
   private readonly timer: Timer;
   private readonly node: RaftNode;
-  private observer: RaftServiceObserver<Payload> | undefined;
+  private observer: RaftServiceObserver<Action> | undefined;
   private channelName: string = 'raft';
   private _isConnected: boolean = true;
 
@@ -29,7 +29,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     this.node = new RaftNode(this.identifier.uuid, this, true);
   }
 
-  public openChannel(channelName: string, observer: RaftServiceObserver<Payload>) {
+  public openChannel(channelName: string, observer: RaftServiceObserver<Action>) {
     this.channelName = channelName;
     this.observer = observer;
     this.communicationService.openChannel(this.channelName, this);
@@ -40,7 +40,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     this.communicationService.closeChannel();
   }
 
-  public performAction(message: Payload): boolean {
+  public performAction(message: Action): boolean {
     this.node.command(message);
     return true;
   }

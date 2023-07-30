@@ -1,6 +1,6 @@
 import {MessageBuffer} from "./MessageBuffer";
 import {Message} from "../domain/Message";
-import {Identifier} from "../../Identifier";
+import {Identifier} from "../../identifier/Identifier";
 
 
 describe('MessageBuffer', () => {

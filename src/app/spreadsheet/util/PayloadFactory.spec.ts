@@ -1,5 +1,5 @@
 import {PayloadFactory} from "./PayloadFactory";
-import {isPayload} from "./Payload";
+import {isPayload} from "./Action";
 
 describe('PayloadFactory', () => {
 
