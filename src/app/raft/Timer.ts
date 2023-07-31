@@ -22,6 +22,10 @@ export class Timer {
     this.end = undefined;
   }
 
+  public isActive(): boolean{
+    return this.end !== undefined;
+  }
+
   public isTimeUp(): boolean {
     if (this.end === undefined) {
       return false;

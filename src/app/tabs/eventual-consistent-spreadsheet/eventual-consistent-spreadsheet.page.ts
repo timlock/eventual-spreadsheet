@@ -41,7 +41,6 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
 
 
   public ngOnInit() {
-    this.communicationService.openChannel(this.channelName, this);
     this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
       console.log('All updates applied ', time);
       this.ngZone.run(() => this._trackedTime = time);
@@ -49,13 +48,21 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('input')[0];
+    this.ionInput = document.getElementsByName('eventual-consistent-input')[0];
   }
+
+
+  public ionViewDidEnter(){
+    this.communicationService.openChannel(this.channelName, this);
+  }
+
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
+      console.log(this.ionInput)
+
     }
   }
 

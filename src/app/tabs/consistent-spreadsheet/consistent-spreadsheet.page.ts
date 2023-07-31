@@ -48,7 +48,6 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
 
 
   public ngOnInit() {
-    this.raftService.openChannel(this.channelName, this);
     this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
       console.log('All updates applied ', time);
       this.ngZone.run(() => this._trackedTime = time);
@@ -56,13 +55,24 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   }
 
   public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('input')[0];
+    this.ionInput = document.getElementsByName('consistent-input')[0];
   }
+
+
+  public ionViewDidEnter(){
+    this.raftService.openChannel(this.channelName, this);
+  }
+
+  public start(){
+    this.raftService.start();
+  }
+
 
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
+      console.log(this.ionInput)
     }
   }
 
@@ -214,6 +224,11 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
 
   get trackedTime(): number | undefined {
     return this._trackedTime;
+  }
+
+
+  get isActive(): boolean {
+    return this.raftService.isActive();
   }
 }
 
