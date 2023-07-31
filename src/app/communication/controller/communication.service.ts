@@ -20,7 +20,7 @@ export class CommunicationService<T> {
 
   public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
     if (this.channel !== undefined) {
-      this.channel.close();
+      this.closeChannel();
     }
     this.observer = observer;
     this.channel = new BroadcastChannel(channelName);
@@ -44,7 +44,6 @@ export class CommunicationService<T> {
       console.warn('Cant post message, channel is undefined');
       return;
     }
-    // console.log('SEND MESSAGE ', message);
     this.channel.postMessage(message);
   }
 
@@ -53,7 +52,6 @@ export class CommunicationService<T> {
       return;
     }
     let message = event.data as Message<T>;
-    // console.log('RECEIVE MESSAGE ', message);
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);

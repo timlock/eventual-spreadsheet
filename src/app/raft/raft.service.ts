@@ -30,6 +30,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   }
 
   public openChannel(channelName: string, observer: RaftServiceObserver<Action>) {
+    this.closeChannel();
     this.channelName = channelName;
     this.observer = observer;
     this.communicationService.openChannel(this.channelName, this);
@@ -38,6 +39,10 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   public closeChannel() {
     this.timer.stop();
     this.communicationService.closeChannel();
+  }
+
+  public start(){
+    this.node.start();
   }
 
   public performAction(message: Action): boolean {
@@ -72,9 +77,6 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     let result = this.node.addNode(nodeId);
     if (result) {
       console.log('Added node: ', nodeId, ' to cluster');
-      if (this.node.clusterSize > 2) {
-        this.node.start();
-      }
       this.observer?.onNode(nodeId);
     }
   }
@@ -127,5 +129,9 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   public getMetaData(): RaftMetaData {
     return this.node.getMetaData();
+  }
+
+  public isActive(): boolean{
+    return this.timer.isActive();
   }
 }

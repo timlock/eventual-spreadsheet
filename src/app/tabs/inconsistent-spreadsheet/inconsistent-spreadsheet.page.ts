@@ -1,11 +1,11 @@
-import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
+import {AfterViewInit, Component, NgZone} from '@angular/core';
 import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
 import {ActionType} from "../../spreadsheet/domain/ActionType";
 import {Identifier} from "../../identifier/Identifier";
-import {isPayload, Action} from "../../spreadsheet/util/Action";
+import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
@@ -16,7 +16,7 @@ import {Table} from "../../spreadsheet/domain/Table";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Action> {
+export class InconsistentSpreadsheetPage implements AfterViewInit, CommunicationServiceObserver<Action> {
   private communicationService: CommunicationService<Action>;
   private spreadsheetService: SpreadsheetService;
   private ngZone: NgZone;
@@ -38,20 +38,23 @@ export class InconsistentSpreadsheetPage implements OnInit, AfterViewInit, Commu
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
 
-  public ngOnInit() {
+
+  public ngAfterViewInit() {
+    this.ionInput = document.getElementsByName('inconsistent-input')[0];
+  }
+
+  public ionViewDidEnter() {
     this.communicationService.openChannel(this.channelName, this);
   }
 
-  public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('input')[0];
-  }
-
-
   public selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
-    if(this.table.rows.length > 0 && this.table.columns.length > 0){
+    if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
-    }  }
+      console.log(this.ionInput)
+
+    }
+  }
 
   public addRow() {
     let id = this.identifier.next();
