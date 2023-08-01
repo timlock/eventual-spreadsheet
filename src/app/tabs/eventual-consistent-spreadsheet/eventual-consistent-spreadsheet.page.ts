@@ -24,6 +24,8 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   private channelName: string = 'eventual-consistent';
   private ionInput: any | undefined;
   private _trackedTime: number | undefined;
+  private _receivedMessageCounter = 0;
+  private _totalMessageCounter = 0;
 
   constructor(
     communicationService: CommunicationService<Uint8Array>,
@@ -61,8 +63,6 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
-      console.log(this.ionInput)
-
     }
   }
 
@@ -170,5 +170,22 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
 
   get trackedTime(): number | undefined {
     return this._trackedTime;
+  }
+
+  get receivedMessageCounter(): number {
+    this._receivedMessageCounter = this.communicationService.receivedMessageCounter;
+    return this._receivedMessageCounter;
+  }
+
+  get totalMessageCounter(): number {
+    this._totalMessageCounter = this.communicationService.totalMessageCounter;
+    return this._totalMessageCounter;
+  }
+
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.ngZone.run(()=> {
+      this._receivedMessageCounter = received;
+      this._totalMessageCounter = total;
+    });
   }
 }

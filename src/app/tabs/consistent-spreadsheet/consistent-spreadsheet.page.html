@@ -14,14 +14,15 @@
       <ion-col size="auto">
         <ion-title>Remote nodes: {{clusterSize}}</ion-title>
       </ion-col>
-      <ion-col>
+      <ion-col size="auto">
         <ion-title>Time: {{trackedTime}}</ion-title>
       </ion-col>
-      <div *ngIf="nodes.size > 1 && !isActive">
-        <ion-col size="auto">
-          <ion-button (click)="start()">Start</ion-button>
-        </ion-col>
-      </div>
+      <ion-col size="auto">
+        <ion-title>Received messages: {{receivedMessageCounter}}</ion-title>
+      </ion-col>
+      <ion-col size="auto">
+        <ion-title>Total messages: {{totalMessageCounter}}</ion-title>
+      </ion-col>
     </ion-row>
     <ion-row>
       <ion-col size="auto">
@@ -35,6 +36,11 @@
       </ion-col>
     </ion-row>
     <ion-row>
+      <div *ngIf="nodes.size > 1 && !isActive">
+        <ion-col size="auto">
+          <ion-button (click)="start()">Start</ion-button>
+        </ion-col>
+      </div>
       <ion-col size="auto">
         <ion-title class="ion-padding-top">{{currentCell.colIndex}}|{{currentCell.rowIndex}}</ion-title>
       </ion-col>

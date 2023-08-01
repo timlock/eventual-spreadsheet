@@ -30,6 +30,8 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
   private ionInput: any | undefined;
   private _trackedTime: number | undefined;
+  private _receivedMessageCounter = 0;
+  private _totalMessageCounter = 0;
 
 
   constructor(
@@ -72,7 +74,6 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
-      console.log(this.ionInput)
     }
   }
 
@@ -229,6 +230,23 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
 
   get isActive(): boolean {
     return this.raftService.isActive();
+  }
+
+  get receivedMessageCounter(): number {
+    this._receivedMessageCounter = this.raftService.receivedMessageCounter;
+    return this._receivedMessageCounter;
+  }
+
+  get totalMessageCounter(): number {
+    this._totalMessageCounter = this.raftService.totalMessageCounter;
+    return this._totalMessageCounter;
+  }
+
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.ngZone.run(()=> {
+      this._receivedMessageCounter = received;
+      this._totalMessageCounter = total;
+    });
   }
 }
 

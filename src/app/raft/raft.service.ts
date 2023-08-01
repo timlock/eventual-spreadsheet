@@ -134,4 +134,16 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   public isActive(): boolean{
     return this.timer.isActive();
   }
+  get receivedMessageCounter(): number {
+    return this.communicationService.receivedMessageCounter;
+  }
+
+  get totalMessageCounter(): number {
+    return this.communicationService.totalMessageCounter;
+  }
+
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.observer?.onMessageCounterUpdate(received, total);
+  }
+
 }
