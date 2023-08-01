@@ -6,7 +6,7 @@ import {CommunicationServiceObserver} from "../../communication/controller/Commu
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
-import {ConsistencyCheckerService} from "../consistency-checker.service";
+import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',

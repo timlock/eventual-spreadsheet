@@ -1,16 +1,16 @@
-import {Identifier} from "../identifier/Identifier";
+import {Identifier} from "../../identifier/Identifier";
 import {TestBed} from "@angular/core/testing";
-import {RaftObserverBuilder} from "./RaftObserverBuilder";
-import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "./domain/message/RequestVoteRequest";
+import {RaftObserverBuilder} from "../util/RaftObserverBuilder";
+import {isRequestVoteRequest, isRequestVoteResponse, RequestVoteRequest} from "../domain/message/RequestVoteRequest";
 import {RaftNode} from "./RaftNode";
-import {NodeId, RaftMessage} from "./domain/Types";
+import {NodeId, RaftMessage} from "../domain/Types";
 import {
   AppendEntriesRequest,
   isAppendEntriesRequest,
   isAppendEntriesResponse
-} from "./domain/message/AppendEntriesRequest";
+} from "../domain/message/AppendEntriesRequest";
 import {RaftNodeObserver} from "./RaftNodeObserver";
-import {Log} from "./domain/message/Log";
+import {Log} from "../domain/message/Log";
 
 
 function buildCluster(observer: RaftNodeObserver, nodeIds: NodeId[]): Map<string, RaftNode> {

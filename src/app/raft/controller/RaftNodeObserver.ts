@@ -1,6 +1,6 @@
-import {Log} from "./domain/message/Log";
-import {NodeId, RaftMessage} from "./domain/Types";
-import {RaftMetaData} from "./RaftMetaData";
+import {Log} from "../domain/message/Log";
+import {NodeId, RaftMessage} from "../domain/Types";
+import {RaftMetaData} from "../util/RaftMetaData";
 
 export interface RaftNodeObserver {
   sendMessage(receiver: NodeId, message: RaftMessage): void;
