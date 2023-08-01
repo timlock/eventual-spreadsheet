@@ -84,7 +84,7 @@ export class RaftNode {
     if (this.role instanceof Candidate) {
       if (response.voteGranted && response.term === this.serverState.currentTerm) {
         this.role.addVote(response.id);
-        if (this.role.countVotes() > this.majority()) {
+        if (this.role.countVotes() >= this.majority()) {
           this.becomeLeader();
         }
       }
