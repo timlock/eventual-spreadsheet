@@ -17,6 +17,8 @@ export class CommunicationService<T> {
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
   private _isConnected: boolean = true;
+  private _receivedMessageCounter = 0;
+  private _totalMessageCounter = 0;
 
   public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
     if (this.channel !== undefined) {
@@ -36,6 +38,8 @@ export class CommunicationService<T> {
     this._nodes.clear();
     this.messageBuffer = new MessageBuffer<T>();
     this.versionVectorManager = new VersionVectorManager();
+    this._receivedMessageCounter = 0;
+    this._totalMessageCounter = 0;
   }
 
 
@@ -44,10 +48,12 @@ export class CommunicationService<T> {
       console.warn('Cant post message, channel is undefined');
       return;
     }
+    this._totalMessageCounter++;
     this.channel.postMessage(message);
   }
 
   private onMessage = (event: MessageEvent): any => {
+    this._totalMessageCounter++;
     if (!this._isConnected) {
       return;
     }
@@ -60,6 +66,7 @@ export class CommunicationService<T> {
       this.versionVectorManager.update(message.source, message.timestamp);
     }
     if (message.destination === this._identifier.uuid && message.payload !== undefined) {
+      this._receivedMessageCounter++;
       this.observer?.onMessage(message.payload, message.source);
     }
   }
@@ -129,5 +136,11 @@ export class CommunicationService<T> {
     return this._identifier;
   }
 
+  get receivedMessageCounter(): number {
+    return this._receivedMessageCounter;
+  }
 
+  get totalMessageCounter(): number {
+    return this._totalMessageCounter;
+  }
 }

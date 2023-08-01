@@ -7,4 +7,6 @@ export interface RaftServiceObserver<T> {
 
   onStateChange(state: RaftMetaData): void;
 
+  onMessageCounterUpdate(received: number, total: number): void;
+
 }

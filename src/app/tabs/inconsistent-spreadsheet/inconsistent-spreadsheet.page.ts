@@ -25,7 +25,8 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'inconsistent';
   private ionInput: any | undefined;
-
+  private _receivedMessageCounter = 0;
+  private _totalMessageCounter = 0;
   constructor(
     communicationService: CommunicationService<Action>,
     spreadsheetService: SpreadsheetService,
@@ -51,8 +52,6 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
-      console.log(this.ionInput)
-
     }
   }
 
@@ -191,6 +190,23 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
 
   set connectionEnabled(enabled: boolean) {
     this.communicationService.isConnected = enabled;
+  }
+
+  get receivedMessageCounter(): number {
+    this._receivedMessageCounter = this.communicationService.receivedMessageCounter;
+    return this._receivedMessageCounter;
+  }
+
+  get totalMessageCounter(): number {
+    this._totalMessageCounter = this.communicationService.totalMessageCounter;
+    return this._totalMessageCounter;
+  }
+
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.ngZone.run(()=> {
+      this._receivedMessageCounter = received;
+      this._totalMessageCounter = total;
+    });
   }
 
 }
