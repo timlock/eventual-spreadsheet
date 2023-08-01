@@ -1,15 +1,15 @@
 import {Injectable} from '@angular/core';
-import {CommunicationService} from "../communication/controller/communication.service";
-import {NodeId, RaftMessage} from "./domain/Types";
-import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
-import {Timer} from "./Timer";
+import {CommunicationService} from "../../communication/controller/communication.service";
+import {NodeId, RaftMessage} from "../domain/Types";
+import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
+import {Timer} from "../util/Timer";
 import {RaftNode} from "./RaftNode";
-import {Identifier} from "../identifier/Identifier";
+import {Identifier} from "../../identifier/Identifier";
 import {RaftNodeObserver} from "./RaftNodeObserver";
-import {Log} from "./domain/message/Log";
-import {isPayload, Action} from "../spreadsheet/util/Action";
-import {RaftServiceObserver} from "./RaftServiceObserver";
-import {RaftMetaData} from "./RaftMetaData";
+import {Log} from "../domain/message/Log";
+import {isPayload, Action} from "../../spreadsheet/util/Action";
+import {RaftServiceObserver} from "../util/RaftServiceObserver";
+import {RaftMetaData} from "../util/RaftMetaData";
 
 
 @Injectable({

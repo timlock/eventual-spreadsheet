@@ -1,17 +1,17 @@
 import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
-import {RaftService} from "../../raft/raft.service";
+import {RaftService} from "../../raft/controller/raft.service";
 import {ActionType} from "../../spreadsheet/domain/ActionType";
 import {Identifier} from "../../identifier/Identifier";
 import {isPayload, Action} from "../../spreadsheet/util/Action";
-import {RaftServiceObserver} from "../../raft/RaftServiceObserver";
+import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 import {Table} from "../../spreadsheet/domain/Table";
-import {RaftMetaData} from "../../raft/RaftMetaData";
-import {ConsistencyCheckerService} from "../consistency-checker.service";
+import {RaftMetaData} from "../../raft/util/RaftMetaData";
+import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 
 @Component({
   selector: 'app-consistent-spreadsheet',

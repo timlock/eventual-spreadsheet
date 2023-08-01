@@ -1,23 +1,23 @@
-import {LogIndex, NodeId, RaftMessage, Term} from "./domain/Types";
+import {LogIndex, NodeId, RaftMessage, Term} from "../domain/Types";
 import {
   isRequestVoteRequest,
   isRequestVoteResponse,
   RequestVoteRequest,
   RequestVoteResponse
-} from "./domain/message/RequestVoteRequest";
+} from "../domain/message/RequestVoteRequest";
 import {
   AppendEntriesRequest,
   AppendEntriesResponse,
   isAppendEntriesRequest,
   isAppendEntriesResponse
-} from "./domain/message/AppendEntriesRequest";
-import {Leader} from "./domain/state/Leader";
-import {Candidate} from "./domain/state/Candidate";
-import {Follower} from "./domain/state/Follower";
-import {ServerState} from "./domain/state/ServerState";
-import {isLog, Log} from "./domain/message/Log";
+} from "../domain/message/AppendEntriesRequest";
+import {Leader} from "../domain/state/Leader";
+import {Candidate} from "../domain/state/Candidate";
+import {Follower} from "../domain/state/Follower";
+import {ServerState} from "../domain/state/ServerState";
+import {isLog, Log} from "../domain/message/Log";
 import {RaftNodeObserver} from "./RaftNodeObserver";
-import {RaftMetaData} from "./RaftMetaData";
+import {RaftMetaData} from "../util/RaftMetaData";
 
 
 export class RaftNode {
@@ -84,7 +84,7 @@ export class RaftNode {
     if (this.role instanceof Candidate) {
       if (response.voteGranted && response.term === this.serverState.currentTerm) {
         this.role.addVote(response.id);
-        if (this.role.countVotes() > this.majority()) {
+        if (this.role.countVotes() >= this.majority()) {
           this.becomeLeader();
         }
       }

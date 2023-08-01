@@ -1,6 +1,6 @@
-import {RaftNodeObserver} from "./RaftNodeObserver";
-import {NodeId, RaftMessage} from "./domain/Types";
-import {Log} from "./domain/message/Log";
+import {RaftNodeObserver} from "../controller/RaftNodeObserver";
+import {NodeId, RaftMessage} from "../domain/Types";
+import {Log} from "../domain/message/Log";
 import {RaftMetaData} from "./RaftMetaData";
 
 export class RaftObserverBuilder {
