@@ -7,8 +7,6 @@ import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spr
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
-import {Router} from "@angular/router";
-import {InconsistentSpreadsheetPage} from "../inconsistent-spreadsheet/inconsistent-spreadsheet.page";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
@@ -16,6 +14,10 @@ import {InconsistentSpreadsheetPage} from "../inconsistent-spreadsheet/inconsist
   styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
 export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Uint8Array> {
+  private communicationService: CommunicationService<Uint8Array>;
+  private spreadsheetService: CrdtSpreadsheetService;
+  private ngZone: NgZone;
+  private consistencyChecker: ConsistencyCheckerService;
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
@@ -26,12 +28,15 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   private _totalMessageCounter = 0;
 
   constructor(
-    private communicationService: CommunicationService<Uint8Array>,
-    private spreadsheetService: CrdtSpreadsheetService,
-    private ngZone: NgZone,
-    private consistencyChecker: ConsistencyCheckerService,
-    private router: Router
+    communicationService: CommunicationService<Uint8Array>,
+    spreadsheetService: CrdtSpreadsheetService,
+    ngZone: NgZone,
+    consistencyChecker: ConsistencyCheckerService
   ) {
+    this.communicationService = communicationService;
+    this.spreadsheetService = spreadsheetService;
+    this.ngZone = ngZone;
+    this.consistencyChecker = consistencyChecker;
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
@@ -49,13 +54,8 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
 
-  public ionViewDidEnter() {
+  public ionViewDidEnter(){
     this.communicationService.openChannel(this.channelName, this);
-  }
-
-  public duplicate() {
-    // window.open(location.origin + '?' + InconsistentSpreadsheetPage.PAGE_PARAM + '=eventual-consistent')
-    window.open(this.router.url)
   }
 
 
@@ -183,7 +183,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(() => {
+    this.ngZone.run(()=> {
       this._receivedMessageCounter = received;
       this._totalMessageCounter = total;
     });
