@@ -1,10 +1,8 @@
 import {NodeId} from "../Types";
 
 export class Follower {
-  private _leaderId: NodeId | undefined;
 
-  constructor(leaderId?: NodeId) {
-    this._leaderId = leaderId;
+  constructor(private _leaderId?: NodeId) {
   }
 
   set leaderId(value: NodeId | undefined) {

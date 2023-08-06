@@ -8,7 +8,7 @@
     <ion-row>
       <ion-col size="auto">
         <ion-toggle [(ngModel)]="connectionEnabled">
-          <ion-title>Global coordination</ion-title>
+          <ion-title>Connected</ion-title>
         </ion-toggle>
       </ion-col>
       <ion-col size="auto">
@@ -21,7 +21,7 @@
         <ion-title>Received messages: {{receivedMessageCounter}}</ion-title>
       </ion-col>
       <ion-col size="auto">
-        <ion-title>Total messages: {{totalMessageCounter}}</ion-title>
+        <ion-title>Sent messages: {{totalMessageCounter}}</ion-title>
       </ion-col>
     </ion-row>
     <ion-row>
@@ -39,6 +39,16 @@
       <div *ngIf="nodes.size > 1 && !isActive">
         <ion-col size="auto">
           <ion-button (click)="start()">Start</ion-button>
+        </ion-col>
+      </div>
+      <div *ngIf="isActive">
+        <ion-col size="auto">
+          <ion-button [disabled]="true" >Start</ion-button>
+        </ion-col>
+      </div>
+      <div *ngIf="nodes.size <= 1">
+        <ion-col size="auto">
+          <ion-title>Required nodes to start: 3</ion-title>
         </ion-col>
       </div>
       <ion-col size="auto">

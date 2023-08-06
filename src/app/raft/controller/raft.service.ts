@@ -16,15 +16,13 @@ import {RaftMetaData} from "../util/RaftMetaData";
   providedIn: 'root'
 })
 export class RaftService implements RaftNodeObserver, CommunicationServiceObserver<RaftMessage> {
-  private readonly communicationService: CommunicationService<RaftMessage>;
   private readonly timer: Timer;
   private readonly node: RaftNode;
   private observer: RaftServiceObserver<Action> | undefined;
   private channelName: string = 'raft';
   private _isConnected: boolean = true;
 
-  constructor(communicationService: CommunicationService<RaftMessage>) {
-    this.communicationService = communicationService;
+  constructor(private readonly communicationService: CommunicationService<RaftMessage>) {
     this.timer = new Timer();
     this.node = new RaftNode(this.identifier.uuid, this, true);
   }
@@ -41,7 +39,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     this.communicationService.closeChannel();
   }
 
-  public start(){
+  public start() {
     this.node.start();
   }
 
@@ -131,15 +129,16 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     return this.node.getMetaData();
   }
 
-  public isActive(): boolean{
+  public isActive(): boolean {
     return this.timer.isActive();
   }
+
   get receivedMessageCounter(): number {
     return this.communicationService.receivedMessageCounter;
   }
 
-  get totalMessageCounter(): number {
-    return this.communicationService.totalMessageCounter;
+  get sentMessageCounter(): number {
+    return this.communicationService.sentMessageCounter;
   }
 
   public onMessageCounterUpdate(received: number, total: number) {

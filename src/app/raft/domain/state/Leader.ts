@@ -1,13 +1,12 @@
 import {LogIndex, NodeId} from "../Types";
 
 export class Leader {
-  private readonly _nextIndex: Map<NodeId, LogIndex>;
-  private readonly _matchIndex: Map<NodeId, LogIndex>;
 
+  constructor(
+    private readonly _nextIndex: Map<NodeId, LogIndex>,
+    private readonly _matchIndex: Map<NodeId, LogIndex>
+  ) {
 
-  constructor(nextIndex: Map<NodeId, LogIndex>, matchIndex: Map<NodeId, LogIndex>) {
-    this._nextIndex = nextIndex;
-    this._matchIndex = matchIndex;
   }
 
   get nextIndex(): Map<NodeId, LogIndex> {

@@ -2,12 +2,6 @@ import {Injectable} from '@angular/core';
 import {Table} from "../spreadsheet/domain/Table";
 import {Cell} from "../spreadsheet/domain/Cell";
 
-
-// interface Entry {
-//   table: Table<Cell>,
-//   totalUpdates: number
-// }
-
 @Injectable({
   providedIn: 'root'
 })
@@ -17,9 +11,6 @@ export class ConsistencyCheckerService {
   private nodes: string[] = [];
   private totalUpdates = 0;
   private start: number | undefined;
-
-  constructor() {
-  }
 
   public subscribe(id: string, initialTable: Table<Cell>, callback: (time: number) => void) {
     this.unsubscribe();

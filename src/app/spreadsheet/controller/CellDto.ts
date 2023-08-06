@@ -1,17 +1,13 @@
 import {Address} from "../domain/Address";
 
 export class CellDto {
-  private _address: Address;
-  private _input: string;
-  private _content: string |undefined;
-  private _colIndex: number;
-  private _rowIndex: number;
-
-  constructor(address: Address, colIndex: number, rowIndex: number, input = '', content?: string) {
-    this._address = address;
-    this._colIndex = colIndex;
-    this._rowIndex = rowIndex;
-    this._input = input;
+  constructor(
+    private _address: Address,
+    private _colIndex: number,
+    private _rowIndex: number,
+    private _input = '',
+    private _content?: string
+  ) {
   }
 
   get address(): Address {

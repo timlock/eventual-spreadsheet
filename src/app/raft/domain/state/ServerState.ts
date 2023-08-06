@@ -4,18 +4,16 @@ import {Log} from "../message/Log";
 export class ServerState {
   private _currentTerm: Term = 0;
   private _votedFor: string | undefined;
-  private _log: Log[];
   private _commitIndex: LogIndex = 0;
   private lastApplied: LogIndex = 0;
 
 
-  constructor(logs: Log[] = []) {
-    this._log = logs;
+  constructor(private _logs: Log[] = []) {
   }
 
   public fetchCommittedLogs(): Log[] {
     if (this.lastApplied < this.commitIndex) {
-      let result = this._log.slice(this.lastApplied, this.commitIndex);
+      let result = this._logs.slice(this.lastApplied, this.commitIndex);
       this.lastApplied = this.commitIndex;
       return result;
     }
@@ -23,14 +21,14 @@ export class ServerState {
   }
 
   public getMissingLogs(lastReplicated: LogIndex): Log[] {
-    return this._log.slice(lastReplicated);
+    return this._logs.slice(lastReplicated);
   }
 
   public replaceInvalidLogs(logIndex: LogIndex): boolean {
-    if (this._log[logIndex] === undefined) {
+    if (this._logs[logIndex] === undefined) {
       return false;
     }
-    this._log.splice(logIndex);
+    this._logs.splice(logIndex);
     return true;
   }
 
@@ -51,15 +49,15 @@ export class ServerState {
   }
 
   public getLogTerm(index: LogIndex): number | undefined {
-    return this._log[index - 1]?.term;
+    return this._logs[index - 1]?.term;
   }
 
   public hasLogAtIndex(index: LogIndex): boolean {
-    return this._log[index - 1] !== undefined || index == 0;
+    return this._logs[index - 1] !== undefined || index == 0;
   }
 
-  get log(): Log[] {
-    return this._log;
+  get logs(): Log[] {
+    return this._logs;
   }
 
   get commitIndex(): LogIndex {
@@ -72,11 +70,11 @@ export class ServerState {
 
 
   get lastLogIndex(): LogIndex {
-    return this._log.length
+    return this._logs.length
   }
 
   get lastLogTerm(): Term | undefined {
-    return this._log[this._log.length - 1]?.term;
+    return this._logs[this._logs.length - 1]?.term;
   }
 
   public isUpToDate(lastLogIndex: LogIndex, lastLogTerm?: Term): boolean {

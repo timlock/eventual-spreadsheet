@@ -1,13 +1,11 @@
 export class Timer {
-  private readonly min: number;
-  private readonly max: number;
-  private readonly fixed: number;
   private end: number | undefined;
 
-  constructor(min = 150, max = 300, fixed = 50) {
-    this.min = min;
-    this.max = max;
-    this.fixed = fixed;
+  constructor(
+    private readonly min = 150,
+    private readonly max = 300,
+    private readonly fixed = 50
+  ) {
   }
 
   public fixedDuration() {
@@ -22,7 +20,7 @@ export class Timer {
     this.end = undefined;
   }
 
-  public isActive(): boolean{
+  public isActive(): boolean {
     return this.end !== undefined;
   }
 
