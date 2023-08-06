@@ -17,9 +17,6 @@ import {Table} from "../../spreadsheet/domain/Table";
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
 export class InconsistentSpreadsheetPage implements AfterViewInit, CommunicationServiceObserver<Action> {
-  private communicationService: CommunicationService<Action>;
-  private spreadsheetService: SpreadsheetService;
-  private ngZone: NgZone;
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
@@ -27,14 +24,12 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
   private ionInput: any | undefined;
   private _receivedMessageCounter = 0;
   private _totalMessageCounter = 0;
+
   constructor(
-    communicationService: CommunicationService<Action>,
-    spreadsheetService: SpreadsheetService,
-    ngZone: NgZone
+    private communicationService: CommunicationService<Action>,
+    private spreadsheetService: SpreadsheetService,
+    private ngZone: NgZone
   ) {
-    this.communicationService = communicationService;
-    this.spreadsheetService = spreadsheetService;
-    this.ngZone = ngZone;
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
@@ -198,12 +193,12 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
   }
 
   get totalMessageCounter(): number {
-    this._totalMessageCounter = this.communicationService.totalMessageCounter;
+    this._totalMessageCounter = this.communicationService.sentMessageCounter;
     return this._totalMessageCounter;
   }
 
   public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(()=> {
+    this.ngZone.run(() => {
       this._receivedMessageCounter = received;
       this._totalMessageCounter = total;
     });

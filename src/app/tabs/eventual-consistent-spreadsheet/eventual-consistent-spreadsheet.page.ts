@@ -14,10 +14,6 @@ import {ConsistencyCheckerService} from "../../consistency-checker/consistency-c
   styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
 export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Uint8Array> {
-  private communicationService: CommunicationService<Uint8Array>;
-  private spreadsheetService: CrdtSpreadsheetService;
-  private ngZone: NgZone;
-  private consistencyChecker: ConsistencyCheckerService;
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
@@ -28,15 +24,11 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   private _totalMessageCounter = 0;
 
   constructor(
-    communicationService: CommunicationService<Uint8Array>,
-    spreadsheetService: CrdtSpreadsheetService,
-    ngZone: NgZone,
-    consistencyChecker: ConsistencyCheckerService
+    private communicationService: CommunicationService<Uint8Array>,
+    private spreadsheetService: CrdtSpreadsheetService,
+    private ngZone: NgZone,
+    private consistencyChecker: ConsistencyCheckerService
   ) {
-    this.communicationService = communicationService;
-    this.spreadsheetService = spreadsheetService;
-    this.ngZone = ngZone;
-    this.consistencyChecker = consistencyChecker;
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
@@ -178,7 +170,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   get totalMessageCounter(): number {
-    this._totalMessageCounter = this.communicationService.totalMessageCounter;
+    this._totalMessageCounter = this.communicationService.sentMessageCounter;
     return this._totalMessageCounter;
   }
 

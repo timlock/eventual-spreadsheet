@@ -1,9 +1,7 @@
 export class LogicalClock {
-  private range: number | undefined;
   private counter: number = -1;
 
-  public constructor(range?: number) {
-    this.range = range;
+  public constructor(private range?: number) {
   }
 
   public next(): number {

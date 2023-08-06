@@ -19,10 +19,6 @@ import {ConsistencyCheckerService} from "../../consistency-checker/consistency-c
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
 export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftServiceObserver<Action> {
-  private raftService: RaftService;
-  private spreadsheetService: SpreadsheetService;
-  private ngZone: NgZone;
-  private consistencyChecker: ConsistencyCheckerService;
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
@@ -35,15 +31,11 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
 
 
   constructor(
-    raftService: RaftService,
-    spreadsheetService: SpreadsheetService,
-    ngZone: NgZone,
-    consistencyChecker: ConsistencyCheckerService
+    private raftService: RaftService,
+    private spreadsheetService: SpreadsheetService,
+    private ngZone: NgZone,
+    private consistencyChecker: ConsistencyCheckerService
   ) {
-    this.raftService = raftService;
-    this.spreadsheetService = spreadsheetService;
-    this.ngZone = ngZone;
-    this.consistencyChecker = consistencyChecker;
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
@@ -238,7 +230,7 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   }
 
   get totalMessageCounter(): number {
-    this._totalMessageCounter = this.raftService.totalMessageCounter;
+    this._totalMessageCounter = this.raftService.sentMessageCounter;
     return this._totalMessageCounter;
   }
 

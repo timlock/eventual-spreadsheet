@@ -1,11 +1,12 @@
 import {LogicalClock} from "./LogicalClock";
 
 export class Identifier {
-  private clock : LogicalClock;
-  private readonly _uuid: string;
+  private clock: LogicalClock;
 
-  public constructor(tag: string, range? : number) {
-    this._uuid = tag;
+  public constructor(
+    private readonly _uuid: string,
+    range?: number
+  ) {
     this.clock = new LogicalClock(range);
   }
 

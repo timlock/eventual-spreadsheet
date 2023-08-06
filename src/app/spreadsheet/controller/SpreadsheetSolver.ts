@@ -9,10 +9,8 @@ import {Spreadsheet} from "./Spreadsheet";
 
 export class SpreadsheetSolver {
   private result: Table<Cell> | undefined;
-  private readonly table: Spreadsheet<Cell>;
 
-  constructor(table: Spreadsheet<Cell>) {
-    this.table = table;
+  constructor(private readonly table: Spreadsheet<Cell>) {
   }
 
   public reset() {

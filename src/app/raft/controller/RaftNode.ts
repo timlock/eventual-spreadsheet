@@ -21,19 +21,17 @@ import {RaftMetaData} from "../util/RaftMetaData";
 
 
 export class RaftNode {
-  private readonly _nodeId: NodeId;
-  private readonly observer: RaftNodeObserver;
   private role: Leader | Candidate | Follower = new Follower();
   private serverState: ServerState;
   private _cluster: Set<NodeId> = new Set();
   private commandBuffer: any[] = [];
-  private debug: boolean;
 
 
-  constructor(id: NodeId, observer: RaftNodeObserver, debug = false, logs: Log[] = []) {
-    this._nodeId = id;
-    this.observer = observer;
-    this.debug = debug;
+  constructor(
+    private readonly _nodeId: NodeId,
+    private readonly observer: RaftNodeObserver,
+    private debug = false, logs: Log[] = []
+  ) {
     this.serverState = new ServerState(logs);
   }
 
@@ -81,12 +79,10 @@ export class RaftNode {
     if (response.term > this.serverState.currentTerm) {
       this.becomeFollower(response.term);
     }
-    if (this.role instanceof Candidate) {
-      if (response.voteGranted && response.term === this.serverState.currentTerm) {
-        this.role.addVote(response.id);
-        if (this.role.countVotes() >= this.majority()) {
-          this.becomeLeader();
-        }
+    if (this.role instanceof Candidate && response.voteGranted && response.term === this.serverState.currentTerm) {
+      this.role.addVote(response.id);
+      if (this.role.countVotes() >= this.majority()) {
+        this.becomeLeader();
       }
     }
   }
@@ -122,12 +118,12 @@ export class RaftNode {
     // }
     // this.serverState.log.splice(request.prevLogIndex -1);
     let removedLogs = this.serverState.replaceInvalidLogs(request.prevLogIndex);
-    if(removedLogs){
+    if (removedLogs) {
       this.print('Removed invalid logs after index ', request.prevLogIndex);
     }
-    this.serverState.log.push(...request.entries)
+    this.serverState.logs.push(...request.entries)
     if (request.leaderCommit > this.serverState.commitIndex) {
-      this.serverState.commitIndex = Math.min(request.leaderCommit, this.serverState.log.length);
+      this.serverState.commitIndex = Math.min(request.leaderCommit, this.serverState.logs.length);
       this.serverState.fetchCommittedLogs().forEach(log => this.observer.onLog(log));
       this.print('Leader increased commitIndex to: ', this.serverState.commitIndex);
       this.observer.onStateChange(this.getMetaData());
@@ -157,7 +153,7 @@ export class RaftNode {
           return;
         }
         let prevLogTerm = this.serverState.getLogTerm(prevLogIndex)!;
-        let logs = this.serverState.log.slice(prevLogIndex);
+        let logs = this.serverState.logs.slice(prevLogIndex);
         this.appendEntriesRequest(response.id, prevLogIndex, prevLogTerm, logs);
         return;
       }
@@ -182,7 +178,7 @@ export class RaftNode {
       this.print('Received command: ', log);
       let prevLogIndex = this.serverState.lastLogIndex;
       let prevLogTerm = this.serverState.lastLogTerm;
-      this.serverState.log.push(log);
+      this.serverState.logs.push(log);
       this._cluster.forEach(id => this.appendEntriesRequest(id, prevLogIndex, prevLogTerm, [log]));
     } else {
       this.warn('Cant handle command as: ', this.role)
@@ -273,7 +269,7 @@ export class RaftNode {
     let nextIndex = new Map();
     let matchIndex = new Map();
     this._cluster.forEach(id => {
-      nextIndex.set(id, this.serverState.log.length + 1);
+      nextIndex.set(id, this.serverState.logs.length + 1);
       matchIndex.set(id, 0);
     });
     this.role = new Leader(nextIndex, matchIndex);
@@ -330,7 +326,7 @@ export class RaftNode {
     this._cluster.add(id);
     if (this._cluster.size > oldSize) {
       if (this.role instanceof Leader) {
-        this.role.nextIndex.set(id, this.serverState.log.length + 1);
+        this.role.nextIndex.set(id, this.serverState.logs.length + 1);
         this.role.matchIndex.set(id, 0);
       }
       return true;
@@ -368,7 +364,7 @@ export class RaftNode {
   }
 
   get allLogs(): Log[] {
-    return this.serverState.log;
+    return this.serverState.logs;
   }
 
   get clusterSize(): number {
