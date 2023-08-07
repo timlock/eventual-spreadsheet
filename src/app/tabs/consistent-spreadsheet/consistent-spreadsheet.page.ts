@@ -27,7 +27,7 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   private ionInput: any | undefined;
   private _trackedTime: number | undefined;
   private _receivedMessageCounter = 0;
-  private _totalMessageCounter = 0;
+  private _sentMessageCounter = 0;
 
 
   constructor(
@@ -53,12 +53,13 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   }
 
 
-  public ionViewDidEnter(){
+  public ionViewDidEnter() {
     this.raftService.openChannel(this.channelName, this);
   }
 
-  public start(){
+  public start() {
     this.raftService.start();
+    this.ionInput.disabled = false;
   }
 
 
@@ -194,20 +195,17 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     return this._nodes;
   }
 
-  get clusterSize(): number {
-    return this.nodes.size;
-  }
-
   get identifier(): Identifier {
     return this.raftService.identifier;
   }
 
-  get connectionEnabled(): boolean {
+  get isConnected(): boolean {
     return this.raftService.isConnected;
   }
 
-  set connectionEnabled(enabled: boolean) {
+  set isConnected(enabled: boolean) {
     this.raftService.isConnected = enabled;
+    this.ionInput.disabled = !this.raftService.isConnected;
   }
 
   get raftMetaData(): RaftMetaData {
@@ -229,15 +227,15 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     return this._receivedMessageCounter;
   }
 
-  get totalMessageCounter(): number {
-    this._totalMessageCounter = this.raftService.sentMessageCounter;
-    return this._totalMessageCounter;
+  get sentMessageCounter(): number {
+    this._sentMessageCounter = this.raftService.sentMessageCounter;
+    return this._sentMessageCounter;
   }
 
   public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(()=> {
+    this.ngZone.run(() => {
       this._receivedMessageCounter = received;
-      this._totalMessageCounter = total;
+      this._sentMessageCounter = total;
     });
   }
 }

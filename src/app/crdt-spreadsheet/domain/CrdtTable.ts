@@ -4,8 +4,8 @@ import {Transaction} from "yjs";
 import {Spreadsheet} from "../../spreadsheet/controller/Spreadsheet";
 
 
-export class CrdtTable<T> implements Spreadsheet<T>{
-  private readonly ydoc = new Y.Doc;
+export class CrdtTable<T> implements Spreadsheet<T> {
+  private readonly ydoc = new Y.Doc();
   private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
@@ -19,7 +19,8 @@ export class CrdtTable<T> implements Spreadsheet<T>{
       updates.push(update);
     });
     action();
-    this.ydoc.off(CrdtTable.UPDATE_MODE, () => {});
+    this.ydoc.off(CrdtTable.UPDATE_MODE, () => {
+    });
     return Y.mergeUpdatesV2(updates);
   }
 
@@ -36,7 +37,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
       console.log("Failed to insert id:" + id + " before id: " + before + " in rows: " + this.rows);
       return undefined;
     }
-    return this.catchUpdate(() =>{
+    return this.catchUpdate(() => {
       this._rows.insert(index, [id]);
       this._keepRows.set(id, this.ydoc.clientID);
     });
@@ -50,7 +51,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
       return undefined;
     }
     if (this._keepRows.has(id)) {
-      return this.catchUpdate(() =>{
+      return this.catchUpdate(() => {
         this._keepRows.delete(id);
       });
     }
@@ -58,7 +59,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
   }
 
   public addColumn(id: string): Uint8Array {
-    return this.catchUpdate(() =>{
+    return this.catchUpdate(() => {
       this._columns.push([id]);
       this._keepColumns.set(id, this.ydoc.clientID);
     });
@@ -71,7 +72,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this.columns);
       return undefined;
     }
-    return this.catchUpdate(() =>{
+    return this.catchUpdate(() => {
       this._columns.insert(index, [id]);
       this._keepColumns.set(id, this.ydoc.clientID);
     });
@@ -84,7 +85,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
       return;
     }
     if (this._keepColumns.has(id)) {
-      return this.catchUpdate(() =>{
+      return this.catchUpdate(() => {
         this._keepColumns.delete(id);
       });
     }
@@ -93,7 +94,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
 
 
   public deleteValue(addres: Address): Uint8Array {
-    return this.catchUpdate(() =>{
+    return this.catchUpdate(() => {
       this._cells.get(addres.row)?.delete(addres.column);
     });
   }
@@ -104,7 +105,7 @@ export class CrdtTable<T> implements Spreadsheet<T>{
 
   public set(address: Address, value: T): Uint8Array | undefined {
     let row = this._cells.get(address.row)
-    return this.catchUpdate(() =>{
+    return this.catchUpdate(() => {
       if (row === undefined) {
         row = new Y.Map<T>();
         this._cells.set(address.row, row);
