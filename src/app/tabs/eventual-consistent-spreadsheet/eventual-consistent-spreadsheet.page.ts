@@ -21,7 +21,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   private ionInput: any | undefined;
   private _trackedTime: number | undefined;
   private _receivedMessageCounter = 0;
-  private _totalMessageCounter = 0;
+  private _sentMessageCounter = 0;
 
   constructor(
     private communicationService: CommunicationService<Uint8Array>,
@@ -139,19 +139,15 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
     return this._nodes;
   }
 
-  get clusterSize(): number {
-    return this.nodes.size;
-  }
-
   get identifier(): Identifier {
     return this.communicationService.identifier;
   }
 
-  get connectionEnabled(): boolean {
+  get isConnected(): boolean {
     return this.communicationService.isConnected;
   }
 
-  set connectionEnabled(enabled: boolean) {
+  set isConnected(enabled: boolean) {
     this.communicationService.isConnected = enabled;
   }
 
@@ -169,15 +165,15 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
     return this._receivedMessageCounter;
   }
 
-  get totalMessageCounter(): number {
-    this._totalMessageCounter = this.communicationService.sentMessageCounter;
-    return this._totalMessageCounter;
+  get sentMessageCounter(): number {
+    this._sentMessageCounter = this.communicationService.sentMessageCounter;
+    return this._sentMessageCounter;
   }
 
   public onMessageCounterUpdate(received: number, total: number) {
     this.ngZone.run(()=> {
       this._receivedMessageCounter = received;
-      this._totalMessageCounter = total;
+      this._sentMessageCounter = total;
     });
   }
 }
