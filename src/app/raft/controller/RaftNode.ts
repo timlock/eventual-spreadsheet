@@ -90,7 +90,7 @@ export class RaftNode {
 
   private handleAppendEntriesRequest(request: AppendEntriesRequest) {
     this.print('Handle AppendEntriesRequest: ', request);
-    if (request.term > this.serverState.currentTerm || (this.role instanceof Candidate && this.serverState.currentTerm == request.term)) {
+    if (request.term > this.serverState.currentTerm || (this.role instanceof Candidate && this.serverState.currentTerm === request.term)) {
       this.becomeFollower(request.term, request.leaderId);
     }
     if (this.role instanceof Follower) {

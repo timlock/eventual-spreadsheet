@@ -39,7 +39,7 @@ export class CellParser {
     }
     let first = this.parse(addrPair[0]);
     let second = this.parse(addrPair[1]);
-    if (first == undefined || second == undefined) {
+    if (first === undefined || second === undefined) {
       return undefined;
     }
     return [first, second];

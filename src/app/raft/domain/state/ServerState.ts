@@ -53,7 +53,7 @@ export class ServerState {
   }
 
   public hasLogAtIndex(index: LogIndex): boolean {
-    return this._logs[index - 1] !== undefined || index == 0;
+    return this._logs[index - 1] !== undefined || !(index !== 0);
   }
 
   get logs(): Log[] {

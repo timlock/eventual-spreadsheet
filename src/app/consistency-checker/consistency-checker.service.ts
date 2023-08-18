@@ -40,7 +40,7 @@ export class ConsistencyCheckerService {
 
   public addNodes(...nodes: string[]) {
     for (const node of nodes) {
-      if (this.nodes.indexOf(node) == -1) {
+      if (this.nodes.indexOf(node) === -1) {
         this.nodes.push(node);
       }
     }

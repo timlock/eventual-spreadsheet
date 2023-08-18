@@ -12,7 +12,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public insertRow(id: string, row: string) {
     let index = this._rows.indexOf(row);
-    if (index == -1) {
+    if (index ===-1) {
       console.log("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
       return;
     }
@@ -21,7 +21,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public deleteRow(id: string) {
     let index = this._rows.indexOf(id);
-    if (index == -1) {
+    if (index ===-1) {
       console.log("Failed to remove id:" + id + " in rows: " + this._rows);
       return;
     }
@@ -34,7 +34,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public insertColumn(id: string, column: string) {
     let index = this._columns.indexOf(column);
-    if (index == -1) {
+    if (index ===-1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);
       return;
     }
@@ -43,7 +43,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public deleteColumn(id: string) {
     let index = this._columns.indexOf(id);
-    if (index == -1) {
+    if (index ===-1) {
       console.log("Failed to remove id:" + id + " in columns: " + this._columns);
       return;
     }
@@ -76,7 +76,7 @@ export class Table<T> implements Spreadsheet<T> {
     let beginRow = this._rows.indexOf(range[0].row);
     let endCol = this._columns.indexOf(range[1].column);
     let endRow = this._rows.indexOf(range[1].row);
-    if (beginCol == -1 || beginRow == -1 || endCol == -1 || endRow == -1) {
+    if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
       return [];
     }
     let rowIds = this._rows.slice(beginRow, endRow + 1);
