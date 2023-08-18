@@ -75,22 +75,21 @@ export class CommunicationService<T> {
     this.messageBuffer.getMissingMessages(destination, timestamp).forEach(message => this.postMessage(message));
   }
 
-  public send(payload: T, destination?: string): boolean {
+  public send(payload: T, destination?: string, atLeastOnce = true) {
     let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
-    message = this.messageBuffer.add(message);
-    if (destination === undefined) {
-      this._nodes.forEach(dest => {
-        message.destination = dest;
-        if (this._isConnected) {
-          this.postMessage(message);
-        }
-      });
-      return true;
+    if(atLeastOnce){
+      message = this.messageBuffer.add(message);
     }
     if (this._isConnected) {
+      if (destination === undefined) {
+        this._nodes.forEach(dest => {
+          message.destination = dest;
+          this.postMessage(message);
+        });
+        return;
+      }
       this.postMessage(message);
     }
-    return true;
   }
 
   public onNode(nodeId: string) {

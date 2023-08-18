@@ -59,7 +59,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   public sendMessage(destination: NodeId, raftMessage: RaftMessage): void {
     if (this._isConnected) {
-      this.communicationService.send(raftMessage, destination);
+      this.communicationService.send(raftMessage, destination, false);
     }
   }
 
