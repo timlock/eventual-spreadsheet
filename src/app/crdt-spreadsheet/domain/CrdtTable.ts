@@ -6,7 +6,6 @@ import {Spreadsheet} from "../../spreadsheet/controller/Spreadsheet";
 export class CrdtTable<T> implements Spreadsheet<T> {
   private readonly ydoc = new Y.Doc();
   private readonly _cells: Y.Map<T> = this.ydoc.getMap('cells');
-  // private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
   private readonly _keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
@@ -93,26 +92,18 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   }
 
 
-  public deleteValue(addres: Address): Uint8Array {
+  public deleteValue(address: Address): Uint8Array {
     return this.catchUpdate(() => {
-      // this._cells.get(addres.row)?.delete(addres.column);
-      this._cells.delete(JSON.stringify(addres));
+      this._cells.delete(JSON.stringify(address));
     });
   }
 
   public get(address: Address): T | undefined {
-    // return this._cells.get(address.row)?.get(address.column);
     return this._cells.get(JSON.stringify(address));
   }
 
   public set(address: Address, value: T): Uint8Array | undefined {
-    // let row = this._cells.get(address.row)
     return this.catchUpdate(() => {
-      // if (row === undefined) {
-      //   row = new Y.Map<T>();
-      //   this._cells.set(address.row, row);
-      // }
-      // row.set(address.column, value);
       this._cells.set(JSON.stringify(address), value);
       this._keepRows.set(address.row, this.ydoc.clientID);
       this._keepColumns.set(address.column, this.ydoc.clientID);
