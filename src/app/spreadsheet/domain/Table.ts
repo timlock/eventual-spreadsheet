@@ -4,7 +4,7 @@ import {Spreadsheet} from "../controller/Spreadsheet";
 export class Table<T> implements Spreadsheet<T> {
   private readonly _rows: string[] = [];
   private readonly _columns: string[] = [];
-  private readonly _cells: Map<string, Map<string, T>> = new Map();
+  private readonly _cells: Map<string, T> = new Map();
 
   public addRow(id: string) {
     this._rows.push(id);
@@ -52,30 +52,28 @@ export class Table<T> implements Spreadsheet<T> {
 
 
   public deleteValue(address: Address) {
-    this.cells.get(address.row)?.delete(address.column);
+    this._cells.delete(JSON.stringify(address));
   }
 
   public get(address: Address): T | undefined {
-    return this.cells.get(address.row)?.get(address.column);
+    return this._cells.get(JSON.stringify(address));
   }
 
   public set(address: Address, value: T) {
-    let row = this.cells.get(address.row) || new Map();
-    row.set(address.column, value);
-    this.cells.set(address.row, row);
+    this._cells.set(JSON.stringify(address), value);
   }
 
-  public getCellRange(range: [Address, Address]): T[] {
-    return this.getAddressRange(range)
-      .filter(a => this.cells.get(a.row)?.get(a.column) != undefined)
-      .map(a => this.cells.get(a.row)!.get(a.column)!);
+  public getCellRange(begin: Address, end: Address): T[] {
+    return this.getAddressRange(begin, end)
+      .filter(a => this.get(a) != undefined)
+      .map(a => this.get(a)!);
   }
 
-  public getAddressRange(range: [Address, Address]): Address[] {
-    let beginCol = this._columns.indexOf(range[0].column);
-    let beginRow = this._rows.indexOf(range[0].row);
-    let endCol = this._columns.indexOf(range[1].column);
-    let endRow = this._rows.indexOf(range[1].row);
+  public getAddressRange(begin: Address, end: Address): Address[] {
+    let beginCol = this._columns.indexOf(begin.column);
+    let beginRow = this._rows.indexOf(begin.row);
+    let endCol = this._columns.indexOf(end.column);
+    let endRow = this._rows.indexOf(end.row);
     if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
       return [];
     }
@@ -98,7 +96,8 @@ export class Table<T> implements Spreadsheet<T> {
     return this._columns;
   }
 
-  get cells(): Map<string, Map<string, T>> {
+
+  get cells(): Map<string, T> {
     return this._cells;
   }
 

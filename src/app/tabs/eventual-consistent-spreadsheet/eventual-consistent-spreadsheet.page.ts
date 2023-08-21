@@ -22,6 +22,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   private _trackedTime: number | undefined;
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
+  private modifiedState: boolean = false;
 
   constructor(
     private communicationService: CommunicationService<Uint8Array>,
@@ -46,7 +47,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
 
-  public ionViewDidEnter(){
+  public ionViewDidEnter() {
     this.communicationService.openChannel(this.channelName, this);
   }
 
@@ -92,7 +93,12 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   private performAction(action: () => Uint8Array | undefined) {
-    this.consistencyChecker.modifiedState();
+    if(this.isConnected){
+      this.consistencyChecker.submittedState();
+      this.modifiedState = false;
+    }else{
+      this.modifiedState = true;
+    }
     this.ngZone.run(() => this._trackedTime = undefined);
     let update = action();
     this.consistencyChecker.updateApplied(this.table);
@@ -117,7 +123,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   public onMessage(message: Uint8Array, source: string) {
-    this.consistencyChecker.modifiedState();
+    this.consistencyChecker.submittedState();
     this.spreadsheetService.applyUpdate(message);
     this.consistencyChecker.updateApplied(this.spreadsheetService.getTable());
     this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
@@ -148,6 +154,10 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   set isConnected(enabled: boolean) {
+    if (enabled && this.modifiedState) {
+      this.consistencyChecker.submittedState();
+      this.modifiedState = false;
+    }
     this.communicationService.isConnected = enabled;
   }
 
@@ -171,7 +181,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(()=> {
+    this.ngZone.run(() => {
       this._receivedMessageCounter = received;
       this._sentMessageCounter = total;
     });

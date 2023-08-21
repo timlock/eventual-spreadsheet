@@ -28,7 +28,7 @@ describe('Table', () => {
 
     table.set(firstAddress, firstCell);
     table.set(secondAddress, secondCell);
-    let result = table.getCellRange(range);
+    let result = table.getCellRange(range[0], range[1]);
     expect(result.length).toEqual(2);
     expect(result[0]).toEqual(firstCell);
     expect(result[1]).toEqual(secondCell);

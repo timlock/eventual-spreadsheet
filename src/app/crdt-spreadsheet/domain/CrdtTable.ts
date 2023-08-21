@@ -1,12 +1,12 @@
 import * as Y from 'yjs'
 import {Address} from "../../spreadsheet/domain/Address";
-import {Transaction} from "yjs";
 import {Spreadsheet} from "../../spreadsheet/controller/Spreadsheet";
 
 
 export class CrdtTable<T> implements Spreadsheet<T> {
   private readonly ydoc = new Y.Doc();
-  private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
+  private readonly _cells: Y.Map<T> = this.ydoc.getMap('cells');
+  // private readonly _cells: Y.Map<Y.Map<T>> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
   private readonly _keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
@@ -15,7 +15,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
   private catchUpdate(action: () => void): Uint8Array {
     let updates: Uint8Array[] = [];
-    this.ydoc.on(CrdtTable.UPDATE_MODE, (update: Uint8Array, origin: any, doc: Y.Doc, tr: Transaction) => {
+    this.ydoc.on(CrdtTable.UPDATE_MODE, (update: Uint8Array) => {
       updates.push(update);
     });
     action();
@@ -95,38 +95,41 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
   public deleteValue(addres: Address): Uint8Array {
     return this.catchUpdate(() => {
-      this._cells.get(addres.row)?.delete(addres.column);
+      // this._cells.get(addres.row)?.delete(addres.column);
+      this._cells.delete(JSON.stringify(addres));
     });
   }
 
   public get(address: Address): T | undefined {
-    return this._cells.get(address.row)?.get(address.column);
+    // return this._cells.get(address.row)?.get(address.column);
+    return this._cells.get(JSON.stringify(address));
   }
 
   public set(address: Address, value: T): Uint8Array | undefined {
-    let row = this._cells.get(address.row)
+    // let row = this._cells.get(address.row)
     return this.catchUpdate(() => {
-      if (row === undefined) {
-        row = new Y.Map<T>();
-        this._cells.set(address.row, row);
-      }
-      row.set(address.column, value);
+      // if (row === undefined) {
+      //   row = new Y.Map<T>();
+      //   this._cells.set(address.row, row);
+      // }
+      // row.set(address.column, value);
+      this._cells.set(JSON.stringify(address), value);
       this._keepRows.set(address.row, this.ydoc.clientID);
       this._keepColumns.set(address.column, this.ydoc.clientID);
     });
   }
 
-  public getCellRange(range: [Address, Address]): T[] {
-    return this.getAddressRange(range)
-      .filter(a => this._cells.get(a.row)?.get(a.column) != undefined)
-      .map(a => this._cells.get(a.row)!.get(a.column)!);
+  public getCellRange(begin: Address, end: Address): T[] {
+    return this.getAddressRange(begin, end)
+      .filter(a => this.get(a) != undefined)
+      .map(a => this.get(a)!);
   }
 
-  public getAddressRange(range: [Address, Address]): Address[] {
-    let beginCol = this.columns.indexOf(range[0].column);
-    let beginRow = this.rows.indexOf(range[0].row);
-    let endCol = this.columns.indexOf(range[1].column);
-    let endRow = this.rows.indexOf(range[1].row);
+  public getAddressRange(begin: Address, end: Address): Address[] {
+    let beginCol = this.columns.indexOf(begin.column);
+    let beginRow = this.rows.indexOf(begin.row);
+    let endCol = this.columns.indexOf(end.column);
+    let endRow = this.rows.indexOf(end.row);
     if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
       return [];
     }

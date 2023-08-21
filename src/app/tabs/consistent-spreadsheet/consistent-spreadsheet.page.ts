@@ -59,7 +59,6 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
 
   public start() {
     this.raftService.start();
-    this.ionInput.disabled = false;
   }
 
 
@@ -110,7 +109,7 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   }
 
   private performAction(action: Action) {
-    this.consistencyChecker.modifiedState();
+    this.consistencyChecker.submittedState();
     this.ngZone.run(() => this._trackedTime = undefined);
     this.raftService.performAction(action);
   }
@@ -144,6 +143,7 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   public onNode(nodeId: string) {
     this._nodes.add(nodeId);
     this.ngZone.run(() => this._nodes = this.raftService.nodes);
+    this.consistencyChecker.addNodes(nodeId);
   }
 
   public onStateChange(state: RaftMetaData) {
@@ -205,7 +205,6 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
 
   set isConnected(enabled: boolean) {
     this.raftService.isConnected = enabled;
-    this.ionInput.disabled = !this.raftService.isConnected;
   }
 
   get raftMetaData(): RaftMetaData {

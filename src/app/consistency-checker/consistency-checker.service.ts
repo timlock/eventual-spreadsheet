@@ -48,18 +48,16 @@ export class ConsistencyCheckerService {
 
 
   public reachedConsistentState(): boolean {
-    let myEntry = this.read(this.id);
+    let myEntry = localStorage.getItem(this.id);
     if (myEntry === undefined) {
       return false;
     }
-    let stateList = this.nodes.map(nodeId => this.read(nodeId));
-    return stateList.every(other => other !== undefined && myEntry?.equals(other));
+    let stateList = this.nodes.map(nodeId => localStorage.getItem(nodeId));
+    return stateList.every(other => myEntry === other);
   }
 
 
-
-
-  public modifiedState() {
+  public submittedState() {
     if (this.start === undefined) {
       this.start = Date.now();
     }
@@ -67,29 +65,24 @@ export class ConsistencyCheckerService {
 
   public updateApplied(newTable: Table<Cell>) {
     this.persist(newTable);
-    if (this.start === undefined || this.callback === undefined) {
-      return;
+    if (this.start !== undefined && this.callback !== undefined) {
+      let possibleDuration = Date.now() - this.start;
+      if (this.reachedConsistentState()) {
+        this.start = undefined;
+        this.callback(possibleDuration);
+      }
     }
-    let possibleDuration = Date.now() - this.start;
-    if (this.reachedConsistentState()) {
-      this.start = undefined;
-      this.callback(possibleDuration);
-    }
-  }
-
-  public read(id: string): Table<Cell> | undefined {
-    let json = localStorage.getItem(id);
-    if (json === null) {
-      return undefined;
-    }
-    let object = JSON.parse(json) as Table<Cell>;
-    let placeHolder = new Table<Cell>()
-    return Object.assign(placeHolder, object);
   }
 
   private persist(entry: Table<Cell>) {
-    let value = JSON.stringify(entry);
-    localStorage.setItem(this.id, value);
+    let value: Entry = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
+    localStorage.setItem(this.id, JSON.stringify(value));
   }
 
+}
+
+interface Entry {
+  rows: string[],
+  columns: string[],
+  cells: [string, Cell][]
 }

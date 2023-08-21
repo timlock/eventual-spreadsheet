@@ -24,7 +24,7 @@ describe('ConsistencyCheckerService', () => {
       expect(time).toBeDefined();
       stopped = true;
     });
-    service.modifiedState();
+    service.submittedState();
     expect(stopped).toBeFalse();
     service.updateApplied(new Table<Cell>());
     expect(stopped).toBeTrue();
@@ -39,7 +39,7 @@ describe('ConsistencyCheckerService', () => {
       expect(time).toBeDefined();
       stopped = true;
     });
-    service.modifiedState();
+    service.submittedState();
     service.updateApplied(new Table<Cell>());
     expect(stopped).toBeTrue();
   });

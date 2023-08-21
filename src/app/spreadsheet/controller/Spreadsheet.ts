@@ -7,5 +7,5 @@ export interface Spreadsheet<T> {
 
   get(address: Address): T | undefined;
 
-  getAddressRange(range: [Address, Address]): Address[];
+  getAddressRange(begin: Address, end: Address): Address[];
 }
