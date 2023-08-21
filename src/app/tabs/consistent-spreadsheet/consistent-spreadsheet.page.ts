@@ -12,6 +12,7 @@ import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 import {Table} from "../../spreadsheet/domain/Table";
 import {RaftMetaData} from "../../raft/util/RaftMetaData";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
+import {AlertButton, AlertController} from "@ionic/angular";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
@@ -34,7 +35,8 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     private raftService: RaftService,
     private spreadsheetService: SpreadsheetService,
     private ngZone: NgZone,
-    private consistencyChecker: ConsistencyCheckerService
+    private consistencyChecker: ConsistencyCheckerService,
+    private alertController: AlertController
   ) {
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
@@ -109,9 +111,47 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   }
 
   private performAction(action: Action) {
+    if (!this.raftService.isActive() || !this.raftService.isConnected) {
+      this.presentAlert().finally();
+      return;
+    }
     this.consistencyChecker.submittedState();
     this.ngZone.run(() => this._trackedTime = undefined);
     this.raftService.performAction(action);
+  }
+
+  private async presentAlert() {
+    let alert;
+    if (!this.raftService.isConnected && this.raftService.isActive()) {
+      alert = await this.alertController.create({
+        header: 'Can not alter spreadsheet',
+        message: 'Connection must be enabled!',
+        buttons: ['OK'],
+      });
+    } else if (this.canBeStarted()) {
+      alert = await this.alertController.create({
+        header: 'Can not alter spreadsheet',
+        message: 'Raft needs to be started first!',
+        buttons: [{
+          text: 'Cancel',
+          role: 'cancel'
+        },
+          {
+            text: 'Start raft',
+            role: 'confirm',
+            handler: () => {
+              this.raftService.start();
+            },
+          },],
+      });
+    } else {
+      alert = await this.alertController.create({
+        header: 'Can not alter spreadsheet',
+        message: `${this.nodes}`,
+        buttons: ['OK'],
+      });
+    }
+    await alert.present();
   }
 
   public deleteCell(cell: CellDto) {
@@ -180,6 +220,9 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     }
   }
 
+  public canBeStarted(): boolean{
+    return this.raftService.canBeStarted();
+  }
 
   get table(): Table<Cell> {
     this._table = this.spreadsheetService.getTable();

@@ -105,6 +105,10 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     }
   }
 
+  public canBeStarted(): boolean{
+    return this.isConnected && !this.isActive() && this.nodes.size > 1;
+  }
+
   get nodes(): Set<string> {
     return this.node.cluster;
   }
