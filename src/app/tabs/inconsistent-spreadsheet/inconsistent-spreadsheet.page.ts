@@ -24,6 +24,7 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
   private ionInput: any | undefined;
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
+  private _growQuantity: number = 0;
 
   constructor(
     private communicationService: CommunicationService<Action>,
@@ -101,6 +102,46 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     this.insertCell(cell);
   }
 
+
+  public clear() {
+    for (let column of this.spreadsheetService.columns) {
+      for (let row of this.spreadsheetService.rows) {
+        let cell = this.spreadsheetService.getCellById({column: column, row: row});
+        this.deleteCell(cell);
+      }
+    }
+    let rows = Array.from(this.spreadsheetService.rows);
+    for (let row of rows) {
+      this.deleteRow(row);
+    }
+    let columns = Array.from(this.spreadsheetService.columns);
+    for (let column of columns) {
+      this.deleteColumn(column);
+    }
+  }
+
+  public grow(quantity: number) {
+    console.log('Grow', quantity)
+    for (let i = 0; i < quantity; i++) {
+      this.addColumn();
+      this.addRow();
+    }
+  }
+
+  public fillTable() {
+    for (let colIndex = 0; colIndex < this.spreadsheetService.columns.length; colIndex++) {
+      for (let rowIndex = 0; rowIndex < this.spreadsheetService.rows.length; rowIndex++) {
+        let address = this.spreadsheetService.getAddressByIndex(colIndex, rowIndex);
+        if (address === undefined) {
+          console.warn(`Cant get address for index column: ${colIndex} index row: ${rowIndex}`)
+          return;
+        }
+        let cell = new CellDto(address, colIndex, rowIndex, this.identifier.next());
+        this.insertCell(cell);
+      }
+    }
+  }
+
   public getCell(column: string, row: string): Cell | undefined {
     return this.spreadsheetService.getTable().get({column: column, row: row});
   }
@@ -157,6 +198,14 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     }
   }
 
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.ngZone.run(() => {
+      this._receivedMessageCounter = received;
+      this._sentMessageCounter = total;
+    });
+  }
+
+
   get table(): Table<Cell> {
     this._table = this.spreadsheetService.getTable();
     return this._table;
@@ -194,12 +243,13 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     return this._sentMessageCounter;
   }
 
-  public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(() => {
-      this._receivedMessageCounter = received;
-      this._sentMessageCounter = total;
-    });
+
+  get growQuantity(): number {
+    return this._growQuantity;
   }
 
+  set growQuantity(value: number) {
+    this._growQuantity = value;
+  }
 }
 

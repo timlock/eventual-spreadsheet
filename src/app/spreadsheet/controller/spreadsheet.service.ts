@@ -17,6 +17,7 @@ export class SpreadsheetService {
     this.fillTable();
   }
 
+
   private fillTable() {
     let counter = 0;
     let tag = 'init';

@@ -19,11 +19,20 @@
               <ion-item>
                 <ion-label>Time: {{trackedTime}}</ion-label>
               </ion-item>
-              <ion-item *ngIf="isActive">
-                <ion-button (click)="performMultipleActions()">Start test</ion-button>
-                <ion-button (click)="clear()">Clear table</ion-button>
-
-              </ion-item>
+              <div *ngIf="isActive">
+                <ion-item>
+                  <ion-button (click)="fillTable()">Fill table</ion-button>
+                </ion-item>
+                <ion-item>
+                  <ion-button (click)="clear()">Clear table</ion-button>
+                </ion-item>
+                <ion-item>
+                  <form (submit)="grow(growQuantity)">
+                    <ion-input name="growInput" type="number" fill="outline" label="Grow"
+                               [(ngModel)]="growQuantity"></ion-input>
+                  </form>
+                </ion-item>
+              </div>
               <ion-item>
                 <ion-label>Received messages: {{receivedMessageCounter}}</ion-label>
               </ion-item>
@@ -77,7 +86,7 @@
       </ion-col>
       <ion-col>
         <form (submit)="insertCell(currentCell)">
-          <ion-input  name="consistent-input" fill="outline" [(ngModel)]="currentCell.input"></ion-input>
+          <ion-input name="consistent-input" fill="outline" [(ngModel)]="currentCell.input"></ion-input>
         </form>
       </ion-col>
     </ion-row>

@@ -29,6 +29,7 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   private _trackedTime: number | undefined;
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
+  private _growQuantity: number = 0;
 
 
   constructor(
@@ -128,22 +129,29 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
       }
     }
     let rows = Array.from(this.spreadsheetService.rows);
-    console.log(rows)
     for (let row of rows) {
       this.deleteRow(row);
     }
     let columns = Array.from(this.spreadsheetService.columns);
-    console.log(columns)
     for (let column of columns) {
       this.deleteColumn(column);
     }
   }
 
-  public performMultipleActions(){
+  public grow(quantity: number) {
+    console.log('Grow', quantity)
+    for (let i = 0; i < quantity; i++) {
+      this.addColumn();
+      this.addRow();
+    }
+  }
+
+
+  public fillTable() {
     for (let colIndex = 0; colIndex < this.spreadsheetService.columns.length; colIndex++) {
-      for(let rowIndex = 0; rowIndex < this.spreadsheetService.rows.length; rowIndex++){
+      for (let rowIndex = 0; rowIndex < this.spreadsheetService.rows.length; rowIndex++) {
         let address = this.spreadsheetService.getAddressByIndex(colIndex, rowIndex);
-        if(address === undefined){
+        if (address === undefined) {
           console.warn(`Cant get address for index column: ${colIndex} index row: ${rowIndex}`)
           return;
         }
@@ -157,14 +165,16 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     let alert;
     if (!this.raftService.isConnected && this.raftService.isActive()) {
       alert = await this.alertController.create({
-        header: 'Can not alter spreadsheet',
-        message: 'Connection must be enabled!',
+        header: 'Can not alter spreadsheet!',
+        subHeader: 'Connection must be enabled',
+        message: `Connection enabled: ${this.raftService.isConnected}`,
         buttons: ['OK'],
       });
     } else if (this.canBeStarted()) {
       alert = await this.alertController.create({
-        header: 'Can not alter spreadsheet',
-        message: 'Raft needs to be started first!',
+        header: 'Can not alter spreadsheet!',
+        subHeader: 'Raft needs to be started first',
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.nodes.size}/3`,
         buttons: [{
           text: 'Cancel',
           role: 'cancel'
@@ -179,8 +189,9 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
       });
     } else {
       alert = await this.alertController.create({
-        header: 'Can not alter spreadsheet',
-        message: `${this.nodes}`,
+        header: 'Can not alter spreadsheet!',
+        subHeader: 'Raft needs to be started first',
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.nodes.size}/3`,
         buttons: ['OK'],
       });
     }
@@ -253,7 +264,14 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     }
   }
 
-  public canBeStarted(): boolean{
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.ngZone.run(() => {
+      this._receivedMessageCounter = received;
+      this._sentMessageCounter = total;
+    });
+  }
+
+  public canBeStarted(): boolean {
     return this.raftService.canBeStarted();
   }
 
@@ -307,11 +325,13 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
     return this._sentMessageCounter;
   }
 
-  public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(() => {
-      this._receivedMessageCounter = received;
-      this._sentMessageCounter = total;
-    });
+
+  get growQuantity(): number {
+    return this._growQuantity;
+  }
+
+  set growQuantity(value: number) {
+    this._growQuantity = value;
   }
 }
 

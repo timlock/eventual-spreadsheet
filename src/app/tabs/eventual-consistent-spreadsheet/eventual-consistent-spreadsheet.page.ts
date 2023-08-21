@@ -7,7 +7,6 @@ import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spr
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
-import {Address} from "../../spreadsheet/domain/Address";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
@@ -24,6 +23,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
   private modifiedState: boolean = false;
+  private _growQuantity: number = 0;
 
   constructor(
     private communicationService: CommunicationService<Uint8Array>,
@@ -118,24 +118,24 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
       }
     }
     let rows = Array.from(this.spreadsheetService.rows);
-    console.log(rows)
     for (let row of rows) {
       this.deleteRow(row);
     }
     let columns = Array.from(this.spreadsheetService.columns);
-    console.log(columns)
     for (let column of columns) {
       this.deleteColumn(column);
     }
   }
 
-  public performMultipleActions() {
-    this.addColumn();
-    this.addColumn();
-    this.addColumn();
-    this.addRow();
-    this.addRow();
-    this.addRow();
+  public grow(quantity: number) {
+    console.log('Grow', quantity)
+    for (let i = 0; i < quantity; i++) {
+      this.addColumn();
+      this.addRow();
+    }
+  }
+
+  public fillTable() {
     for (let colIndex = 0; colIndex < this.spreadsheetService.columns.length; colIndex++) {
       for (let rowIndex = 0; rowIndex < this.spreadsheetService.rows.length; rowIndex++) {
         let address = this.spreadsheetService.getAddressByIndex(colIndex, rowIndex);
@@ -160,6 +160,13 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
       this.selectCell(this.table.columns[0], this.table.rows[0]);
     }
     return this._currentCell;
+  }
+
+  public onMessageCounterUpdate(received: number, total: number) {
+    this.ngZone.run(() => {
+      this._receivedMessageCounter = received;
+      this._sentMessageCounter = total;
+    });
   }
 
   public onMessage(message: Uint8Array, source: string) {
@@ -220,10 +227,13 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
     return this._sentMessageCounter;
   }
 
-  public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(() => {
-      this._receivedMessageCounter = received;
-      this._sentMessageCounter = total;
-    });
+  get growQuantity(): number {
+    return this._growQuantity;
   }
+
+  set growQuantity(value: number) {
+    this._growQuantity = value;
+  }
+
+
 }
