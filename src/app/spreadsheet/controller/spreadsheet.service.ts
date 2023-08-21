@@ -87,6 +87,15 @@ export class SpreadsheetService {
     return new CellDto(address, colIndex, rowIndex, cell.rawInput);
   }
 
+  public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
+    let column = this.columns[columnIndex];
+    let row = this.rows[rowIndex];
+    if (column === undefined || row === undefined) {
+      return undefined;
+    }
+    return {column: column, row: row};
+  }
+
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
     let column = this.columns[columnIndex - 1];
     let row = this.rows[rowIndex - 1];

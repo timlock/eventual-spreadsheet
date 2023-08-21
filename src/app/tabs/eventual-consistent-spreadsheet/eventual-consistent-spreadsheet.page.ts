@@ -7,6 +7,7 @@ import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spr
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
+import {Address} from "../../spreadsheet/domain/Address";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
@@ -93,10 +94,10 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
   private performAction(action: () => Uint8Array | undefined) {
-    if(this.isConnected){
+    if (this.isConnected) {
       this.consistencyChecker.submittedState();
       this.modifiedState = false;
-    }else{
+    } else {
       this.modifiedState = true;
     }
     this.ngZone.run(() => this._trackedTime = undefined);
@@ -107,6 +108,45 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
       return;
     }
     this.communicationService.send(update);
+  }
+
+  public clear() {
+    for (let column of this.spreadsheetService.columns) {
+      for (let row of this.spreadsheetService.rows) {
+        let cell = this.spreadsheetService.getCellById({column: column, row: row});
+        this.deleteCell(cell);
+      }
+    }
+    let rows = Array.from(this.spreadsheetService.rows);
+    console.log(rows)
+    for (let row of rows) {
+      this.deleteRow(row);
+    }
+    let columns = Array.from(this.spreadsheetService.columns);
+    console.log(columns)
+    for (let column of columns) {
+      this.deleteColumn(column);
+    }
+  }
+
+  public performMultipleActions() {
+    this.addColumn();
+    this.addColumn();
+    this.addColumn();
+    this.addRow();
+    this.addRow();
+    this.addRow();
+    for (let colIndex = 0; colIndex < this.spreadsheetService.columns.length; colIndex++) {
+      for (let rowIndex = 0; rowIndex < this.spreadsheetService.rows.length; rowIndex++) {
+        let address = this.spreadsheetService.getAddressByIndex(colIndex, rowIndex);
+        if (address === undefined) {
+          console.warn(`Cant get address for index column: ${colIndex} index row: ${rowIndex}`)
+          return;
+        }
+        let cell = new CellDto(address, colIndex, rowIndex, this.identifier.next());
+        this.insertCell(cell);
+      }
+    }
   }
 
   public deleteCell(cell: CellDto) {

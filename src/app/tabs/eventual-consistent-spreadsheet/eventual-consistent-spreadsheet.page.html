@@ -20,6 +20,10 @@
                 <ion-label>Time: {{trackedTime}}</ion-label>
               </ion-item>
               <ion-item>
+                <ion-button (click)="performMultipleActions()">Start test</ion-button>
+                <ion-button (click)="clear()">Clear table</ion-button>
+              </ion-item>
+              <ion-item>
                 <ion-label>Received messages: {{receivedMessageCounter}}</ion-label>
               </ion-item>
               <ion-item>

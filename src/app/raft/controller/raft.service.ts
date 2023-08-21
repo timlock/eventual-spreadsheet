@@ -24,7 +24,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   constructor(private readonly communicationService: CommunicationService<RaftMessage>) {
     this.timer = new Timer();
-    this.node = new RaftNode(this.identifier.uuid, this, true);
+    this.node = new RaftNode(this.identifier.uuid, this, false);
   }
 
   public openChannel(channelName: string, observer: RaftServiceObserver<Action>) {

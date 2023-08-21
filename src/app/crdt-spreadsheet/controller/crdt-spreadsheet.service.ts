@@ -99,6 +99,7 @@ export class CrdtSpreadsheetService {
   public getTable(): Table<Cell> {
     return this.spreadsheetSolver.solve();
   }
+
   public getCellById(address: Address): CellDto {
     let cell = this.getTable().get(address);
     let colIndex = this.columns.indexOf(address.column) + 1;
@@ -113,6 +114,15 @@ export class CrdtSpreadsheetService {
     let column = this.columns[columnIndex];
     let row = this.rows[rowIndex];
     return this.getCellById({column: column, row: row});
+  }
+
+  public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
+    let column = this.columns[columnIndex];
+    let row = this.rows[rowIndex];
+    if (column === undefined || row === undefined) {
+      return undefined;
+    }
+    return {column: column, row: row};
   }
 
   get rows(): string[] {
