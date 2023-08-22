@@ -100,10 +100,4 @@ export class Table<T> implements Spreadsheet<T> {
   get cells(): Map<string, T> {
     return this._cells;
   }
-
-  public equals(other: Table<T>): boolean {
-    return JSON.stringify(this._columns) === JSON.stringify(other._columns)
-      && JSON.stringify(this._rows) === JSON.stringify(other._rows)
-      && JSON.stringify(this._cells) === JSON.stringify(other._cells)
-  }
 }

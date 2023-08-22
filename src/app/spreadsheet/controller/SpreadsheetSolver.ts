@@ -51,7 +51,7 @@ export class SpreadsheetSolver {
         let address: Address = {column: colId, row: rowId};
         let cell = table.get(address);
         if (cell !== undefined && cell.content !== undefined && isFormula(cell.content)) {
-          let addressRange = table.getAddressRange(cell.content.range[0], cell.content.range[1]);
+          let addressRange = table.getAddressRange(cell.content.begin, cell.content.end);
           formulas.push([{column: colId, row: rowId}, addressRange]);
         }
 
@@ -74,7 +74,7 @@ export class SpreadsheetSolver {
 
 
   private computeFormula(formula: Formula): number {
-    let cells = this.result!.getCellRange(formula.range[0], formula.range[1])
+    let cells = this.result!.getCellRange(formula.begin, formula.end)
       .map(c => c.content)
       .filter(cell => typeof cell === 'number')
       .map(cell => cell as number);

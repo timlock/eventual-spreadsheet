@@ -1,4 +1,4 @@
-import {ActionType} from "../domain/ActionType";
+import {ActionType} from "./ActionType";
 
 export interface Action {
   action: string;

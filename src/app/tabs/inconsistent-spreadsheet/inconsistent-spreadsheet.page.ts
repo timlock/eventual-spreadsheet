@@ -3,7 +3,7 @@ import {CommunicationServiceObserver} from "../../communication/controller/Commu
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
-import {ActionType} from "../../spreadsheet/domain/ActionType";
+import {ActionType} from "../../spreadsheet/util/ActionType";
 import {Identifier} from "../../identifier/Identifier";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {Cell} from "../../spreadsheet/domain/Cell";

@@ -234,6 +234,4 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   set growQuantity(value: number) {
     this._growQuantity = value;
   }
-
-
 }

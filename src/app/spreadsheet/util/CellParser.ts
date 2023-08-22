@@ -29,7 +29,7 @@ export class CellParser {
     if (range === undefined) {
       return undefined;
     }
-    return {type: formulaType, range: range}
+    return {type: formulaType, begin: range[0], end: range[1]}
   }
 
   public static parseRange(addrStr: string): [Address, Address] | undefined {

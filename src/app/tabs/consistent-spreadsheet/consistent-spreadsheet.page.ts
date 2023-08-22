@@ -2,7 +2,7 @@ import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../raft/controller/raft.service";
-import {ActionType} from "../../spreadsheet/domain/ActionType";
+import {ActionType} from "../../spreadsheet/util/ActionType";
 import {Identifier} from "../../identifier/Identifier";
 import {isPayload, Action} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
