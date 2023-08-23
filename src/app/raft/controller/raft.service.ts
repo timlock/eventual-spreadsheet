@@ -64,7 +64,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   }
 
 
-  public onMessage(message: RaftMessage, source: string): void {
+  public onMessage(message: RaftMessage): void {
     if (this._isConnected) {
       this.node.handleMessage(message);
     }

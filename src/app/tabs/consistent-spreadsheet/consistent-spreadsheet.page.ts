@@ -1,10 +1,10 @@
-import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
+import {AfterViewInit, Component, NgZone} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../raft/controller/raft.service";
 import {ActionType} from "../../spreadsheet/util/ActionType";
 import {Identifier} from "../../identifier/Identifier";
-import {isPayload, Action} from "../../spreadsheet/util/Action";
+import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
@@ -19,7 +19,7 @@ import {AlertController} from "@ionic/angular";
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftServiceObserver<Action> {
+export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObserver<Action> {
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
@@ -44,15 +44,12 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
   }
 
 
-  public ngOnInit() {
+  public ngAfterViewInit() {
+    this.ionInput = document.getElementsByName('consistent-input')[0];
     this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
       console.log('All updates applied ', time);
       this.ngZone.run(() => this._trackedTime = time);
     });
-  }
-
-  public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('consistent-input')[0];
   }
 
 
@@ -219,6 +216,7 @@ export class ConsistentSpreadsheetPage implements OnInit, AfterViewInit, RaftSer
       console.warn('Invalid message', message);
       return;
     }
+    this.consistencyChecker.submittedState();
     this.handleAction(message);
     this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
     this.consistencyChecker.updateApplied(this.table);

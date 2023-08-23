@@ -66,7 +66,7 @@ export class CommunicationService<T> {
     }
     if (message.destination === this._identifier.uuid && message.payload !== undefined) {
       this._receivedMessageCounter++;
-      this.observer?.onMessage(message.payload, message.source);
+      this.observer?.onMessage(message.payload);
     }
   }
 

@@ -10,26 +10,30 @@ import {Cell} from "../../spreadsheet/domain/Cell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 import {Table} from "../../spreadsheet/domain/Table";
+import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 
 @Component({
   selector: 'app-inconsistent-spreadsheet',
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage implements AfterViewInit, CommunicationServiceObserver<Action> {
+export class InconsistentSpreadsheetPage implements  AfterViewInit, CommunicationServiceObserver<Action> {
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
   private channelName: string = 'inconsistent';
   private ionInput: any | undefined;
+  private _trackedTime: number | undefined;
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
+  private modifiedState: boolean = false;
   private _growQuantity: number = 0;
 
   constructor(
     private communicationService: CommunicationService<Action>,
     private spreadsheetService: SpreadsheetService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private consistencyChecker: ConsistencyCheckerService
   ) {
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
@@ -38,6 +42,10 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
 
   public ngAfterViewInit() {
     this.ionInput = document.getElementsByName('inconsistent-input')[0];
+    this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
+      console.log('All updates applied ', time);
+      this.ngZone.run(() => this._trackedTime = time);
+    });
   }
 
   public ionViewDidEnter() {
@@ -55,46 +63,46 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     let id = this.identifier.next();
     let message = PayloadFactory.addRow(id);
     this.spreadsheetService.addRow(id);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public insertRow(row: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertRow(id, row);
     this.spreadsheetService.insertRow(id, row);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
     this.spreadsheetService.deleteRow(row);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public addColumn() {
     let id = this.identifier.next();
     let message = PayloadFactory.addColumn(id);
     this.spreadsheetService.addColumn(id);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public insertColumn(column: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertColumn(id, column);
     this.spreadsheetService.insertColumn(id, column);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
     this.spreadsheetService.deleteColumn(column);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public insertCell(cell: CellDto) {
     let message = PayloadFactory.insertCell(cell.address, cell.input);
     this.spreadsheetService.insertCellById(cell.address, cell.input);
-    this.communicationService.send(message!);
+    this.performAction(message!);
   }
 
   public deleteCell(cell: CellDto) {
@@ -102,6 +110,17 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     this.insertCell(cell);
   }
 
+  private performAction(action: Action) {
+    if (this.isConnected) {
+      this.consistencyChecker.submittedState();
+      this.modifiedState = false;
+    } else {
+      this.modifiedState = true;
+    }
+    this.ngZone.run(() => this._trackedTime = undefined);
+    this.consistencyChecker.updateApplied(this.table);
+    this.communicationService.send(action);
+  }
 
   public clear() {
     for (let column of this.spreadsheetService.columns) {
@@ -154,18 +173,20 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
     return this._currentCell;
   }
 
-  public onMessage(message: Action, source: string) {
+  public onMessage(message: Action) {
     if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
     }
+    this.consistencyChecker.submittedState();
     this.handleAction(message);
+    this.consistencyChecker.updateApplied(this.spreadsheetService.getTable());
     this.ngZone.run(() => this.table = this.spreadsheetService.getTable());
   }
 
   public onNode(nodeId: string) {
-    this._nodes.add(nodeId);
-    this.ngZone.run(() => this._nodes = this.communicationService.nodes);
+    this.ngZone.run(() => this._nodes.add(nodeId));
+    this.consistencyChecker.addNodes(nodeId);
   }
 
   private handleAction(payload: Action) {
@@ -230,6 +251,10 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
   }
 
   set isConnected(enabled: boolean) {
+    if (enabled && this.modifiedState) {
+      this.consistencyChecker.submittedState();
+      this.modifiedState = false;
+    }
     this.communicationService.isConnected = enabled;
   }
 
@@ -250,6 +275,11 @@ export class InconsistentSpreadsheetPage implements AfterViewInit, Communication
 
   set growQuantity(value: number) {
     this._growQuantity = value;
+  }
+
+
+  get trackedTime(): number | undefined {
+    return this._trackedTime;
   }
 }
 

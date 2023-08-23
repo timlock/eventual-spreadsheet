@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, NgZone, OnInit} from '@angular/core';
+import {AfterViewInit, Component, NgZone} from '@angular/core';
 import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {CommunicationService} from "../../communication/controller/communication.service";
 import {Identifier} from "../../identifier/Identifier";
@@ -13,7 +13,7 @@ import {ConsistencyCheckerService} from "../../consistency-checker/consistency-c
   templateUrl: './eventual-consistent-spreadsheet.page.html',
   styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
-export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit, CommunicationServiceObserver<Uint8Array> {
+export class EventualConsistentSpreadsheetPage implements AfterViewInit, CommunicationServiceObserver<Uint8Array> {
   private _table: Table<Cell>;
   private _currentCell: CellDto;
   private _nodes: Set<string> = new Set<string>();
@@ -36,15 +36,12 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
   }
 
 
-  public ngOnInit() {
+  public ngAfterViewInit() {
+    this.ionInput = document.getElementsByName('eventual-consistent-input')[0];
     this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
       console.log('All updates applied ', time);
       this.ngZone.run(() => this._trackedTime = time);
     });
-  }
-
-  public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('eventual-consistent-input')[0];
   }
 
 
@@ -169,7 +166,7 @@ export class EventualConsistentSpreadsheetPage implements OnInit, AfterViewInit,
     });
   }
 
-  public onMessage(message: Uint8Array, source: string) {
+  public onMessage(message: Uint8Array) {
     this.consistencyChecker.submittedState();
     this.spreadsheetService.applyUpdate(message);
     this.consistencyChecker.updateApplied(this.spreadsheetService.getTable());
