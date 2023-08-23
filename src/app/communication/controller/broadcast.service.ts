@@ -5,11 +5,12 @@ import {Identifier} from "../../identifier/Identifier";
 import {VersionVectorManager} from "../util/VersionVectorManager";
 import {MessageBuffer} from "../util/MessageBuffer";
 import {VersionVector} from "../domain/VersionVector";
+import {Communication} from "../../tabs/Communication";
 
 @Injectable({
   providedIn: 'root'
 })
-export class CommunicationService<T> {
+export class BroadcastService<T> implements Communication<T>{
   private readonly _identifier: Identifier = Identifier.generate();
   private channel: BroadcastChannel | undefined;
   private observer: CommunicationServiceObserver<T> | undefined;
@@ -50,6 +51,7 @@ export class CommunicationService<T> {
     }
     this._sentMessageCounter++;
     this.channel.postMessage(message);
+    this.observer?.onMessageCounterUpdate(this._receivedMessageCounter, this._sentMessageCounter);
   }
 
   private onMessage = (event: MessageEvent): any => {
@@ -68,6 +70,7 @@ export class CommunicationService<T> {
       this._receivedMessageCounter++;
       this.observer?.onMessage(message.payload);
     }
+    this.observer?.onMessageCounterUpdate(this._receivedMessageCounter, this._sentMessageCounter);
   }
 
   private sendMissingMessages(destination: string, versionVector: VersionVector) {
@@ -132,13 +135,5 @@ export class CommunicationService<T> {
 
   get identifier(): Identifier {
     return this._identifier;
-  }
-
-  get receivedMessageCounter(): number {
-    return this._receivedMessageCounter;
-  }
-
-  get sentMessageCounter(): number {
-    return this._sentMessageCounter;
   }
 }

@@ -64,7 +64,7 @@ export class RaftObserverBuilder {
         }
       }
 
-      sendMessage(receiver: NodeId, message: RaftMessage): void {
+      sendRaftMessage(receiver: NodeId, message: RaftMessage): void {
         if (sendMessage !== undefined) {
           sendMessage(receiver, message);
         }

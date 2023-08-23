@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {CommunicationService} from "../../communication/controller/communication.service";
+import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {NodeId, RaftMessage} from "../domain/Types";
 import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
 import {Timer} from "../util/Timer";
@@ -10,19 +10,20 @@ import {Log} from "../domain/message/Log";
 import {isPayload, Action} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../util/RaftServiceObserver";
 import {RaftMetaData} from "../util/RaftMetaData";
+import {Communication} from "../../tabs/Communication";
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class RaftService implements RaftNodeObserver, CommunicationServiceObserver<RaftMessage> {
+export class RaftService implements RaftNodeObserver, CommunicationServiceObserver<RaftMessage>, Communication<Action> {
   private readonly timer: Timer;
   private readonly node: RaftNode;
   private observer: RaftServiceObserver<Action> | undefined;
   private channelName: string = 'raft';
   private _isConnected: boolean = true;
 
-  constructor(private readonly communicationService: CommunicationService<RaftMessage>) {
+  constructor(private readonly communicationService: BroadcastService<RaftMessage>) {
     this.timer = new Timer();
     this.node = new RaftNode(this.identifier.uuid, this, false);
   }
@@ -43,9 +44,8 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     this.node.start();
   }
 
-  public performAction(message: Action): boolean {
+  public send(message: Action) {
     this.node.command(message);
-    return true;
   }
 
   public onLog(log: Log): void {
@@ -57,7 +57,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
     console.warn('Log doesnt contain payload, ', log);
   }
 
-  public sendMessage(destination: NodeId, raftMessage: RaftMessage): void {
+  public sendRaftMessage(destination: NodeId, raftMessage: RaftMessage): void {
     if (this._isConnected) {
       this.communicationService.send(raftMessage, destination, false);
     }
@@ -135,14 +135,6 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   public isActive(): boolean {
     return this.timer.isActive();
-  }
-
-  get receivedMessageCounter(): number {
-    return this.communicationService.receivedMessageCounter;
-  }
-
-  get sentMessageCounter(): number {
-    return this.communicationService.sentMessageCounter;
   }
 
   public onMessageCounterUpdate(received: number, total: number) {

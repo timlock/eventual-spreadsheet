@@ -3,7 +3,7 @@ import {NodeId, RaftMessage} from "../domain/Types";
 import {RaftMetaData} from "../util/RaftMetaData";
 
 export interface RaftNodeObserver {
-  sendMessage(receiver: NodeId, message: RaftMessage): void;
+  sendRaftMessage(receiver: NodeId, message: RaftMessage): void;
 
   onLog(log: Log): void;
 

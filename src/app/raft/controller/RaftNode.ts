@@ -192,7 +192,7 @@ export class RaftNode {
       lastLogIndex: this.serverState.lastLogIndex,
       lastLogTerm: this.serverState.getLogTerm(this.serverState.lastLogIndex)!
     }
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send requestVoteRequest: ', message);
   }
 
@@ -202,7 +202,7 @@ export class RaftNode {
       voteGranted: voteGranted,
       id: this.nodeId
     }
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send requestVoteResponse: ', message);
   }
 
@@ -215,7 +215,7 @@ export class RaftNode {
       entries: entries,
       leaderCommit: this.serverState.commitIndex
     };
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send appendEntriesRequest: ', message);
   }
 
@@ -227,13 +227,13 @@ export class RaftNode {
       id: this.nodeId,
       lastLogIndex: this.serverState.lastLogIndex
     }
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send appendEntriesResponse: ', message);
   }
 
   private log(destination: NodeId, command: any) {
     let message: Log = {term: this.serverState.currentTerm, content: command};
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send command: ', message);
   }
 
