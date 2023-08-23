@@ -1,9 +1,7 @@
 import {AfterViewInit, Component, NgZone} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
-import {CellDto} from "../../spreadsheet/controller/CellDto";
 import {RaftService} from "../../raft/controller/raft.service";
 import {ActionType} from "../../spreadsheet/util/ActionType";
-import {Identifier} from "../../identifier/Identifier";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
 import {Cell} from "../../spreadsheet/domain/Cell";
@@ -13,37 +11,30 @@ import {Table} from "../../spreadsheet/domain/Table";
 import {RaftMetaData} from "../../raft/util/RaftMetaData";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {AlertController} from "@ionic/angular";
+import {SpreadsheetPage} from "../SpreadsheetPage";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObserver<Action> {
-  private _table: Table<Cell>;
-  private _currentCell: CellDto;
-  private _nodes: Set<string> = new Set<string>();
+export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implements AfterViewInit, RaftServiceObserver<Action> {
   private channelName: string = 'consistent';
-  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
   private ionInput: any | undefined;
-  private _trackedTime: number | undefined;
-  private _receivedMessageCounter = 0;
-  private _sentMessageCounter = 0;
-  private _growQuantity: number = 0;
-
+  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
 
   constructor(
     private raftService: RaftService,
+    private alertController: AlertController,
     private spreadsheetService: SpreadsheetService,
-    private ngZone: NgZone,
-    private consistencyChecker: ConsistencyCheckerService,
-    private alertController: AlertController
+    ngZone: NgZone,
+    consistencyChecker: ConsistencyCheckerService,
   ) {
-    this._table = this.spreadsheetService.getTable();
+    super(ngZone, consistencyChecker, raftService);
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
     this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
       console.log('All updates applied ', time);
-      this.ngZone.run(() => this._trackedTime = time);
+      this.ngZone.run(() => this.trackedTime = time);
     });
   }
 
@@ -62,100 +53,62 @@ export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObse
   }
 
 
-  public selectCell(colId: string, rowId: string) {
+  public override selectCell(colId: string, rowId: string) {
     this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
     }
   }
 
-  public addRow() {
+  public override addRow() {
     let id = this.identifier.next();
     let message = PayloadFactory.addRow(id);
-    this.performAction(message);
+    this.performAction(() => message);
   }
 
-  public insertRow(row: string) {
+  public override insertRow(row: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertRow(id, row);
-    this.performAction(message);
+    this.performAction(() => message);
   }
 
-  public deleteRow(row: string) {
+  public override deleteRow(row: string) {
     let message = PayloadFactory.deleteRow(row);
-    this.performAction(message);
+    this.performAction(() => message);
   }
 
-  public addColumn() {
+  public override addColumn() {
     let id = this.identifier.next();
     let message = PayloadFactory.addColumn(id);
-    this.performAction(message);
+    this.performAction(() => message);
   }
 
-  public insertColumn(column: string) {
+  public override insertColumn(column: string) {
     let id = this.identifier.next();
     let message = PayloadFactory.insertColumn(id, column);
-    this.performAction(message);
+    this.performAction(() => message);
   }
 
-  public deleteColumn(column: string) {
+  public override deleteColumn(column: string) {
     let message = PayloadFactory.deleteColumn(column);
-    this.performAction(message);
+    this.performAction(() => message);
   }
 
-  public insertCell(cell: CellDto) {
-    let message = PayloadFactory.insertCell(cell.address, cell.input);
-    this.performAction(message)
+  public override insertCell(address: Address, input: string) {
+    let message = PayloadFactory.insertCell(address, input);
+    this.performAction(() => message)
   }
 
-  private performAction(action: Action) {
+  public override deleteCell(address: Address) {
+    this.insertCell(address, '');
+  }
+
+  protected override performAction(action: () => Action) {
     if (!this.raftService.isActive() || !this.raftService.isConnected) {
       this.presentAlert().finally();
       return;
     }
-    this.consistencyChecker.submittedState();
-    this.ngZone.run(() => this._trackedTime = undefined);
-    this.raftService.performAction(action);
-  }
-
-  public clear() {
-    for (let column of this.spreadsheetService.columns) {
-      for (let row of this.spreadsheetService.rows) {
-        let cell = this.spreadsheetService.getCellById({column: column, row: row});
-        this.deleteCell(cell);
-      }
-    }
-    let rows = Array.from(this.spreadsheetService.rows);
-    for (let row of rows) {
-      this.deleteRow(row);
-    }
-    let columns = Array.from(this.spreadsheetService.columns);
-    for (let column of columns) {
-      this.deleteColumn(column);
-    }
-  }
-
-  public grow(quantity: number) {
-    console.log('Grow', quantity)
-    for (let i = 0; i < quantity; i++) {
-      this.addColumn();
-      this.addRow();
-    }
-  }
-
-
-  public fillTable() {
-    for (let colIndex = 0; colIndex < this.spreadsheetService.columns.length; colIndex++) {
-      for (let rowIndex = 0; rowIndex < this.spreadsheetService.rows.length; rowIndex++) {
-        let address = this.spreadsheetService.getAddressByIndex(colIndex, rowIndex);
-        if (address === undefined) {
-          console.warn(`Cant get address for index column: ${colIndex} index row: ${rowIndex}`)
-          return;
-        }
-        let cell = new CellDto(address, colIndex, rowIndex, this.identifier.next());
-        this.insertCell(cell);
-      }
-    }
+    super.performAction(action);
   }
 
   private async presentAlert() {
@@ -195,43 +148,20 @@ export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObse
     await alert.present();
   }
 
-  public deleteCell(cell: CellDto) {
-    cell.input = '';
-    this.insertCell(cell);
-  }
 
-  public getCell(column: string, row: string): Cell | undefined {
-    return this.spreadsheetService.getTable().get({column: column, row: row});
-  }
-
-  get currentCell(): CellDto {
-    if (this._table.rows.indexOf(this._currentCell.row) === -1 || this._table.columns.indexOf(this._currentCell.column) === -1) {
-      this.selectCell(this._table.columns[0], this._table.rows[0]);
-    }
-    return this._currentCell;
-  }
-
-  public onMessage(message: Action) {
+  public override onMessage(message: Action) {
     if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
     }
-    this.consistencyChecker.submittedState();
-    this.handleAction(message);
-    this.ngZone.run(() => this._table = this.spreadsheetService.getTable());
-    this.consistencyChecker.updateApplied(this.table);
-  }
-
-  public onNode(nodeId: string) {
-    this.ngZone.run(() => this._nodes.add(nodeId));
-    this.consistencyChecker.addNodes(nodeId);
+    super.onMessage(message);
   }
 
   public onStateChange(state: RaftMetaData) {
     this.ngZone.run(() => this._raftMetaData = state);
   }
 
-  private handleAction(message: Action) {
+  protected override handleMessage(message: Action) {
     switch (message.action) {
       case ActionType.INSERT_CELL:
         let address: Address = {column: message.column!, row: message.row!};
@@ -261,74 +191,22 @@ export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObse
     }
   }
 
-  public onMessageCounterUpdate(received: number, total: number) {
-    this.ngZone.run(() => {
-      this._receivedMessageCounter = received;
-      this._sentMessageCounter = total;
-    });
-  }
-
   public canBeStarted(): boolean {
     return this.raftService.canBeStarted();
   }
 
-  get table(): Table<Cell> {
-    this._table = this.spreadsheetService.getTable();
-    return this._table;
+  override get table(): Table<Cell> {
+    return this.spreadsheetService.getTable();
   }
 
-  set table(value: Table<Cell>) {
-    this._table = value;
-  }
-
-  get nodes(): Set<string> {
-    this._nodes = this.raftService.nodes;
-    return this._nodes;
-  }
-
-  get identifier(): Identifier {
-    return this.raftService.identifier;
-  }
-
-  get isConnected(): boolean {
-    return this.raftService.isConnected;
-  }
-
-  set isConnected(enabled: boolean) {
-    this.raftService.isConnected = enabled;
-  }
 
   get raftMetaData(): RaftMetaData {
     this._raftMetaData = this.raftService.getMetaData();
     return this._raftMetaData;
   }
 
-  get trackedTime(): number | undefined {
-    return this._trackedTime;
-  }
-
-
   get isActive(): boolean {
     return this.raftService.isActive();
-  }
-
-  get receivedMessageCounter(): number {
-    this._receivedMessageCounter = this.raftService.receivedMessageCounter;
-    return this._receivedMessageCounter;
-  }
-
-  get sentMessageCounter(): number {
-    this._sentMessageCounter = this.raftService.sentMessageCounter;
-    return this._sentMessageCounter;
-  }
-
-
-  get growQuantity(): number {
-    return this._growQuantity;
-  }
-
-  set growQuantity(value: number) {
-    this._growQuantity = value;
   }
 }
 

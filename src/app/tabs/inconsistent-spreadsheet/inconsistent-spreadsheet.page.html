@@ -51,7 +51,7 @@
         <ion-title class="ion-padding-top">{{currentCell.colIndex}}|{{currentCell.rowIndex}}</ion-title>
       </ion-col>
       <ion-col>
-        <form (submit)="insertCell(currentCell)">
+        <form (submit)="insertCell(currentCell.address, currentCell.input)">
           <ion-input name="inconsistent-input" fill="outline" [(ngModel)]="currentCell.input"></ion-input>
         </form>
       </ion-col>
