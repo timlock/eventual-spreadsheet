@@ -22,7 +22,7 @@ export class EventualConsistentSpreadsheetPage implements AfterViewInit, Communi
   private _trackedTime: number | undefined;
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
-  private modifiedState: boolean = false;
+    private modifiedState: boolean = false;
   private _growQuantity: number = 0;
 
   constructor(
@@ -33,15 +33,15 @@ export class EventualConsistentSpreadsheetPage implements AfterViewInit, Communi
   ) {
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
+    this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
+      console.log('All updates applied ', time);
+      this.ngZone.run(() => this._trackedTime = time);
+    });
   }
 
 
   public ngAfterViewInit() {
     this.ionInput = document.getElementsByName('eventual-consistent-input')[0];
-    this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
-      console.log('All updates applied ', time);
-      this.ngZone.run(() => this._trackedTime = time);
-    });
   }
 
 
@@ -180,7 +180,7 @@ export class EventualConsistentSpreadsheetPage implements AfterViewInit, Communi
       return;
     }
     this.communicationService.send(update, nodeId);
-    this.ngZone.run(() => this._nodes = this.communicationService.nodes);
+    this.ngZone.run(() => this._nodes.add(nodeId));
     this.consistencyChecker.addNodes(nodeId);
   }
 

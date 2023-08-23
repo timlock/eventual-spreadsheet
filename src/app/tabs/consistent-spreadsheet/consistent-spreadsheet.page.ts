@@ -41,15 +41,15 @@ export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObse
   ) {
     this._table = this.spreadsheetService.getTable();
     this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
+    this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
+      console.log('All updates applied ', time);
+      this.ngZone.run(() => this._trackedTime = time);
+    });
   }
 
 
   public ngAfterViewInit() {
     this.ionInput = document.getElementsByName('consistent-input')[0];
-    this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
-      console.log('All updates applied ', time);
-      this.ngZone.run(() => this._trackedTime = time);
-    });
   }
 
 
@@ -223,8 +223,7 @@ export class ConsistentSpreadsheetPage implements AfterViewInit, RaftServiceObse
   }
 
   public onNode(nodeId: string) {
-    this._nodes.add(nodeId);
-    this.ngZone.run(() => this._nodes = this.raftService.nodes);
+    this.ngZone.run(() => this._nodes.add(nodeId));
     this.consistencyChecker.addNodes(nodeId);
   }
 
