@@ -1,7 +1,6 @@
 import {TestBed} from '@angular/core/testing';
 
 import {ConsistencyCheckerService} from './consistency-checker.service';
-import {Cell} from "../spreadsheet/domain/Cell";
 import {Table} from "../spreadsheet/domain/Table";
 
 describe('ConsistencyCheckerService', () => {
@@ -20,27 +19,27 @@ describe('ConsistencyCheckerService', () => {
 
   it('single node', () => {
     let stopped = false;
-    service.subscribe(identifier, new Table<Cell>(), (time) => {
+    service.subscribe(identifier, new Table(), (time) => {
       expect(time).toBeDefined();
       stopped = true;
     });
     service.submittedState();
     expect(stopped).toBeFalse();
-    service.updateApplied(new Table<Cell>());
+    service.updateApplied(new Table());
     expect(stopped).toBeTrue();
   });
 
   it('two nodes', () => {
     let remoteId = 'remote';
     service.addNodes(remoteId);
-    localStorage.setItem(remoteId, JSON.stringify(new Table<Cell>()));
+    service.persist(new Table(), remoteId);
     let stopped = false;
-    service.subscribe(identifier,new Table<Cell>(), (time) => {
+    service.subscribe(identifier,new Table(), (time) => {
       expect(time).toBeDefined();
       stopped = true;
     });
     service.submittedState();
-    service.updateApplied(new Table<Cell>());
+    service.updateApplied(new Table());
     expect(stopped).toBeTrue();
   });
 

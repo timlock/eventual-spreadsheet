@@ -74,9 +74,9 @@ export class ConsistencyCheckerService {
     }
   }
 
-  private persist(entry: Table<Cell>) {
+  public persist(entry: Table<Cell>, id = this.id) {
     let value: Entry = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
-    localStorage.setItem(this.id, JSON.stringify(value));
+    localStorage.setItem(id, JSON.stringify(value));
   }
 
 }
