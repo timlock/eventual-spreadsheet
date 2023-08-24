@@ -72,7 +72,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
 
   public onNode(nodeId: string) {
-    let result = this.node.addNode(nodeId);
+    const result = this.node.addNode(nodeId);
     if (result) {
       console.log('Added node: ', nodeId, ' to cluster');
       this.observer?.onNode(nodeId);
@@ -80,7 +80,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
   }
 
   private checkTime() {
-    let remaining = this.timer.remainingTime();
+    const remaining = this.timer.remainingTime();
     if (this.timer.isTimeUp()) {
       this.node.timeout();
     } else if (remaining !== undefined) {
@@ -90,7 +90,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   public restartElectionTimer(): void {
     this.timer.randomDuration();
-    let remaining = this.timer.remainingTime();
+    const remaining = this.timer.remainingTime();
     if (remaining !== undefined) {
       setTimeout(() => this.checkTime(), remaining);
     }
@@ -99,7 +99,7 @@ export class RaftService implements RaftNodeObserver, CommunicationServiceObserv
 
   public restartHeartbeatTimer(): void {
     this.timer.fixedDuration();
-    let remaining = this.timer.remainingTime();
+    const remaining = this.timer.remainingTime();
     if (remaining !== undefined) {
       setTimeout(() => this.checkTime(), remaining);
     }

@@ -6,11 +6,11 @@ import {FormulaType} from "../domain/FormulaType";
 export class CellParser {
 
   public static parseCell(rawInput: string): Cell {
-    let value = +rawInput;
+    const value = +rawInput;
     if (!Number.isNaN(value)) {
       return {rawInput: rawInput, content: value}
     }
-    let formula = this.parseFormula(rawInput);
+    const formula = this.parseFormula(rawInput);
     if (formula !== undefined) {
       return {rawInput: rawInput, content: formula}
     }
@@ -21,11 +21,11 @@ export class CellParser {
     if (!rawInput.includes('=') || !rawInput.includes('(') || !rawInput.includes(')')) {
       return undefined;
     }
-    let trimmed = rawInput.trim();
-    let typeString = trimmed.substring(1, trimmed.indexOf('('));
-    let formulaType = FormulaType[typeString as keyof typeof FormulaType];
-    let rangeStr = trimmed.substring(trimmed.indexOf('(') + 1, trimmed.indexOf(')'));
-    let range = this.parseRange(rangeStr);
+    const trimmed = rawInput.trim();
+    const typeString = trimmed.substring(1, trimmed.indexOf('('));
+    const formulaType = FormulaType[typeString as keyof typeof FormulaType];
+    const rangeStr = trimmed.substring(trimmed.indexOf('(') + 1, trimmed.indexOf(')'));
+    const range = this.parseRange(rangeStr);
     if (range === undefined) {
       return undefined;
     }
@@ -33,12 +33,12 @@ export class CellParser {
   }
 
   public static parseRange(addrStr: string): [Address, Address] | undefined {
-    let addrPair = addrStr.split(':');
+    const addrPair = addrStr.split(':');
     if (addrPair.length != 2) {
       return undefined;
     }
-    let first = this.parse(addrPair[0]);
-    let second = this.parse(addrPair[1]);
+    const first = this.parse(addrPair[0]);
+    const second = this.parse(addrPair[1]);
     if (first === undefined || second === undefined) {
       return undefined;
     }
@@ -46,7 +46,7 @@ export class CellParser {
   }
 
   public static parse(input: string): Address | undefined {
-    let addressStr = input.split('|');
+    const addressStr = input.split('|');
     if (addressStr.length != 2) {
       return undefined;
     }

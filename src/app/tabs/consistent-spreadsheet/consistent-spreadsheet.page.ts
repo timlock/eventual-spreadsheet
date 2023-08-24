@@ -31,11 +31,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
     consistencyChecker: ConsistencyCheckerService,
   ) {
     super(ngZone, consistencyChecker, raftService);
-    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
-    this.consistencyChecker.subscribe(this.raftService.identifier.uuid, this.table, (time: number) => {
-      console.log('All updates applied ', time);
-      this.ngZone.run(() => this.trackedTime = time);
-    });
+    this.currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
 
 
@@ -46,6 +42,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
 
   public ionViewDidEnter() {
     this.raftService.openChannel(this.channelName, this);
+    this.startTimeMeasuring();
   }
 
   public start() {
@@ -54,48 +51,48 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
 
 
   public override selectCell(colId: string, rowId: string) {
-    this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    this.currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
     }
   }
 
   public override addRow() {
-    let id = this.identifier.next();
-    let message = PayloadFactory.addRow(id);
+    const id = this.communication.identifier.next();
+    const message = PayloadFactory.addRow(id);
     this.performAction(() => message);
   }
 
   public override insertRow(row: string) {
-    let id = this.identifier.next();
-    let message = PayloadFactory.insertRow(id, row);
+    const id = this.communication.identifier.next();
+    const message = PayloadFactory.insertRow(id, row);
     this.performAction(() => message);
   }
 
   public override deleteRow(row: string) {
-    let message = PayloadFactory.deleteRow(row);
+    const message = PayloadFactory.deleteRow(row);
     this.performAction(() => message);
   }
 
   public override addColumn() {
-    let id = this.identifier.next();
-    let message = PayloadFactory.addColumn(id);
+    const id = this.communication.identifier.next();
+    const message = PayloadFactory.addColumn(id);
     this.performAction(() => message);
   }
 
   public override insertColumn(column: string) {
-    let id = this.identifier.next();
-    let message = PayloadFactory.insertColumn(id, column);
+    const id = this.communication.identifier.next();
+    const message = PayloadFactory.insertColumn(id, column);
     this.performAction(() => message);
   }
 
   public override deleteColumn(column: string) {
-    let message = PayloadFactory.deleteColumn(column);
+    const message = PayloadFactory.deleteColumn(column);
     this.performAction(() => message);
   }
 
   public override insertCell(address: Address, input: string) {
-    let message = PayloadFactory.insertCell(address, input);
+    const message = PayloadFactory.insertCell(address, input);
     this.performAction(() => message)
   }
 
@@ -164,7 +161,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
   protected override handleMessage(message: Action) {
     switch (message.action) {
       case ActionType.INSERT_CELL:
-        let address: Address = {column: message.column!, row: message.row!};
+        const address: Address = {column: message.column!, row: message.row!};
         this.spreadsheetService.insertCellById(address, message.input!);
         break;
       case ActionType.ADD_ROW:
@@ -195,19 +192,17 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
     return this.raftService.canBeStarted();
   }
 
-  override get table(): Table<Cell> {
+  public override get table(): Table<Cell> {
     return this.spreadsheetService.getTable();
   }
 
 
-  get raftMetaData(): RaftMetaData {
+  public get raftMetaData(): RaftMetaData {
     this._raftMetaData = this.raftService.getMetaData();
     return this._raftMetaData;
   }
 
-  get isActive(): boolean {
+  public get isActive(): boolean {
     return this.raftService.isActive();
   }
 }
-
-

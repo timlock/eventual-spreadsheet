@@ -58,7 +58,7 @@ export class BroadcastService<T> implements Communication<T>{
     if (!this._isConnected) {
       return;
     }
-    let message = event.data as Message<T>;
+    const message = event.data as Message<T>;
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -74,7 +74,7 @@ export class BroadcastService<T> implements Communication<T>{
   }
 
   private sendMissingMessages(destination: string, versionVector: VersionVector) {
-    let timestamp = versionVector[this._identifier.uuid];
+    const timestamp = versionVector[this._identifier.uuid];
     this.messageBuffer.getMissingMessages(destination, timestamp).forEach(message => this.postMessage(message));
   }
 
@@ -96,7 +96,7 @@ export class BroadcastService<T> implements Communication<T>{
   }
 
   public onNode(nodeId: string) {
-    let oldSize = this._nodes.size;
+    const oldSize = this._nodes.size;
     this._nodes.add(nodeId);
     if (this._nodes.size > oldSize) {
       if (this.observer === undefined) {
@@ -110,7 +110,7 @@ export class BroadcastService<T> implements Communication<T>{
   }
 
   private advertiseSelf() {
-    let message: Message<undefined> = {
+    const message: Message<undefined> = {
       source: this._identifier.uuid,
       versionVector: this.versionVectorManager.versionVector
     }

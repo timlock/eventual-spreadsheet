@@ -13,7 +13,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   private static UPDATE_MODE = 'updateV2';
 
   private catchUpdate(action: () => void): Uint8Array {
-    let updates: Uint8Array[] = [];
+    const updates: Uint8Array[] = [];
     this.ydoc.on(CrdtTable.UPDATE_MODE, (update: Uint8Array) => {
       updates.push(update);
     });
@@ -31,7 +31,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   }
 
   public insertRow(id: string, before: string): Uint8Array | undefined {
-    let index = this.rows.indexOf(before);
+    const index = this.rows.indexOf(before);
     if (index ===-1) {
       console.log("Failed to insert id:" + id + " before id: " + before + " in rows: " + this.rows);
       return undefined;
@@ -44,7 +44,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
 
   public deleteRow(id: string): Uint8Array | undefined {
-    let index = this.rows.indexOf(id);
+    const index = this.rows.indexOf(id);
     if (index ===-1) {
       console.log("Failed to remove id:" + id + " in rows: " + this.rows);
       return undefined;
@@ -66,7 +66,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
 
   public insertColumn(id: string, column: string): Uint8Array | undefined {
-    let index = this.columns.indexOf(column);
+    const index = this.columns.indexOf(column);
     if (index ===-1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this.columns);
       return undefined;
@@ -78,7 +78,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   }
 
   public deleteColumn(id: string): Uint8Array | undefined {
-    let index = this.columns.indexOf(id);
+    const index = this.columns.indexOf(id);
     if (index ===-1) {
       console.log("Failed to remove id:" + id + " in columns: " + this.columns);
       return;
@@ -117,16 +117,16 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   }
 
   public getAddressRange(begin: Address, end: Address): Address[] {
-    let beginCol = this.columns.indexOf(begin.column);
-    let beginRow = this.rows.indexOf(begin.row);
-    let endCol = this.columns.indexOf(end.column);
-    let endRow = this.rows.indexOf(end.row);
+    const beginCol = this.columns.indexOf(begin.column);
+    const beginRow = this.rows.indexOf(begin.row);
+    const endCol = this.columns.indexOf(end.column);
+    const endRow = this.rows.indexOf(end.row);
     if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
       return [];
     }
-    let rowIds = this.rows.slice(beginRow, endRow + 1);
-    let colIds = this.columns.slice(beginCol, endCol + 1);
-    let result: Address[] = [];
+    const rowIds = this.rows.slice(beginRow, endRow + 1);
+    const colIds = this.columns.slice(beginCol, endCol + 1);
+    const result: Address[] = [];
     for (const r of rowIds) {
       for (const c of colIds) {
         result.push({column: c, row: r});

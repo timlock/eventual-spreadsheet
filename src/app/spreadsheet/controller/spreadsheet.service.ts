@@ -5,6 +5,7 @@ import {Cell} from "../domain/Cell";
 import {Address} from "../domain/Address";
 import {Table} from "../domain/Table";
 import {SpreadsheetSolver} from "./SpreadsheetSolver";
+import {Identifier} from "../../identifier/Identifier";
 
 @Injectable({
   providedIn: 'root'
@@ -17,13 +18,11 @@ export class SpreadsheetService {
     this.fillTable();
   }
 
-
   private fillTable() {
-    let counter = 0;
-    let tag = 'init';
+    const counter = new Identifier('init')
     for (let i = 0; i < 10; i++) {
-      this.addRow(tag + counter++);
-      this.addColumn(tag + counter++);
+      this.addRow(counter.next());
+      this.addColumn(counter.next());
     }
     this.spreadsheetSolver.reset();
   }
@@ -63,7 +62,7 @@ export class SpreadsheetService {
     if (input.trim().length === 0) {
       this.deleteCell(address);
     } else {
-      let cell = CellParser.parseCell(input);
+      const cell = CellParser.parseCell(input);
       this.table.set(address, cell);
     }
     this.spreadsheetSolver.reset();
@@ -79,9 +78,9 @@ export class SpreadsheetService {
   }
 
   public getCellById(address: Address): CellDto {
-    let cell = this.getTable().get(address);
-    let colIndex = this.columns.indexOf(address.column) + 1;
-    let rowIndex = this.rows.indexOf(address.row) + 1;
+    const cell = this.getTable().get(address);
+    const colIndex = this.columns.indexOf(address.column) + 1;
+    const rowIndex = this.rows.indexOf(address.row) + 1;
     if (cell === undefined) {
       return new CellDto(address, colIndex, rowIndex, '');
     }
@@ -89,8 +88,8 @@ export class SpreadsheetService {
   }
 
   public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
-    let column = this.columns[columnIndex];
-    let row = this.rows[rowIndex];
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
     if (column === undefined || row === undefined) {
       return undefined;
     }
@@ -98,8 +97,8 @@ export class SpreadsheetService {
   }
 
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
-    let column = this.columns[columnIndex - 1];
-    let row = this.rows[rowIndex - 1];
+    const column = this.columns[columnIndex - 1];
+    const row = this.rows[rowIndex - 1];
     return this.getCellById({column: column, row: row});
   }
 

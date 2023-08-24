@@ -11,7 +11,7 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public insertRow(id: string, row: string) {
-    let index = this._rows.indexOf(row);
+    const index = this._rows.indexOf(row);
     if (index ===-1) {
       console.log("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
       return;
@@ -20,7 +20,7 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public deleteRow(id: string) {
-    let index = this._rows.indexOf(id);
+    const index = this._rows.indexOf(id);
     if (index ===-1) {
       console.log("Failed to remove id:" + id + " in rows: " + this._rows);
       return;
@@ -33,7 +33,7 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public insertColumn(id: string, column: string) {
-    let index = this._columns.indexOf(column);
+    const index = this._columns.indexOf(column);
     if (index ===-1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);
       return;
@@ -42,7 +42,7 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public deleteColumn(id: string) {
-    let index = this._columns.indexOf(id);
+    const index = this._columns.indexOf(id);
     if (index ===-1) {
       console.log("Failed to remove id:" + id + " in columns: " + this._columns);
       return;
@@ -70,16 +70,16 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public getAddressRange(begin: Address, end: Address): Address[] {
-    let beginCol = this._columns.indexOf(begin.column);
-    let beginRow = this._rows.indexOf(begin.row);
-    let endCol = this._columns.indexOf(end.column);
-    let endRow = this._rows.indexOf(end.row);
+    const beginCol = this._columns.indexOf(begin.column);
+    const beginRow = this._rows.indexOf(begin.row);
+    const endCol = this._columns.indexOf(end.column);
+    const endRow = this._rows.indexOf(end.row);
     if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
       return [];
     }
-    let rowIds = this._rows.slice(beginRow, endRow + 1);
-    let colIds = this._columns.slice(beginCol, endCol + 1);
-    let result: Address[] = [];
+    const rowIds = this._rows.slice(beginRow, endRow + 1);
+    const colIds = this._columns.slice(beginCol, endCol + 1);
+    const result: Address[] = [];
     for (const r of rowIds) {
       for (const c of colIds) {
         result.push({column: c, row: r});

@@ -29,7 +29,7 @@ export class MessageBuffer<T> {
   }
 
   public getUnsentMessages(): Message<T>[] {
-    let result = Array.from(this.records).flatMap(record => this.getMissingMessages(record[0], record[1]));
+    const result = Array.from(this.records).flatMap(record => this.getMissingMessages(record[0], record[1]));
     for (const record of this.records) {
       this.records.set(record[0], this.buffer.length);
     }

@@ -2,19 +2,18 @@ import {Table} from "../spreadsheet/domain/Table";
 import {Cell} from "../spreadsheet/domain/Cell";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {NgZone} from "@angular/core";
-import {Identifier} from "../identifier/Identifier";
 import {Address} from "../spreadsheet/domain/Address";
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
 import {Communication} from "./Communication";
 
 export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver<T> {
-  protected _currentCell: CellDto | undefined;
-  protected _nodes: Set<string> = new Set<string>();
+  private _currentCell: CellDto | undefined;
+  protected nodes: Set<string> = new Set<string>();
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
   private _trackedTime: number | undefined;
-  protected _growQuantity: number = 0;
+  protected growQuantity: number = 0;
   protected modifiedState: boolean = false;
 
   protected constructor(
@@ -23,13 +22,6 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     protected communication: Communication<T>
   ) {
 
-  }
-
-  get currentCell(): CellDto {
-    if (this.table.rows.indexOf(this._currentCell!.row) === -1 || this.table.columns.indexOf(this._currentCell!.column) === -1) {
-      this.selectCell(this.table.columns[0], this.table.rows[0]);
-    }
-    return this._currentCell!;
   }
 
   public abstract selectCell(colId: string, rowId: string): void ;
@@ -50,6 +42,35 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   public abstract deleteCell(address: Address): void;
 
+  public abstract get table(): Table<Cell>;
+
+  protected abstract handleMessage(message: T): void;
+
+
+  public startTimeMeasuring() {
+    this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.table, (time: number) => {
+      console.log('All updates applied ', time);
+      this.ngZone.run(() => this._trackedTime = time);
+    });
+  }
+
+  public stopTimeMeasuring() {
+    this.consistencyChecker.unsubscribe();
+  }
+
+
+  get currentCell(): CellDto {
+    if (this.table.rows.indexOf(this._currentCell!.row) === -1 || this.table.columns.indexOf(this._currentCell!.column) === -1) {
+      this.selectCell(this.table.columns[0], this.table.rows[0]);
+    }
+    return this._currentCell!;
+  }
+
+
+  protected set currentCell(value: CellDto | undefined) {
+    this._currentCell = value;
+  }
+
   protected performAction(action: () => T | undefined) {
     if (this.communication.isConnected) {
       this.consistencyChecker.submittedState();
@@ -58,7 +79,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
       this.modifiedState = true;
     }
     this.ngZone.run(() => this._trackedTime = undefined);
-    let update = action();
+    const update = action();
     this.consistencyChecker.updateApplied(this.table);
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -73,11 +94,11 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
         this.deleteCell({column: column, row: row});
       }
     }
-    let rows = Array.from(this.table.rows);
+    const rows = Array.from(this.table.rows);
     for (let row of rows) {
       this.deleteRow(row);
     }
-    let columns = Array.from(this.table.columns);
+    const columns = Array.from(this.table.columns);
     for (let column of columns) {
       this.deleteColumn(column);
     }
@@ -111,7 +132,6 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     });
   }
 
-  protected abstract handleMessage(message: T): void;
 
   public onMessageCounterUpdate(received: number, total: number): void {
     console.log(received, total)
@@ -122,7 +142,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   }
 
   public onNode(nodeId: string): void {
-    this.ngZone.run(() => this._nodes.add(nodeId));
+    this.ngZone.run(() => this.nodes.add(nodeId));
     this.consistencyChecker.addNodes(nodeId);
   }
 
@@ -132,6 +152,14 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
       this.modifiedState = false;
     }
     this.communication.isConnected = enabled;
+  }
+
+  public get isConnected(): boolean {
+    return this.communication.isConnected;
+  }
+
+  public set isConnected(enabled: boolean) {
+    this.changeConnectionState(enabled);
   }
 
 
@@ -145,36 +173,5 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   get trackedTime(): number | undefined {
     return this._trackedTime;
-  }
-
-  set trackedTime(value: number | undefined) {
-    this._trackedTime = value;
-  }
-
-  get identifier(): Identifier {
-    return this.communication.identifier;
-  }
-
-  get isConnected(): boolean {
-    return this.communication.isConnected;
-  }
-
-  set isConnected(enabled: boolean) {
-    this.changeConnectionState(enabled);
-  }
-
-  abstract get table(): Table<Cell>;
-
-  get nodes(): Set<string> {
-    return this._nodes;
-  }
-
-
-  get growQuantity(): number {
-    return this._growQuantity;
-  }
-
-  set growQuantity(value: number) {
-    this._growQuantity = value;
   }
 }

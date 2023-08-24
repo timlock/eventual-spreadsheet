@@ -25,7 +25,7 @@ export class ConsistencyCheckerService {
         || this.callback === undefined) {
         return;
       }
-      let possibleDuration = Date.now() - this.start;
+      const possibleDuration = Date.now() - this.start;
       if (this.reachedConsistentState()) {
         this.start = undefined;
         this.callback(possibleDuration);
@@ -48,11 +48,11 @@ export class ConsistencyCheckerService {
 
 
   public reachedConsistentState(): boolean {
-    let myEntry = localStorage.getItem(this.id);
+    const myEntry = localStorage.getItem(this.id);
     if (myEntry === undefined) {
       return false;
     }
-    let stateList = this.nodes.map(nodeId => localStorage.getItem(nodeId));
+    const stateList = this.nodes.map(nodeId => localStorage.getItem(nodeId));
     return stateList.every(other => myEntry === other);
   }
 
@@ -66,7 +66,7 @@ export class ConsistencyCheckerService {
   public updateApplied(newTable: Table<Cell>) {
     this.persist(newTable);
     if (this.start !== undefined && this.callback !== undefined) {
-      let possibleDuration = Date.now() - this.start;
+      const possibleDuration = Date.now() - this.start;
       if (this.reachedConsistentState()) {
         this.start = undefined;
         this.callback(possibleDuration);
@@ -75,7 +75,7 @@ export class ConsistencyCheckerService {
   }
 
   public persist(entry: Table<Cell>, id = this.id) {
-    let value: Entry = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
+    const value: Entry = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
     localStorage.setItem(id, JSON.stringify(value));
   }
 

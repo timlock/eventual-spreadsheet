@@ -24,7 +24,7 @@ export class Identifier {
   }
 
   public multiple(amount: number): string[] {
-    let list: string[] = [];
+    const list: string[] = [];
     for (let i = 0; i < amount; i++) {
       list.push(this.next());
     }

@@ -103,10 +103,10 @@ export class RaftNode {
       this.appendEntriesResponse(request.leaderId, false);
       return;
     }
-    // let newIndex = request.prevLogIndex;
+    // const newIndex = request.prevLogIndex;
     // for (const log of request.entries) {
     //   newIndex++;
-    //   let oldEntry = this.serverState.log[newIndex - 1];
+    //   const oldEntry = this.serverState.log[newIndex - 1];
     //   if (oldEntry === undefined) {
     //     this.serverState.log.push(log);
     //   } else {
@@ -117,7 +117,7 @@ export class RaftNode {
     //   }
     // }
     // this.serverState.log.splice(request.prevLogIndex -1);
-    let removedLogs = this.serverState.replaceInvalidLogs(request.prevLogIndex);
+    const removedLogs = this.serverState.replaceInvalidLogs(request.prevLogIndex);
     if (removedLogs) {
       this.print('Removed invalid logs after index ', request.prevLogIndex);
     }
@@ -147,13 +147,13 @@ export class RaftNode {
         }
       } else {
         this.role.decrementNexIndex(response.id);
-        let prevLogIndex = this.role.nextIndex.get(response.id);
+        const prevLogIndex = this.role.nextIndex.get(response.id);
         if (prevLogIndex === undefined) {
           this.warn('Missing entry in nextIndex for: ', response.id);
           return;
         }
-        let prevLogTerm = this.serverState.getLogTerm(prevLogIndex)!;
-        let logs = this.serverState.logs.slice(prevLogIndex);
+        const prevLogTerm = this.serverState.getLogTerm(prevLogIndex)!;
+        const logs = this.serverState.logs.slice(prevLogIndex);
         this.appendEntriesRequest(response.id, prevLogIndex, prevLogTerm, logs);
         return;
       }
@@ -166,7 +166,7 @@ export class RaftNode {
     if (this.role instanceof Follower && this.role.leaderId !== undefined) {
       this.log(this.role.leaderId, command)
     } else if (this.role instanceof Leader) {
-      let log: Log = {term: this.serverState.currentTerm, content: command};
+      const log: Log = {term: this.serverState.currentTerm, content: command};
       this.handleCommand(log);
     } else {
       this.commandBuffer.push(command);
@@ -176,8 +176,8 @@ export class RaftNode {
   private handleCommand(log: Log) {
     if (this.role instanceof Leader) {
       this.print('Received command: ', log);
-      let prevLogIndex = this.serverState.lastLogIndex;
-      let prevLogTerm = this.serverState.lastLogTerm;
+      const prevLogIndex = this.serverState.lastLogIndex;
+      const prevLogTerm = this.serverState.lastLogTerm;
       this.serverState.logs.push(log);
       this._cluster.forEach(id => this.appendEntriesRequest(id, prevLogIndex, prevLogTerm, [log]));
     } else {
@@ -186,7 +186,7 @@ export class RaftNode {
   }
 
   private requestVoteRequest(destination: NodeId) {
-    let message: RequestVoteRequest = {
+    const message: RequestVoteRequest = {
       term: this.serverState.currentTerm,
       candidateId: this._nodeId,
       lastLogIndex: this.serverState.lastLogIndex,
@@ -197,7 +197,7 @@ export class RaftNode {
   }
 
   private requestVoteResponse(destination: NodeId, voteGranted: boolean) {
-    let message: RequestVoteResponse = {
+    const message: RequestVoteResponse = {
       term: this.serverState.currentTerm,
       voteGranted: voteGranted,
       id: this.nodeId
@@ -207,7 +207,7 @@ export class RaftNode {
   }
 
   private appendEntriesRequest(destination: NodeId, prevLogIndex: LogIndex, prevLogTerm: Term | undefined, entries: Log[] = []) {
-    let message: AppendEntriesRequest = {
+    const message: AppendEntriesRequest = {
       term: this.serverState.currentTerm,
       leaderId: this._nodeId,
       prevLogIndex: prevLogIndex,
@@ -221,7 +221,7 @@ export class RaftNode {
 
 
   private appendEntriesResponse(destination: NodeId, success: boolean) {
-    let message: AppendEntriesResponse = {
+    const message: AppendEntriesResponse = {
       term: this.serverState.currentTerm,
       success: success,
       id: this.nodeId,
@@ -232,7 +232,7 @@ export class RaftNode {
   }
 
   private log(destination: NodeId, command: any) {
-    let message: Log = {term: this.serverState.currentTerm, content: command};
+    const message: Log = {term: this.serverState.currentTerm, content: command};
     this.observer.sendRaftMessage(destination, message);
     this.print('Send command: ', message);
   }
@@ -266,8 +266,8 @@ export class RaftNode {
 
   private becomeLeader() {
     this.print('New role: LEADER');
-    let nextIndex = new Map();
-    let matchIndex = new Map();
+    const nextIndex = new Map();
+    const matchIndex = new Map();
     this._cluster.forEach(id => {
       nextIndex.set(id, this.serverState.logs.length + 1);
       matchIndex.set(id, 0);
@@ -281,9 +281,9 @@ export class RaftNode {
 
   private advanceCommitIndex() {
     if (this.role instanceof Leader) {
-      let matchingIndices = Array.from(this.role.matchIndex.values())
+      const matchingIndices = Array.from(this.role.matchIndex.values())
         .filter(value => value > this.serverState.commitIndex && this.serverState.getLogTerm(value) === this.serverState.currentTerm);
-      let majority = this.majority();
+      const majority = this.majority();
       if (matchingIndices.length < majority) {
         return;
       }
@@ -309,9 +309,9 @@ export class RaftNode {
     if (this.role instanceof Leader) {
       this.print('Heartbeat');
       for (const id of this._cluster) {
-        let lastReplicated = this.role.matchIndex.get(id);
+        const lastReplicated = this.role.matchIndex.get(id);
         if (lastReplicated !== undefined) {
-          let missingLogs = this.serverState.getMissingLogs(lastReplicated);
+          const missingLogs = this.serverState.getMissingLogs(lastReplicated);
           this.appendEntriesRequest(id, this.serverState.lastLogIndex, this.serverState.lastLogTerm, missingLogs);
         } else {
           this.warn('Missing matchIndex entry for : ', id);
@@ -322,7 +322,7 @@ export class RaftNode {
   }
 
   public addNode(id: NodeId): boolean {
-    let oldSize = this._cluster.size;
+    const oldSize = this._cluster.size;
     this._cluster.add(id);
     if (this._cluster.size > oldSize) {
       if (this.role instanceof Leader) {

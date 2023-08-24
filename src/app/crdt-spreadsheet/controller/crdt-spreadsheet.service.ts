@@ -21,13 +21,13 @@ export class CrdtSpreadsheetService {
 
 
   public addRow(id: string): Uint8Array | undefined {
-    let update = this.table.addRow(id);
+    const update = this.table.addRow(id);
     this.spreadsheetSolver.reset();
     return update;
   }
 
   public insertRow(id: string, row: string): Uint8Array | undefined {
-    let update = this.table.insertRow(id, row);
+    const update = this.table.insertRow(id, row);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -36,7 +36,7 @@ export class CrdtSpreadsheetService {
   }
 
   public deleteRow(id: string): Uint8Array | undefined {
-    let update = this.table.deleteRow(id);
+    const update = this.table.deleteRow(id);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -45,7 +45,7 @@ export class CrdtSpreadsheetService {
   }
 
   public addColumn(id: string): Uint8Array | undefined {
-    let update = this.table.addColumn(id);
+    const update = this.table.addColumn(id);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -54,7 +54,7 @@ export class CrdtSpreadsheetService {
   }
 
   public insertColumn(id: string, column: string): Uint8Array | undefined {
-    let update = this.table.insertColumn(id, column);
+    const update = this.table.insertColumn(id, column);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -63,7 +63,7 @@ export class CrdtSpreadsheetService {
   }
 
   public deleteColumn(id: string): Uint8Array | undefined {
-    let update = this.table.deleteColumn(id);
+    const update = this.table.deleteColumn(id);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -75,8 +75,8 @@ export class CrdtSpreadsheetService {
     if (input.trim().length === 0) {
       return this.deleteCell(address);
     }
-    let cell = CellParser.parseCell(input);
-    let update = this.table.set(address, cell);
+    const cell = CellParser.parseCell(input);
+    const update = this.table.set(address, cell);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -87,7 +87,7 @@ export class CrdtSpreadsheetService {
   }
 
   public deleteCell(address: Address): Uint8Array | undefined {
-    let update = this.table.deleteValue(address);
+    const update = this.table.deleteValue(address);
     this.spreadsheetSolver.reset();
     if (update === undefined) {
       console.warn('Update is undefined');
@@ -101,9 +101,9 @@ export class CrdtSpreadsheetService {
   }
 
   public getCellById(address: Address): CellDto {
-    let cell = this.getTable().get(address);
-    let colIndex = this.columns.indexOf(address.column) + 1;
-    let rowIndex = this.rows.indexOf(address.row) + 1;
+    const cell = this.getTable().get(address);
+    const colIndex = this.columns.indexOf(address.column) + 1;
+    const rowIndex = this.rows.indexOf(address.row) + 1;
     if (cell === undefined) {
       return new CellDto(address, colIndex, rowIndex, '');
     }
@@ -111,14 +111,14 @@ export class CrdtSpreadsheetService {
   }
 
   public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
-    let column = this.columns[columnIndex];
-    let row = this.rows[rowIndex];
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
     return this.getCellById({column: column, row: row});
   }
 
   public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
-    let column = this.columns[columnIndex];
-    let row = this.rows[rowIndex];
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
     if (column === undefined || row === undefined) {
       return undefined;
     }

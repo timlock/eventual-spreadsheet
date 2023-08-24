@@ -39,11 +39,11 @@ export class RaftObserverBuilder {
 
 
   public build(): RaftNodeObserver {
-    let onLog = this._onLog;
-    let restartElectionTimer = this._restartElectionTimer;
-    let restartHearBeatTimer = this._restartHearBeatTimer;
-    let sendMessage = this._sendMessage;
-    let onStateChange = this._onStateChange;
+    const onLog = this._onLog;
+    const restartElectionTimer = this._restartElectionTimer;
+    const restartHearBeatTimer = this._restartHearBeatTimer;
+    const sendMessage = this._sendMessage;
+    const onStateChange = this._onStateChange;
 
     return new class implements RaftNodeObserver {
       onLog(log: Log): void {

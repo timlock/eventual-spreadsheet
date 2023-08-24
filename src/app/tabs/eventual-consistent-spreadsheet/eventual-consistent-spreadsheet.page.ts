@@ -1,6 +1,5 @@
 import {AfterViewInit, Component, NgZone} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
-import {Identifier} from "../../identifier/Identifier";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
@@ -24,12 +23,7 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
     consistencyChecker: ConsistencyCheckerService
   ) {
     super(ngZone, consistencyChecker, communicationService);
-    this._currentCell = this.spreadsheetService.getCellByIndex(1, 1);
-    this.consistencyChecker.subscribe(this.communicationService.identifier.uuid, this.table, (time: number) => {
-      console.log('All updates applied ', time);
-      this.ngZone.run(() => this.trackedTime = time);
-    });
-
+    this.currentCell = this.spreadsheetService.getCellByIndex(1, 1);
   }
 
 
@@ -40,11 +34,12 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
 
   public ionViewDidEnter() {
     this.communicationService.openChannel(this.channelName, this);
+    this.startTimeMeasuring();
   }
 
 
   public override selectCell(colId: string, rowId: string) {
-    this._currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    this.currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
     }
@@ -52,12 +47,12 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
 
 
   public override addRow() {
-    let id = this.identifier.next();
+    const id = this.communication.identifier.next();
     this.performAction(() => this.spreadsheetService.addRow(id));
   }
 
   public override insertRow(row: string) {
-    let id = this.identifier.next();
+    const id = this.communication.identifier.next();
     this.performAction(() => this.spreadsheetService.insertRow(id, row));
   }
 
@@ -66,12 +61,12 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
   }
 
   public override addColumn() {
-    let id = this.identifier.next();
+    const id = this.communication.identifier.next();
     this.performAction(() => this.spreadsheetService.addColumn(id));
   }
 
   public override insertColumn(column: string) {
-    let id = this.identifier.next();
+    const id = this.communication.identifier.next();
     this.performAction(() => this.spreadsheetService.insertColumn(id, column));
   }
 
@@ -87,12 +82,8 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
     this.insertCell(address, '');
   }
 
-  override get identifier(): Identifier {
-    return this.communicationService.identifier;
-  }
 
-
-  override get table(): Table<Cell> {
+  public override get table(): Table<Cell> {
     return this.spreadsheetService.getTable();
   }
 
