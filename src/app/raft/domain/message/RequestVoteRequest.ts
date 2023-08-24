@@ -13,7 +13,7 @@ export interface RequestVoteResponse {
   id: NodeId;
 }
 
-export function isRequestVoteRequest(message: RaftMessage): message is RequestVoteRequest {
+export function isRequestVoteRequest<T>(message: RaftMessage<T>): message is RequestVoteRequest {
   return (
     typeof message === 'object' &&
     'term' in message &&
@@ -23,7 +23,7 @@ export function isRequestVoteRequest(message: RaftMessage): message is RequestVo
   );
 }
 
-export function isRequestVoteResponse(message: RaftMessage): message is RequestVoteResponse {
+export function isRequestVoteResponse<T>(message: RaftMessage<T>): message is RequestVoteResponse {
   return (
     typeof message === 'object' &&
     'term' in message &&

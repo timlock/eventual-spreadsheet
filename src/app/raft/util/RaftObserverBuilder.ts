@@ -3,34 +3,34 @@ import {NodeId, RaftMessage} from "../domain/Types";
 import {Log} from "../domain/message/Log";
 import {RaftMetaData} from "./RaftMetaData";
 
-export class RaftObserverBuilder {
-  private _sendMessage: ((receiver: NodeId, message: RaftMessage) => void) | undefined;
-  private _onLog: ((log: Log) => void) | undefined;
+export class RaftObserverBuilder<T> {
+  private _sendMessage: ((receiver: NodeId, message: RaftMessage<T>) => void) | undefined;
+  private _onLog: ((log: Log<T>) => void) | undefined;
   private _restartHearBeatTimer: (() => void) | undefined;
   private _restartElectionTimer: (() => void) | undefined;
   private _onStateChange: ((state: RaftMetaData) => void) | undefined;
 
-  public sendMessage(value: ((receiver: NodeId, message: RaftMessage) => void)): RaftObserverBuilder {
+  public sendMessage(value: ((receiver: NodeId, message: RaftMessage<T>) => void)): RaftObserverBuilder<T> {
     this._sendMessage = value;
     return this;
   }
 
-  public onLog(value: (log: Log) => void): RaftObserverBuilder {
+  public onLog(value: (log: Log<T>) => void): RaftObserverBuilder<T> {
     this._onLog = value;
     return this;
   }
 
-  public restartHearBeatTimer(value: () => void): RaftObserverBuilder {
+  public restartHearBeatTimer(value: () => void): RaftObserverBuilder<T> {
     this._restartHearBeatTimer = value;
     return this;
   }
 
-  public restartElectionTimer(value: () => void): RaftObserverBuilder {
+  public restartElectionTimer(value: () => void): RaftObserverBuilder<T> {
     this._restartElectionTimer = value;
     return this;
   }
 
-  public onStateChange(value: (state: RaftMetaData) => void): RaftObserverBuilder {
+  public onStateChange(value: (state: RaftMetaData) => void): RaftObserverBuilder<T> {
     this._onStateChange = value;
     return this;
   }
@@ -38,15 +38,15 @@ export class RaftObserverBuilder {
 
 
 
-  public build(): RaftNodeObserver {
+  public build(): RaftNodeObserver<T> {
     const onLog = this._onLog;
     const restartElectionTimer = this._restartElectionTimer;
     const restartHearBeatTimer = this._restartHearBeatTimer;
     const sendMessage = this._sendMessage;
     const onStateChange = this._onStateChange;
 
-    return new class implements RaftNodeObserver {
-      onLog(log: Log): void {
+    return new class implements RaftNodeObserver<T> {
+      onLog(log: Log<T>): void {
         if (onLog !== undefined) {
           onLog(log);
         }
@@ -64,7 +64,7 @@ export class RaftObserverBuilder {
         }
       }
 
-      sendRaftMessage(receiver: NodeId, message: RaftMessage): void {
+      sendRaftMessage(receiver: NodeId, message: RaftMessage<T>): void {
         if (sendMessage !== undefined) {
           sendMessage(receiver, message);
         }

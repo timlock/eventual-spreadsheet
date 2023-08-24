@@ -1,17 +1,17 @@
 import {LogIndex, Term} from "../Types";
 import {Log} from "../message/Log";
 
-export class ServerState {
+export class ServerState<T> {
   private _currentTerm: Term = 0;
   private _votedFor: string | undefined;
   private _commitIndex: LogIndex = 0;
   private lastApplied: LogIndex = 0;
 
 
-  constructor(private _logs: Log[] = []) {
+  constructor(private _logs: Log<T>[] = []) {
   }
 
-  public fetchCommittedLogs(): Log[] {
+  public fetchCommittedLogs(): Log<T>[] {
     if (this.lastApplied < this.commitIndex) {
       let result = this._logs.slice(this.lastApplied, this.commitIndex);
       this.lastApplied = this.commitIndex;
@@ -20,7 +20,7 @@ export class ServerState {
     return [];
   }
 
-  public getMissingLogs(lastReplicated: LogIndex): Log[] {
+  public getMissingLogs(lastReplicated: LogIndex): Log<T>[] {
     return this._logs.slice(lastReplicated);
   }
 
@@ -56,7 +56,7 @@ export class ServerState {
     return this._logs[index - 1] !== undefined || !(index !== 0);
   }
 
-  get logs(): Log[] {
+  get logs(): Log<T>[] {
     return this._logs;
   }
 

@@ -1,12 +1,12 @@
 import {Log} from "./Log";
 import {LogIndex, NodeId, RaftMessage, Term} from "../Types";
 
-export interface AppendEntriesRequest {
+export interface AppendEntriesRequest<T> {
   term: Term;
   leaderId: NodeId;
   prevLogIndex: LogIndex;
   prevLogTerm: Term | undefined;
-  entries: Log[];
+  entries: Log<T>[];
   leaderCommit: LogIndex;
 }
 
@@ -17,7 +17,7 @@ export interface AppendEntriesResponse {
   lastLogIndex: LogIndex;
 }
 
-export function isAppendEntriesRequest(message: RaftMessage): message is AppendEntriesRequest {
+export function isAppendEntriesRequest<T>(message: RaftMessage<T>): message is AppendEntriesRequest<T> {
   return (
     typeof message === 'object' &&
     'term' in message &&
@@ -29,7 +29,7 @@ export function isAppendEntriesRequest(message: RaftMessage): message is AppendE
   );
 }
 
-export function isAppendEntriesResponse(message: RaftMessage): message is AppendEntriesResponse {
+export function isAppendEntriesResponse<T>(message: RaftMessage<T>): message is AppendEntriesResponse {
   return (
     typeof message === 'object' &&
     'term' in message &&

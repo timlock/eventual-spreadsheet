@@ -18,7 +18,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   protected constructor(
     protected ngZone: NgZone,
-    protected consistencyChecker: ConsistencyCheckerService,
+    private consistencyChecker: ConsistencyCheckerService,
     protected communication: Communication<T>
   ) {
 

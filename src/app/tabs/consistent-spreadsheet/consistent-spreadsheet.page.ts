@@ -24,7 +24,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
   private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
 
   constructor(
-    private raftService: RaftService,
+    private raftService: RaftService<Action>,
     private alertController: AlertController,
     private spreadsheetService: SpreadsheetService,
     ngZone: NgZone,

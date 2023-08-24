@@ -7,138 +7,131 @@ import {RaftNode} from "./RaftNode";
 import {Identifier} from "../../identifier/Identifier";
 import {RaftNodeObserver} from "./RaftNodeObserver";
 import {Log} from "../domain/message/Log";
-import {isPayload, Action} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../util/RaftServiceObserver";
 import {RaftMetaData} from "../util/RaftMetaData";
 import {Communication} from "../../tabs/Communication";
 
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
-export class RaftService implements RaftNodeObserver, CommunicationServiceObserver<RaftMessage>, Communication<Action> {
-  private readonly timer: Timer;
-  private readonly node: RaftNode;
-  private observer: RaftServiceObserver<Action> | undefined;
-  private channelName: string = 'raft';
-  private _isConnected: boolean = true;
+export class RaftService<T> implements RaftNodeObserver<T>, CommunicationServiceObserver<RaftMessage<T>>, Communication<T> {
+    private readonly timer: Timer;
+    private readonly node: RaftNode<T>;
+    private observer: RaftServiceObserver<T> | undefined;
+    private channelName: string = 'raft';
+    private _isConnected: boolean = true;
 
-  constructor(private readonly communicationService: BroadcastService<RaftMessage>) {
-    this.timer = new Timer();
-    this.node = new RaftNode(this.identifier.uuid, this, false);
-  }
-
-  public openChannel(channelName: string, observer: RaftServiceObserver<Action>) {
-    this.closeChannel();
-    this.channelName = channelName;
-    this.observer = observer;
-    this.communicationService.openChannel(this.channelName, this);
-  }
-
-  public closeChannel() {
-    this.timer.stop();
-    this.communicationService.closeChannel();
-  }
-
-  public start() {
-    this.node.start();
-  }
-
-  public send(message: Action) {
-    this.node.command(message);
-  }
-
-  public onLog(log: Log): void {
-    if (isPayload(log.content)) {
-      this.observer?.onMessage(log.content);
-      console.log('Log applied: ', log);
-      return;
+    constructor(private readonly communicationService: BroadcastService<RaftMessage<T>>) {
+        this.timer = new Timer();
+        this.node = new RaftNode(this.identifier.uuid, this, false);
     }
-    console.warn('Log doesnt contain payload, ', log);
-  }
 
-  public sendRaftMessage(destination: NodeId, raftMessage: RaftMessage): void {
-    if (this._isConnected) {
-      this.communicationService.send(raftMessage, destination, false);
+    public openChannel(channelName: string, observer: RaftServiceObserver<T>) {
+        this.closeChannel();
+        this.channelName = channelName;
+        this.observer = observer;
+        this.communicationService.openChannel(this.channelName, this);
     }
-  }
 
-
-  public onMessage(message: RaftMessage): void {
-    if (this._isConnected) {
-      this.node.handleMessage(message);
+    public closeChannel() {
+        this.timer.stop();
+        this.communicationService.closeChannel();
     }
-  }
 
-
-  public onNode(nodeId: string) {
-    const result = this.node.addNode(nodeId);
-    if (result) {
-      console.log('Added node: ', nodeId, ' to cluster');
-      this.observer?.onNode(nodeId);
+    public start() {
+        this.node.start();
     }
-  }
 
-  private checkTime() {
-    const remaining = this.timer.remainingTime();
-    if (this.timer.isTimeUp()) {
-      this.node.timeout();
-    } else if (remaining !== undefined) {
-      setTimeout(() => this.checkTime(), remaining);
+    public send(message: T) {
+        this.node.command(message);
     }
-  }
 
-  public restartElectionTimer(): void {
-    this.timer.randomDuration();
-    const remaining = this.timer.remainingTime();
-    if (remaining !== undefined) {
-      setTimeout(() => this.checkTime(), remaining);
+    public onLog(log: Log<T>): void {
+        this.observer?.onMessage(log.content);
+        console.log('Log applied: ', log);
+        return;
     }
-  }
 
-
-  public restartHeartbeatTimer(): void {
-    this.timer.fixedDuration();
-    const remaining = this.timer.remainingTime();
-    if (remaining !== undefined) {
-      setTimeout(() => this.checkTime(), remaining);
+    public sendRaftMessage(destination: NodeId, raftMessage: RaftMessage<T>): void {
+        if (this._isConnected) {
+            this.communicationService.send(raftMessage, destination, false);
+        }
     }
-  }
 
-  public canBeStarted(): boolean{
-    return this.isConnected && !this.isActive() && this.nodes.size > 1;
-  }
+    public onMessage(message: RaftMessage<T>): void {
+        if (this._isConnected) {
+            this.node.handleMessage(message);
+        }
+    }
 
-  get nodes(): Set<string> {
-    return this.node.cluster;
-  }
+    public onNode(nodeId: string) {
+        const result = this.node.addNode(nodeId);
+        if (result) {
+            console.log('Added node: ', nodeId, ' to cluster');
+            this.observer?.onNode(nodeId);
+        }
+    }
 
-  get identifier(): Identifier {
-    return this.communicationService.identifier;
-  }
+    private checkTime() {
+        const remaining = this.timer.remainingTime();
+        if (this.timer.isTimeUp()) {
+            this.node.timeout();
+        } else if (remaining !== undefined) {
+            setTimeout(() => this.checkTime(), remaining);
+        }
+    }
 
-  set isConnected(value: boolean) {
-    this._isConnected = value;
-  }
+    public restartElectionTimer(): void {
+        this.timer.randomDuration();
+        const remaining = this.timer.remainingTime();
+        if (remaining !== undefined) {
+            setTimeout(() => this.checkTime(), remaining);
+        }
+    }
 
-  get isConnected(): boolean {
-    return this._isConnected;
-  }
+    public restartHeartbeatTimer(): void {
+        this.timer.fixedDuration();
+        const remaining = this.timer.remainingTime();
+        if (remaining !== undefined) {
+            setTimeout(() => this.checkTime(), remaining);
+        }
+    }
 
-  public onStateChange(state: RaftMetaData): void {
-    this.observer?.onStateChange(state);
-  }
+    public canBeStarted(): boolean {
+        return this.isConnected && !this.isActive() && this.nodes.size > 1;
+    }
 
-  public getMetaData(): RaftMetaData {
-    return this.node.getMetaData();
-  }
+    get nodes(): Set<string> {
+        return this.node.cluster;
+    }
 
-  public isActive(): boolean {
-    return this.timer.isActive();
-  }
+    get identifier(): Identifier {
+        return this.communicationService.identifier;
+    }
 
-  public onMessageCounterUpdate(received: number, total: number) {
-    this.observer?.onMessageCounterUpdate(received, total);
-  }
+    set isConnected(value: boolean) {
+        this._isConnected = value;
+    }
+
+    get isConnected(): boolean {
+        return this._isConnected;
+    }
+
+    public onStateChange(state: RaftMetaData): void {
+        this.observer?.onStateChange(state);
+    }
+
+    public getMetaData(): RaftMetaData {
+        return this.node.getMetaData();
+    }
+
+    public isActive(): boolean {
+        return this.timer.isActive();
+    }
+
+    public onMessageCounterUpdate(received: number, total: number) {
+        this.observer?.onMessageCounterUpdate(received, total);
+    }
 
 }
