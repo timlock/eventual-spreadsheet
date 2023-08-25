@@ -7,10 +7,11 @@ import {MessageBuffer} from "../util/MessageBuffer";
 import {VersionVector} from "../domain/VersionVector";
 import {Communication} from "../../tabs/Communication";
 
+
 @Injectable({
   providedIn: 'root'
 })
-export class BroadcastService<T> implements Communication<T>{
+export class BroadcastService<T> implements Communication<T> {
   private readonly _identifier: Identifier = Identifier.generate();
   private channel: BroadcastChannel | undefined;
   private observer: CommunicationServiceObserver<T> | undefined;
@@ -20,6 +21,8 @@ export class BroadcastService<T> implements Communication<T>{
   private _isConnected: boolean = true;
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
+  private _totalBytes = 0;
+
 
   public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
     if (this.channel !== undefined) {
@@ -50,15 +53,20 @@ export class BroadcastService<T> implements Communication<T>{
       return;
     }
     this._sentMessageCounter++;
-    this.channel.postMessage(message);
+    const jsonData = JSON.stringify(message);
+    this._totalBytes += new Blob([jsonData]).size;
+    this.channel.postMessage(jsonData);
     this.observer?.onMessageCounterUpdate(this._receivedMessageCounter, this._sentMessageCounter);
   }
 
   private onMessage = (event: MessageEvent): any => {
+    const jsonData = event.data as string;
+    const bytes = new Blob([jsonData]).size;
+    this._totalBytes += bytes;
     if (!this._isConnected) {
       return;
     }
-    const message = event.data as Message<T>;
+    const message = JSON.parse(jsonData) as Message<T>;
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -80,7 +88,7 @@ export class BroadcastService<T> implements Communication<T>{
 
   public send(payload: T, destination?: string, atLeastOnce = true) {
     let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
-    if(atLeastOnce){
+    if (atLeastOnce) {
       message = this.messageBuffer.add(message);
     }
     if (this._isConnected) {
@@ -135,5 +143,9 @@ export class BroadcastService<T> implements Communication<T>{
 
   get identifier(): Identifier {
     return this._identifier;
+  }
+
+  get totalBytes(): number {
+    return this._totalBytes;
   }
 }

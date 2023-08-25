@@ -131,7 +131,6 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
 
   public onMessageCounterUpdate(received: number, total: number): void {
-    console.log(received, total)
     this.ngZone.run(() => {
       this._receivedMessageCounter = received;
       this._sentMessageCounter = total;
@@ -149,6 +148,10 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
       this.modifiedState = false;
     }
     this.communication.isConnected = enabled;
+  }
+
+  public get totalBytes(): number {
+    return this.communication.totalBytes;
   }
 
   public get isConnected(): boolean {
