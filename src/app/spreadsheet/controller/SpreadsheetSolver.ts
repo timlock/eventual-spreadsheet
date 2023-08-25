@@ -5,10 +5,11 @@ import {Formula, isFormula} from "../domain/Formula";
 import {GraphSorter} from "../util/GraphSorter";
 import {FormulaType} from "../domain/FormulaType";
 import {Spreadsheet} from "./Spreadsheet";
+import {CellDto} from "./CellDto";
 
 
 export class SpreadsheetSolver {
-  private result: Table<Cell> | undefined;
+  private result: Table<CellDto> | undefined;
 
   constructor(private readonly table: Spreadsheet<Cell>) {
   }
@@ -17,9 +18,9 @@ export class SpreadsheetSolver {
     this.result = undefined;
   }
 
-  public solve(): Table<Cell> {
-    if(this.result === undefined) {
-      this.result = new Table<Cell>();
+  public solve(): Table<CellDto> {
+    if (this.result === undefined) {
+      this.result = new Table();
       this.table.rows.forEach(row => this.result?.addRow(row));
       this.table.columns.forEach(column => this.result?.addColumn(column));
       this.renderSimpleCells(this.table);
@@ -31,14 +32,30 @@ export class SpreadsheetSolver {
   }
 
   private renderSimpleCells(table: Spreadsheet<Cell>) {
-    for (const rowId of table.rows) {
-      for (const colId of table.columns) {
-        const address: Address = {column: colId, row: rowId};
+    let rowIndex = 0;
+    for (const row of table.rows) {
+      let columnIndex = 0;
+      rowIndex++;
+      for (const column of table.columns) {
+        columnIndex++;
+        const address: Address = {column: column, row: row};
         const cell = table.get(address);
         if (cell === undefined) {
-          this.result?.set(address, emptyCell());
+          this.result?.set(address, {
+            address: address,
+            columnIndex: columnIndex,
+            rowIndex: rowIndex,
+            input: '',
+            content: ''
+          });
         } else if (typeof cell.content === 'number' || typeof cell.content === 'string') {
-          this.result?.set(address, cell);
+          this.result?.set(address, {
+            address: address,
+            columnIndex: columnIndex,
+            rowIndex: rowIndex,
+            input: cell.rawInput,
+            content: cell.content
+          });
         }
       }
     }
@@ -67,7 +84,12 @@ export class SpreadsheetSolver {
       for (const address of group) {
         const formulaCell = table.get(address)!;
         const result = this.computeFormula(formulaCell.content as Formula);
-        this.result?.set(address, {rawInput: formulaCell.rawInput, content: result});
+        this.result?.set(address, {
+          address: address,
+          columnIndex: table.columns.indexOf(address.column),
+          rowIndex: table.rows.indexOf(address.row),
+          input: formulaCell.rawInput, content: result
+        });
       }
     }
   }

@@ -2,9 +2,9 @@ import {Address} from "./Address";
 import {FormulaType} from "./FormulaType";
 
 export interface Formula {
-  type: FormulaType;
-  begin: Address;
-  end: Address;
+  readonly type: FormulaType;
+  readonly begin: Address;
+  readonly end: Address;
 }
 
 export function isFormula(object: any): object is Formula {

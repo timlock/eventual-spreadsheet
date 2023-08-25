@@ -1,18 +1,17 @@
 import {Injectable} from '@angular/core';
 import {Table} from "../spreadsheet/domain/Table";
-import {Cell} from "../spreadsheet/domain/Cell";
 
 @Injectable({
   providedIn: 'root'
 })
-export class ConsistencyCheckerService {
+export class ConsistencyCheckerService<T> {
   private id: string = '';
   private callback: ((time: number) => void) | undefined;
   private nodes: string[] = [];
   private totalUpdates = 0;
   private start: number | undefined;
 
-  public subscribe(id: string, initialTable: Table<Cell>, callback: (time: number) => void) {
+  public subscribe(id: string, initialTable: Table<T>, callback: (time: number) => void) {
     this.unsubscribe();
     this.id = id;
     this.callback = callback;
@@ -25,6 +24,7 @@ export class ConsistencyCheckerService {
         || this.callback === undefined) {
         return;
       }
+      this.totalUpdates++;
       const possibleDuration = Date.now() - this.start;
       if (this.reachedConsistentState()) {
         this.start = undefined;
@@ -63,7 +63,7 @@ export class ConsistencyCheckerService {
     }
   }
 
-  public updateApplied(newTable: Table<Cell>) {
+  public updateApplied(newTable: Table<T>) {
     this.persist(newTable);
     if (this.start !== undefined && this.callback !== undefined) {
       const possibleDuration = Date.now() - this.start;
@@ -74,15 +74,15 @@ export class ConsistencyCheckerService {
     }
   }
 
-  public persist(entry: Table<Cell>, id = this.id) {
-    const value: Entry = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
+  public persist(entry: Table<T>, id = this.id) {
+    const value: Entry<T> = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
     localStorage.setItem(id, JSON.stringify(value));
   }
 
 }
 
-interface Entry {
+interface Entry<T> {
   rows: string[],
   columns: string[],
-  cells: [string, Cell][]
+  cells: [string, T][]
 }

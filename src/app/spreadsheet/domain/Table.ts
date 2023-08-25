@@ -12,7 +12,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public insertRow(id: string, row: string) {
     const index = this._rows.indexOf(row);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
       return;
     }
@@ -21,7 +21,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public deleteRow(id: string) {
     const index = this._rows.indexOf(id);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to remove id:" + id + " in rows: " + this._rows);
       return;
     }
@@ -34,7 +34,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public insertColumn(id: string, column: string) {
     const index = this._columns.indexOf(column);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);
       return;
     }
@@ -43,7 +43,7 @@ export class Table<T> implements Spreadsheet<T> {
 
   public deleteColumn(id: string) {
     const index = this._columns.indexOf(id);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to remove id:" + id + " in columns: " + this._columns);
       return;
     }
@@ -58,6 +58,7 @@ export class Table<T> implements Spreadsheet<T> {
   public get(address: Address): T | undefined {
     return this._cells.get(JSON.stringify(address));
   }
+
 
   public set(address: Address, value: T) {
     this._cells.set(JSON.stringify(address), value);
@@ -74,7 +75,7 @@ export class Table<T> implements Spreadsheet<T> {
     const beginRow = this._rows.indexOf(begin.row);
     const endCol = this._columns.indexOf(end.column);
     const endRow = this._rows.indexOf(end.row);
-    if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
+    if (beginCol === -1 || beginRow === -1 || endCol === -1 || endRow === -1) {
       return [];
     }
     const rowIds = this._rows.slice(beginRow, endRow + 1);
@@ -86,6 +87,21 @@ export class Table<T> implements Spreadsheet<T> {
       }
     }
     return result;
+  }
+
+  public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
+    if (column === undefined || row === undefined) {
+      return undefined;
+    }
+    return {column: column, row: row};
+  }
+
+  public getCellByIndex(columnIndex: number, rowIndex: number): T | undefined {
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
+    return this.get({column: column, row: row});
   }
 
   get rows(): string[] {
@@ -100,4 +116,6 @@ export class Table<T> implements Spreadsheet<T> {
   get cells(): Map<string, T> {
     return this._cells;
   }
+
+
 }

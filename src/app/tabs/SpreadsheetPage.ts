@@ -1,5 +1,4 @@
 import {Table} from "../spreadsheet/domain/Table";
-import {Cell} from "../spreadsheet/domain/Cell";
 import {CellDto} from "../spreadsheet/controller/CellDto";
 import {NgZone} from "@angular/core";
 import {Address} from "../spreadsheet/domain/Address";
@@ -18,7 +17,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   protected constructor(
     protected ngZone: NgZone,
-    private consistencyChecker: ConsistencyCheckerService,
+    private consistencyChecker: ConsistencyCheckerService<CellDto>,
     protected communication: Communication<T>
   ) {
 
@@ -42,7 +41,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   public abstract deleteCell(address: Address): void;
 
-  public abstract get table(): Table<Cell>;
+  public abstract get table(): Table<CellDto>;
 
   protected abstract handleMessage(message: T): void;
 
@@ -59,11 +58,11 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   }
 
 
-  get currentCell(): CellDto {
-    if (this.table.rows.indexOf(this._currentCell!.row) === -1 || this.table.columns.indexOf(this._currentCell!.column) === -1) {
-      this.selectCell(this.table.columns[0], this.table.rows[0]);
-    }
-    return this._currentCell!;
+  get currentCell(): CellDto | undefined {
+    // if (this.table.rows.indexOf(this._currentCell?.address?.row) === -1 || this.table.columns.indexOf(this._currentCell!.address.column) === -1) {
+    //   this.selectCell(this.table.columns[0], this.table.rows[0]);
+    // }
+    return this._currentCell;
   }
 
 
@@ -86,6 +85,11 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
       return;
     }
     this.communication.send(update);
+    if (this.table.rows.length === 1 && this.table.columns.length === 1) {
+      this.selectCell(this.table.columns[0], this.table.rows[0])
+    } else if (this.table.rows.length === 0 || this.table.columns.length === 0) {
+      this.currentCell = undefined;
+    }
   }
 
   public clear() {

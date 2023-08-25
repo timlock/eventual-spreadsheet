@@ -2,9 +2,10 @@ import {TestBed} from '@angular/core/testing';
 
 import {ConsistencyCheckerService} from './consistency-checker.service';
 import {Table} from "../spreadsheet/domain/Table";
+import {CellDto} from "../spreadsheet/controller/CellDto";
 
 describe('ConsistencyCheckerService', () => {
-  let service: ConsistencyCheckerService;
+  let service: ConsistencyCheckerService<CellDto>;
   let identifier = 'ConsistencyCheckerService';
 
   beforeEach(() => {

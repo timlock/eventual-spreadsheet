@@ -1,11 +1,11 @@
 import {AfterViewInit, Component, NgZone} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
-import {Cell} from "../../spreadsheet/domain/Cell";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {SpreadsheetPage} from "../SpreadsheetPage";
 import {Address} from "../../spreadsheet/domain/Address";
+import {CellDto} from "../../spreadsheet/controller/CellDto";
 
 @Component({
   selector: 'app-eventual-consistent-spreadsheet',
@@ -20,10 +20,10 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
     private communicationService: BroadcastService<Uint8Array>,
     private spreadsheetService: CrdtSpreadsheetService,
     ngZone: NgZone,
-    consistencyChecker: ConsistencyCheckerService
+    consistencyChecker: ConsistencyCheckerService<CellDto>
   ) {
     super(ngZone, consistencyChecker, communicationService);
-    this.currentCell = this.spreadsheetService.getCellByIndex(1, 1);
+    this.currentCell = this.spreadsheetService.getTable().getCellByIndex(1, 1);
   }
 
 
@@ -39,7 +39,7 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
 
 
   public override selectCell(colId: string, rowId: string) {
-    this.currentCell = this.spreadsheetService.getCellById({column: colId, row: rowId});
+    this.currentCell = this.spreadsheetService.getTable().get({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
       this.ionInput?.setFocus();
     }
@@ -83,7 +83,7 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
   }
 
 
-  public override get table(): Table<Cell> {
+  public override get table(): Table<CellDto> {
     return this.spreadsheetService.getTable();
   }
 

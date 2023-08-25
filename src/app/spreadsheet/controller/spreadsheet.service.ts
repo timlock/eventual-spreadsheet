@@ -10,7 +10,7 @@ import {Identifier} from "../../identifier/Identifier";
 @Injectable({
   providedIn: 'root'
 })
-export class SpreadsheetService {
+export class SpreadsheetService{
   private table: Table<Cell> = new Table();
   private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.table);
 
@@ -73,35 +73,9 @@ export class SpreadsheetService {
     this.spreadsheetSolver.reset();
   }
 
-  public getTable(): Table<Cell> {
+  public getTable(): Table<CellDto> {
     return this.spreadsheetSolver.solve();
   }
-
-  public getCellById(address: Address): CellDto {
-    const cell = this.getTable().get(address);
-    const colIndex = this.columns.indexOf(address.column) + 1;
-    const rowIndex = this.rows.indexOf(address.row) + 1;
-    if (cell === undefined) {
-      return new CellDto(address, colIndex, rowIndex, '');
-    }
-    return new CellDto(address, colIndex, rowIndex, cell.rawInput);
-  }
-
-  public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
-    const column = this.columns[columnIndex];
-    const row = this.rows[rowIndex];
-    if (column === undefined || row === undefined) {
-      return undefined;
-    }
-    return {column: column, row: row};
-  }
-
-  public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
-    const column = this.columns[columnIndex - 1];
-    const row = this.rows[rowIndex - 1];
-    return this.getCellById({column: column, row: row});
-  }
-
   get rows(): string[] {
     return this.table.rows;
   }
