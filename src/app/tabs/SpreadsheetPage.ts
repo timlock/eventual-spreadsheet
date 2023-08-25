@@ -8,6 +8,7 @@ import {Communication} from "./Communication";
 
 export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver<T> {
   private _currentCell: CellDto | undefined;
+  private _input = '';
   protected nodes: Set<string> = new Set<string>();
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
@@ -53,15 +54,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     });
   }
 
-  public stopTimeMeasuring() {
-    this.consistencyChecker.unsubscribe();
-  }
-
-
   get currentCell(): CellDto | undefined {
-    // if (this.table.rows.indexOf(this._currentCell?.address?.row) === -1 || this.table.columns.indexOf(this._currentCell!.address.column) === -1) {
-    //   this.selectCell(this.table.columns[0], this.table.rows[0]);
-    // }
     return this._currentCell;
   }
 
@@ -177,5 +170,14 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   get trackedTime(): number | undefined {
     return this._trackedTime;
+  }
+
+
+  get input(): string {
+    return this._input;
+  }
+
+  set input(value: string) {
+    this._input = value;
   }
 }

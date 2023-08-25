@@ -51,13 +51,13 @@
       <ion-col size="auto">
         <ion-title class="ion-padding-top">{{currentCell?.columnIndex}}|{{currentCell?.rowIndex}}</ion-title>
       </ion-col>
-      <div *ngIf="currentCell !== undefined">
-        <ion-col>
-          <form (submit)="insertCell(currentCell!.address, currentCell!.input)">
-            <ion-input name="inconsistent-input" fill="outline" [(ngModel)]="currentCell!.input"></ion-input>
+      <ion-col>
+        <div *ngIf="currentCell !== undefined">
+          <form (submit)="insertCell(currentCell!.address, input)">
+            <ion-input name="inconsistent-input" fill="outline" [(ngModel)]="input"></ion-input>
           </form>
-        </ion-col>
-      </div>
+        </div>
+      </ion-col>
     </ion-row>
   </ion-grid>
   <div class="spreadsheet">
@@ -104,7 +104,8 @@
         </td>
         <td class="ion-text-right cell" (click)=selectCell(column,row)
             *ngFor="let column of table.columns; let c = index">
-          <div *ngIf="currentCell !== undefined && (currentCell!.address.row === row && currentCell!.address.column === column); else cellValue">
+          <div
+            *ngIf="currentCell !== undefined && (currentCell!.address.row === row && currentCell!.address.column === column); else cellValue">
             <div class="selected">
               {{ table.get({column: column, row: row})?.content }}
             </div>

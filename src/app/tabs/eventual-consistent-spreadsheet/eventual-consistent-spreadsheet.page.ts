@@ -39,8 +39,9 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
 
 
   public override selectCell(colId: string, rowId: string) {
-    this.currentCell = this.spreadsheetService.getTable().get({column: colId, row: rowId});
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
+      this.currentCell = this.spreadsheetService.getTable().get({column: colId, row: rowId});
+      this.input = this.currentCell?.input || '';
       this.ionInput?.setFocus();
     }
   }

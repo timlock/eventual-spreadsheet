@@ -4,6 +4,6 @@ export interface CellDto {
   readonly address: Address;
   readonly  columnIndex: number;
   readonly  rowIndex: number;
-  input: string;
+  readonly input: string;
   readonly  content: string | number;
 }

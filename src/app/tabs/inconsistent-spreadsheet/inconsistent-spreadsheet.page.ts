@@ -41,10 +41,11 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> impleme
     }
 
     public override selectCell(colId: string, rowId: string) {
+      if (this.table.rows.length > 0 && this.table.columns.length > 0) {
         this.currentCell = this.spreadsheetService.getTable().get({column: colId, row: rowId});
-        if (this.table.rows.length > 0 && this.table.columns.length > 0) {
-            this.ionInput?.setFocus();
-        }
+        this.input = this.currentCell?.input || '';
+        this.ionInput?.setFocus();
+      }
     }
 
     public override addRow() {
