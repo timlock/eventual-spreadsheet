@@ -8,13 +8,13 @@ export class CellParser {
   public static parseCell(rawInput: string): Cell {
     const value = +rawInput;
     if (!Number.isNaN(value)) {
-      return {rawInput: rawInput, content: value}
+      return {input: rawInput, content: value}
     }
     const formula = this.parseFormula(rawInput);
     if (formula !== undefined) {
-      return {rawInput: rawInput, content: formula}
+      return {input: rawInput, content: formula}
     }
-    return {rawInput: rawInput, content: rawInput}
+    return {input: rawInput, content: rawInput}
   }
 
   private static parseFormula(rawInput: string): Formula | undefined {

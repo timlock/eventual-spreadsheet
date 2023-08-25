@@ -27,7 +27,8 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> impleme
         consistencyChecker: ConsistencyCheckerService<CellDto>
     ) {
         super(ngZone, consistencyChecker, communicationService);
-        this.currentCell = this.spreadsheetService.getTable().getCellByIndex(0, 0);
+        const address = this.spreadsheetService.getTable().getAddressByIndex(0,0)!;
+        this.selectCell(address?.column, address?.row);
     }
 
 
@@ -40,13 +41,23 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> impleme
         this.startTimeMeasuring();
     }
 
-    public override selectCell(colId: string, rowId: string) {
-      if (this.table.rows.length > 0 && this.table.columns.length > 0) {
-        this.currentCell = this.spreadsheetService.getTable().get({column: colId, row: rowId});
-        this.input = this.currentCell?.input || '';
-        this.ionInput?.setFocus();
+  public override selectCell(column: string, row: string) {
+    if (this.table.rows.length > 0 && this.table.columns.length > 0) {
+      const address: Address = {column: column, row: row};
+      this.currentCell = this.spreadsheetService.getTable().get(address)
+      if (this.currentCell === undefined) {
+        const index = this.spreadsheetService.getTable().getIndexByAddress(address);
+        if (index === undefined) {
+          console.warn(`Cant select cell ${column}|${row}`);
+          return;
+        }
+        this.currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
       }
+      this.input = this.currentCell.input;
+      this.ionInput?.setFocus();
     }
+    console.warn(`Cant select cell ${column}|${row}`);
+  }
 
     public override addRow() {
         const id = this.communication.identifier.next();

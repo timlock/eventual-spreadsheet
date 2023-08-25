@@ -98,6 +98,10 @@ export class Table<T> implements Spreadsheet<T> {
     return {column: column, row: row};
   }
 
+  public getIndexByAddress(address: Address): [number,number] | undefined{
+    return [this.columns.indexOf(address.column), this.rows.indexOf(address.row)];
+  }
+
   public getCellByIndex(columnIndex: number, rowIndex: number): T | undefined {
     const column = this.columns[columnIndex];
     const row = this.rows[rowIndex];

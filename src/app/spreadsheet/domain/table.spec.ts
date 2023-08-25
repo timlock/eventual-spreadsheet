@@ -20,8 +20,8 @@ describe('Table', () => {
 
 
   it('getCellRange', () => {
-    let firstCell: Cell = {rawInput: 'first', content: undefined};
-    let secondCell: Cell = {rawInput: 'second', content: undefined};
+    let firstCell: Cell = {input: 'first', content: undefined};
+    let secondCell: Cell = {input: 'second', content: undefined};
     let firstAddress: Address = {column: table.columns[0], row: table.rows[0]};
     let secondAddress: Address = {column: table.columns[0], row: table.rows[1]};
     let range: [Address, Address] = [firstAddress, {column: table.columns[0], row: table.rows[2]}];

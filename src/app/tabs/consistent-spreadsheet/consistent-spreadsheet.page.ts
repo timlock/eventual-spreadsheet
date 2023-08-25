@@ -31,7 +31,8 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
     consistencyChecker: ConsistencyCheckerService<CellDto>,
   ) {
     super(ngZone, consistencyChecker, raftService);
-    this.currentCell = this.spreadsheetService.getTable().getCellByIndex(1, 1);
+    const address = this.spreadsheetService.getTable().getAddressByIndex(0, 0)!;
+    this.selectCell(address?.column, address?.row);
   }
 
 
@@ -50,12 +51,22 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
   }
 
 
-  public override selectCell(colId: string, rowId: string) {
+  public override selectCell(column: string, row: string) {
     if (this.table.rows.length > 0 && this.table.columns.length > 0) {
-      this.currentCell = this.spreadsheetService.getTable().get({column: colId, row: rowId});
-      this.input = this.currentCell?.input || '';
+      const address: Address = {column: column, row: row};
+      this.currentCell = this.spreadsheetService.getTable().get(address)
+      if (this.currentCell === undefined) {
+        const index = this.spreadsheetService.getTable().getIndexByAddress(address);
+        if (index === undefined) {
+          console.warn(`Cant select cell ${column}|${row}`);
+          return;
+        }
+        this.currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
+      }
+      this.input = this.currentCell.input;
       this.ionInput?.setFocus();
     }
+    console.warn(`Cant select cell ${column}|${row}`);
   }
 
   public override addRow() {

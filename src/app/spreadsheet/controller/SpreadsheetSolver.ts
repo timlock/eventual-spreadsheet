@@ -1,5 +1,5 @@
 import {Table} from "../domain/Table";
-import {Cell, emptyCell} from "../domain/Cell";
+import {Cell} from "../domain/Cell";
 import {Address} from "../domain/Address";
 import {Formula, isFormula} from "../domain/Formula";
 import {GraphSorter} from "../util/GraphSorter";
@@ -40,20 +40,12 @@ export class SpreadsheetSolver {
         columnIndex++;
         const address: Address = {column: column, row: row};
         const cell = table.get(address);
-        if (cell === undefined) {
+        if (cell !== undefined && (typeof cell.content === 'number' || typeof cell.content === 'string')) {
           this.result?.set(address, {
             address: address,
             columnIndex: columnIndex,
             rowIndex: rowIndex,
-            input: '',
-            content: ''
-          });
-        } else if (typeof cell.content === 'number' || typeof cell.content === 'string') {
-          this.result?.set(address, {
-            address: address,
-            columnIndex: columnIndex,
-            rowIndex: rowIndex,
-            input: cell.rawInput,
+            input: cell.input,
             content: cell.content
           });
         }
@@ -88,7 +80,7 @@ export class SpreadsheetSolver {
           address: address,
           columnIndex: table.columns.indexOf(address.column),
           rowIndex: table.rows.indexOf(address.row),
-          input: formulaCell.rawInput, content: result
+          input: formulaCell.input, content: result
         });
       }
     }
