@@ -21,10 +21,9 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
   constructor(
     private communicationService: BroadcastService<Action>,
     private spreadsheetService: SpreadsheetService,
-    ngZone: NgZone,
     consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
-    super(ngZone, consistencyChecker, communicationService, InconsistentSpreadsheetPage.TAG);
+    super(consistencyChecker, communicationService, InconsistentSpreadsheetPage.TAG);
     const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
     if (address !== undefined) {
       this.selectCell(address.column, address.row);
@@ -35,6 +34,10 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
   public ionViewDidEnter() {
     this.communicationService.openChannel(InconsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
+  }
+
+  public ionViewDidLeave(){
+    this.communicationService.closeChannel();
   }
 
 

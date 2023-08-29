@@ -14,7 +14,7 @@
           <ion-card-content>
             <ion-list>
               <ion-item>
-                <ion-label>Remote nodes: {{nodes.size}}</ion-label>
+                <ion-label>Remote nodes: {{communication.nodes.size}}</ion-label>
               </ion-item>
               <ion-item>
                 <ion-label>Time: {{trackedTime}}</ion-label>
@@ -43,10 +43,10 @@
                 <ion-label>Total bytes: {{totalBytes}}</ion-label>
               </ion-item>
               <ion-item>
-                <ion-label>Received messages: {{receivedMessageCounter}}</ion-label>
+                <ion-label>Received messages: {{communication.totalReceivedMessages}}</ion-label>
               </ion-item>
               <ion-item>
-                <ion-label>Sent messages: {{sentMessageCounter}}</ion-label>
+                <ion-label>Sent messages: {{communication.totalSentMessages}}</ion-label>
               </ion-item>
               <ion-item lines="none">
                 <ion-toggle justify="start" [(ngModel)]="isConnected">
@@ -77,13 +77,13 @@
                 <ion-label>Last applied log: {{raftMetaData.lastAppliedLog}}</ion-label>
               </ion-item>
               <ion-item>
-                <ion-label>Required nodes: {{nodes.size + 1}}/3</ion-label>
+                <ion-label>Required nodes: {{communication.nodes.size + 1}}/3</ion-label>
               </ion-item>
               <ion-item lines="none">
                 <div *ngIf="canBeStarted()">
                   <ion-button (click)="start()">Start</ion-button>
                 </div>
-                <div *ngIf="isActive || nodes.size <= 1">
+                <div *ngIf="isActive || communication.nodes.size <= 1">
                   <ion-button [disabled]="true">Start</ion-button>
                 </div>
               </ion-item>
@@ -99,7 +99,7 @@
       <ion-col>
         <div *ngIf="currentCell !== undefined">
           <form (submit)="insertCell(currentCell!.address, input)">
-            <ion-input name="inconsistent" fill="outline" [(ngModel)]="input"></ion-input>
+            <ion-input name="consistent" fill="outline" [(ngModel)]="input"></ion-input>
           </form>
         </div>
       </ion-col>

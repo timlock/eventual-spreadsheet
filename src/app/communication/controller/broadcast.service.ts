@@ -18,10 +18,10 @@ export class BroadcastService<T> implements Communication<T> {
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
   private _isConnected: boolean = true;
-  private _receivedMessageCounter = 0;
-  private _sentMessageCounter = 0;
+  private _totalReceivedMessages = 0;
+  private _totalSentMessages = 0;
   private _totalBytes = 0;
-
+  private static readonly QUIT = 'QUIT';
 
   public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
     if (this.channel !== undefined) {
@@ -35,14 +35,16 @@ export class BroadcastService<T> implements Communication<T> {
 
   public closeChannel() {
     if (this.channel !== undefined) {
+      this.announceQuit();
       this.channel.close();
     }
     this.channel = undefined;
     this._nodes.clear();
     this.messageBuffer = new MessageBuffer<T>();
     this.versionVectorManager = new VersionVectorManager();
-    this._receivedMessageCounter = 0;
-    this._sentMessageCounter = 0;
+    this._totalReceivedMessages = 0;
+    this._totalSentMessages = 0;
+    this._totalBytes = 0;
   }
 
 
@@ -51,10 +53,9 @@ export class BroadcastService<T> implements Communication<T> {
       console.warn('Cant post message, channel is undefined');
       return;
     }
-    this._sentMessageCounter++;
+    this._totalSentMessages++;
     this._totalBytes += new Blob([JSON.stringify(message)]).size;
     this.channel.postMessage(message);
-    this.observer?.onMessageCounterUpdate(this._receivedMessageCounter, this._sentMessageCounter);
   }
 
   private onMessage = (event: MessageEvent): any => {
@@ -64,6 +65,10 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     const message = event.data as Message<T>;
+    if(message.payload === BroadcastService.QUIT){
+      this._nodes.delete(message.source);
+      return;
+    }
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -72,10 +77,9 @@ export class BroadcastService<T> implements Communication<T> {
       this.versionVectorManager.update(message.source, message.timestamp);
     }
     if (message.destination === this._identifier.uuid && message.payload !== undefined) {
-      this._receivedMessageCounter++;
+      this._totalReceivedMessages++;
       this.observer?.onMessage(message.payload);
     }
-    this.observer?.onMessageCounterUpdate(this._receivedMessageCounter, this._sentMessageCounter);
   }
 
   private sendMissingMessages(destination: string, versionVector: VersionVector) {
@@ -122,6 +126,14 @@ export class BroadcastService<T> implements Communication<T> {
     this.postMessage(message);
   }
 
+  private announceQuit(){
+    const message: Message<string> ={
+      source: this._identifier.uuid,
+      payload: BroadcastService.QUIT
+    }
+    this.postMessage(message);
+  }
+
   set isConnected(value: boolean) {
     this._isConnected = value;
     if (this._isConnected) {
@@ -142,20 +154,20 @@ export class BroadcastService<T> implements Communication<T> {
     return this._identifier;
   }
 
-  get countedBytes(): number {
+  get totalBytes(): number {
     return this._totalBytes;
   }
 
   get countedMessages(): number {
-    return this._receivedMessageCounter + this._sentMessageCounter;
+    return this._totalReceivedMessages + this._totalSentMessages;
   }
 
 
-  get receivedMessageCounter(): number {
-    return this._receivedMessageCounter;
+  get totalReceivedMessages(): number {
+    return this._totalReceivedMessages;
   }
 
-  get sentMessageCounter(): number {
-    return this._sentMessageCounter;
+  get totalSentMessages(): number {
+    return this._totalSentMessages;
   }
 }

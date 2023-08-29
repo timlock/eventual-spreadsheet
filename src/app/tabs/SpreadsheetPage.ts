@@ -23,7 +23,6 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
 
   protected constructor(
-    protected ngZone: NgZone,
     private consistencyChecker: ConsistencyCheckerService<OutputCell>,
     protected communication: Communication<T>,
     private readonly tag: string
@@ -148,24 +147,13 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     this.startStopwatch();
     this.handleMessage(message);
     this.consistencyChecker.update(this.renderTable());
-    this.ngZone.run(() => {
-      this.renderTable()
-    });
     if (this.renderTable().rows.length === 0 || this.renderTable().columns.length === 0) {
       this._currentCell = undefined;
     }
   }
 
 
-  public onMessageCounterUpdate(received: number, total: number): void {
-    this.ngZone.run(() => {
-      this._receivedMessageCounter = received;
-      this._sentMessageCounter = total;
-    });
-  }
-
   public onNode(nodeId: string): void {
-    this.ngZone.run(() => this.nodes.add(nodeId));
     this.consistencyChecker.addNodes(nodeId);
   }
 

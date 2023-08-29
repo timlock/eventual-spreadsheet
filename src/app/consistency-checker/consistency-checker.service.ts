@@ -55,9 +55,9 @@ export class ConsistencyCheckerService<T> {
   public update(entry: Table<T>, id = this.id) {
     const value: Entry<T> = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
     localStorage.setItem(id, JSON.stringify(value));
-    if(this.reachedConsistentState() && this.callback !== undefined){
-      this.callback();
-    }
+    // if(this.reachedConsistentState() && this.callback !== undefined){
+    //   this.callback();
+    // }
   }
 
 }

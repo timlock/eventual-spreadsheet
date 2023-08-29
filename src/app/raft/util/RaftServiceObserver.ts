@@ -8,6 +8,5 @@ export interface RaftServiceObserver<T> extends CommunicationServiceObserver<T>{
 
   onStateChange(state: RaftMetaData): void;
 
-  onMessageCounterUpdate(received: number, total: number): void;
 
 }

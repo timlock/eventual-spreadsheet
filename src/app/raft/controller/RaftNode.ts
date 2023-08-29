@@ -140,7 +140,6 @@ export class RaftNode<T> {
     }
     if (this.role instanceof Leader) {
       if (response.success) {
-        console.log(response.lastLogIndex, this.role.matchIndex.get(response.id), response)
         if (response.lastLogIndex > this.role.matchIndex.get(response.id)!) {
           this.role.nextIndex.set(response.id, response.lastLogIndex + 1);
           this.role.matchIndex.set(response.id, response.lastLogIndex);

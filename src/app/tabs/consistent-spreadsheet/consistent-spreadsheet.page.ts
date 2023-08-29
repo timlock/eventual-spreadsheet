@@ -1,4 +1,4 @@
-import {Component, NgZone} from '@angular/core';
+import {Component} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {RaftService} from "../../raft/controller/raft.service";
 import {ActionType} from "../../spreadsheet/util/ActionType";
@@ -26,10 +26,9 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
     private raftService: RaftService<Action>,
     private alertController: AlertController,
     private spreadsheetService: SpreadsheetService,
-    ngZone: NgZone,
     consistencyChecker: ConsistencyCheckerService<OutputCell>,
   ) {
-    super(ngZone, consistencyChecker, raftService, ConsistentSpreadsheetPage.TAG);
+    super(consistencyChecker, raftService, ConsistentSpreadsheetPage.TAG);
     const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
     if (address !== undefined) {
       this.selectCell(address.column, address.row);
@@ -40,6 +39,10 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
   public ionViewDidEnter() {
     this.raftService.openChannel(ConsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
+  }
+
+  public ionViewDidLeave(){
+    this.raftService.closeChannel();
   }
 
   public start() {
@@ -110,7 +113,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
       alert = await this.alertController.create({
         header: 'Can not alter spreadsheet!',
         subHeader: 'Raft needs to be started first',
-        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.nodes.size}/3`,
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.communication.nodes.size}/3`,
         buttons: [{
           text: 'Cancel',
           role: 'cancel'
@@ -127,7 +130,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
       alert = await this.alertController.create({
         header: 'Can not alter spreadsheet!',
         subHeader: 'Raft needs to be started first',
-        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.nodes.size}/3`,
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.communication.nodes.size}/3`,
         buttons: ['OK'],
       });
     }

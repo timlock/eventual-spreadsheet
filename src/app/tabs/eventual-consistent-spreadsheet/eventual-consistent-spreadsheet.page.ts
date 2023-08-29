@@ -1,4 +1,4 @@
-import {Component, NgZone} from '@angular/core';
+import {Component} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Table} from "../../spreadsheet/domain/Table";
@@ -19,10 +19,9 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
   constructor(
     private communicationService: BroadcastService<Uint8Array>,
     private spreadsheetService: CrdtSpreadsheetService,
-    ngZone: NgZone,
     consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
-    super(ngZone, consistencyChecker, communicationService, EventualConsistentSpreadsheetPage.TAG);
+    super(consistencyChecker, communicationService, EventualConsistentSpreadsheetPage.TAG);
     const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
     if (address !== undefined) {
       this.selectCell(address.column, address.row);
@@ -33,6 +32,10 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
   public ionViewDidEnter() {
     this.communicationService.openChannel(EventualConsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
+  }
+
+  public ionViewDidLeave(){
+    this.communicationService.closeChannel();
   }
 
   public override addRow() {
