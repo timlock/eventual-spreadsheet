@@ -1,5 +1,6 @@
 export interface RaftMetaData{
   role: string,
   term: number,
-  lastLogIndex: number
+  lastLogIndex: number,
+  lastAppliedLog: number
 }

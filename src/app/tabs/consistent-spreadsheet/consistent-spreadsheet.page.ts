@@ -20,7 +20,7 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 })
 export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implements RaftServiceObserver<Action> {
   private static readonly TAG: string = 'consistent';
-  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0};
+  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0, lastAppliedLog: 0};
 
   constructor(
     private raftService: RaftService<Action>,
@@ -144,7 +144,7 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
   }
 
   public onStateChange(state: RaftMetaData) {
-    this.ngZone.run(() => this._raftMetaData = state);
+    this._raftMetaData = state;
   }
 
   protected override handleMessage(message: Action) {

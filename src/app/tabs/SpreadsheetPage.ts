@@ -128,7 +128,6 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   }
 
   public grow(quantity: number) {
-    console.log('Grow', quantity)
     for (let i = 0; i < quantity; i++) {
       this.addColumn();
       this.addRow();
@@ -152,6 +151,9 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     this.ngZone.run(() => {
       this.renderTable()
     });
+    if (this.renderTable().rows.length === 0 || this.renderTable().columns.length === 0) {
+      this._currentCell = undefined;
+    }
   }
 
 

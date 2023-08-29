@@ -48,7 +48,6 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationService
 
   public onLog(log: Log<T>): void {
     this.observer?.onMessage(log.content);
-    console.log('Log applied: ', log);
     return;
   }
 

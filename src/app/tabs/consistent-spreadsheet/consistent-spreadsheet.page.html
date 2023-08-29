@@ -74,6 +74,9 @@
                 <ion-label>Last log index: {{raftMetaData.lastLogIndex}}</ion-label>
               </ion-item>
               <ion-item>
+                <ion-label>Last applied log: {{raftMetaData.lastAppliedLog}}</ion-label>
+              </ion-item>
+              <ion-item>
                 <ion-label>Required nodes: {{nodes.size + 1}}/3</ion-label>
               </ion-item>
               <ion-item lines="none">
@@ -96,7 +99,7 @@
       <ion-col>
         <div *ngIf="currentCell !== undefined">
           <form (submit)="insertCell(currentCell!.address, input)">
-            <ion-input name="consistent" fill="outline" [(ngModel)]="input"></ion-input>
+            <ion-input name="inconsistent" fill="outline" [(ngModel)]="input"></ion-input>
           </form>
         </div>
       </ion-col>

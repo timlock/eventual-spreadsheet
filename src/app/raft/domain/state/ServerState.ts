@@ -5,16 +5,16 @@ export class ServerState<T> {
   private _currentTerm: Term = 0;
   private _votedFor: string | undefined;
   private _commitIndex: LogIndex = 0;
-  private lastApplied: LogIndex = 0;
+  private _lastApplied: LogIndex = 0;
 
 
   constructor(private _logs: Log<T>[] = []) {
   }
 
   public fetchCommittedLogs(): Log<T>[] {
-    if (this.lastApplied < this.commitIndex) {
-      let result = this._logs.slice(this.lastApplied, this.commitIndex);
-      this.lastApplied = this.commitIndex;
+    if (this._lastApplied < this._commitIndex) {
+      let result = this._logs.slice(this._lastApplied, this._commitIndex);
+      this._lastApplied = this._commitIndex;
       return result;
     }
     return [];
@@ -75,6 +75,10 @@ export class ServerState<T> {
 
   get lastLogTerm(): Term | undefined {
     return this._logs[this._logs.length - 1]?.term;
+  }
+
+  get lastApplied(): LogIndex {
+    return this._lastApplied;
   }
 
   public isUpToDate(lastLogIndex: LogIndex, lastLogTerm?: Term): boolean {
