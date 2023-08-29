@@ -1,24 +1,24 @@
 import {Table} from "../domain/Table";
-import {Cell} from "../domain/Cell";
+import {InputCell} from "../domain/InputCell";
 import {Address} from "../domain/Address";
 import {Formula, isFormula} from "../domain/Formula";
 import {GraphSorter} from "../util/GraphSorter";
 import {FormulaType} from "../domain/FormulaType";
 import {Spreadsheet} from "./Spreadsheet";
-import {CellDto} from "./CellDto";
+import {OutputCell} from "../domain/OutputCell";
 
 
 export class SpreadsheetSolver {
-  private result: Table<CellDto> | undefined;
+  private result: Table<OutputCell> | undefined;
 
-  constructor(private readonly table: Spreadsheet<Cell>) {
+  constructor(private readonly table: Spreadsheet<InputCell>) {
   }
 
   public reset() {
     this.result = undefined;
   }
 
-  public solve(): Table<CellDto> {
+  public solve(): Table<OutputCell> {
     if (this.result === undefined) {
       this.result = new Table();
       this.table.rows.forEach(row => this.result?.addRow(row));
@@ -31,7 +31,7 @@ export class SpreadsheetSolver {
     return this.result;
   }
 
-  private renderSimpleCells(table: Spreadsheet<Cell>) {
+  private renderSimpleCells(table: Spreadsheet<InputCell>) {
     let rowIndex = 0;
     for (const row of table.rows) {
       let columnIndex = 0;
@@ -53,7 +53,7 @@ export class SpreadsheetSolver {
     }
   }
 
-  private collectFormulas(table: Spreadsheet<Cell>): [Address, Address[]][] {
+  private collectFormulas(table: Spreadsheet<InputCell>): [Address, Address[]][] {
     const formulas: [Address, Address[]][] = [];
     for (const rowId of table.rows) {
       for (const colId of table.columns) {
@@ -69,7 +69,7 @@ export class SpreadsheetSolver {
     return formulas;
   }
 
-  private renderFormulas(formulas: [Address, Address[]][], table: Spreadsheet<Cell>) {
+  private renderFormulas(formulas: [Address, Address[]][], table: Spreadsheet<InputCell>) {
     const sorter = new GraphSorter();
     formulas.filter(formula => this.result?.get(formula[0]) === undefined).forEach(v => sorter.addCell(v));
     for (const group of sorter.sort()) {

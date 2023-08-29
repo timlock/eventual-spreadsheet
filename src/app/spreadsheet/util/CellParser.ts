@@ -1,11 +1,11 @@
-import {Cell} from "../domain/Cell";
+import {InputCell} from "../domain/InputCell";
 import {Formula} from "../domain/Formula";
 import {Address} from "../domain/Address";
 import {FormulaType} from "../domain/FormulaType";
 
 export class CellParser {
 
-  public static parseCell(rawInput: string): Cell {
+  public static parseCell(rawInput: string): InputCell {
     const value = +rawInput;
     if (!Number.isNaN(value)) {
       return {input: rawInput, content: value}

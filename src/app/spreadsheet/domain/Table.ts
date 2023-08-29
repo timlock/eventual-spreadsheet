@@ -99,7 +99,7 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public getIndexByAddress(address: Address): [number,number] | undefined{
-    return [this.columns.indexOf(address.column), this.rows.indexOf(address.row)];
+    return [this.columns.indexOf(address.column) + 1, this.rows.indexOf(address.row) + 1];
   }
 
   public getCellByIndex(columnIndex: number, rowIndex: number): T | undefined {

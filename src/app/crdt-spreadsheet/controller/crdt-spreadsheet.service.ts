@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
-import {CellDto} from "../../spreadsheet/controller/CellDto";
+import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 import {CellParser} from "../../spreadsheet/util/CellParser";
 import {CrdtTable} from "../domain/CrdtTable";
-import {Cell} from "../../spreadsheet/domain/Cell";
+import {InputCell} from "../../spreadsheet/domain/InputCell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {Table} from "../../spreadsheet/domain/Table";
 import {SpreadsheetSolver} from "../../spreadsheet/controller/SpreadsheetSolver";
@@ -11,7 +11,7 @@ import {SpreadsheetSolver} from "../../spreadsheet/controller/SpreadsheetSolver"
     providedIn: 'root'
 })
 export class CrdtSpreadsheetService {
-    private table: CrdtTable<Cell> = new CrdtTable();
+    private table: CrdtTable<InputCell> = new CrdtTable();
     private spreadsheetSolver = new SpreadsheetSolver(this.table);
 
     public applyUpdate(update: Uint8Array) {
@@ -96,7 +96,7 @@ export class CrdtSpreadsheetService {
         return update;
     }
 
-    public getTable(): Table<CellDto> {
+    public getTable(): Table<OutputCell> {
         return this.spreadsheetSolver.solve();
     }
 

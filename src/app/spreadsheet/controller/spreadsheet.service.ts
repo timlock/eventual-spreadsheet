@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
-import {CellDto} from "./CellDto";
+import {OutputCell} from "../domain/OutputCell";
 import {CellParser} from "../util/CellParser";
-import {Cell} from "../domain/Cell";
+import {InputCell} from "../domain/InputCell";
 import {Address} from "../domain/Address";
 import {Table} from "../domain/Table";
 import {SpreadsheetSolver} from "./SpreadsheetSolver";
@@ -11,7 +11,7 @@ import {Identifier} from "../../identifier/Identifier";
   providedIn: 'root'
 })
 export class SpreadsheetService{
-  private table: Table<Cell> = new Table();
+  private table: Table<InputCell> = new Table();
   private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.table);
 
   public constructor() {
@@ -73,7 +73,7 @@ export class SpreadsheetService{
     this.spreadsheetSolver.reset();
   }
 
-  public getTable(): Table<CellDto> {
+  public renderTable(): Table<OutputCell> {
     return this.spreadsheetSolver.solve();
   }
   get rows(): string[] {

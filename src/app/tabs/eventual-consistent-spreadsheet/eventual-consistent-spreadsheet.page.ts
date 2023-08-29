@@ -1,104 +1,101 @@
-import {AfterViewInit, Component, NgZone} from '@angular/core';
+import {Component, NgZone} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {SpreadsheetPage} from "../SpreadsheetPage";
 import {Address} from "../../spreadsheet/domain/Address";
-import {CellDto} from "../../spreadsheet/controller/CellDto";
+import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 
 @Component({
-  selector: 'app-eventual-consistent-spreadsheet',
-  templateUrl: './eventual-consistent-spreadsheet.page.html',
-  styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
+    selector: 'app-eventual-consistent-spreadsheet',
+    templateUrl: './eventual-consistent-spreadsheet.page.html',
+    styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
-export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Array> implements AfterViewInit {
-  private channelName: string = 'eventual-consistent';
-  private ionInput: any | undefined;
+export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Array> {
+    private channelName: string = 'eventual-consistent';
 
-  constructor(
-    private communicationService: BroadcastService<Uint8Array>,
-    private spreadsheetService: CrdtSpreadsheetService,
-    ngZone: NgZone,
-    consistencyChecker: ConsistencyCheckerService<CellDto>
-  ) {
-    super(ngZone, consistencyChecker, communicationService);
-    this.currentCell = this.spreadsheetService.getTable().getCellByIndex(1, 1);
-  }
-
-
-  public ngAfterViewInit() {
-    this.ionInput = document.getElementsByName('eventual-consistent-input')[0];
-  }
-
-
-  public ionViewDidEnter() {
-    this.communicationService.openChannel(this.channelName, this);
-    this.startTimeMeasuring();
-  }
-
-
-  public override selectCell(column: string, row: string) {
-    if (this.table.rows.length > 0 && this.table.columns.length > 0) {
-      const address: Address = {column: column, row: row};
-      this.currentCell = this.spreadsheetService.getTable().get(address)
-      if (this.currentCell === undefined) {
-        const index = this.spreadsheetService.getTable().getIndexByAddress(address);
-        if (index === undefined) {
-          console.warn(`Cant select cell ${column}|${row}`);
-          return;
-        }
-        this.currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
-      }
-      this.input = this.currentCell.input;
-      this.ionInput?.setFocus();
+    constructor(
+        private communicationService: BroadcastService<Uint8Array>,
+        private spreadsheetService: CrdtSpreadsheetService,
+        ngZone: NgZone,
+        consistencyChecker: ConsistencyCheckerService<OutputCell>
+    ) {
+        super(ngZone, consistencyChecker, communicationService);
+        this.currentCell = this.spreadsheetService.getTable().getCellByIndex(1, 1);
     }
-    console.warn(`Cant select cell ${column}|${row}`);
-  }
 
 
-  public override addRow() {
-    const id = this.communication.identifier.next();
-    this.performAction(() => this.spreadsheetService.addRow(id));
-  }
-
-  public override insertRow(row: string) {
-    const id = this.communication.identifier.next();
-    this.performAction(() => this.spreadsheetService.insertRow(id, row));
-  }
-
-  public override deleteRow(row: string) {
-    this.performAction(() => this.spreadsheetService.deleteRow(row));
-  }
-
-  public override addColumn() {
-    const id = this.communication.identifier.next();
-    this.performAction(() => this.spreadsheetService.addColumn(id));
-  }
-
-  public override insertColumn(column: string) {
-    const id = this.communication.identifier.next();
-    this.performAction(() => this.spreadsheetService.insertColumn(id, column));
-  }
-
-  public override deleteColumn(column: string) {
-    this.performAction(() => this.spreadsheetService.deleteColumn(column));
-  }
-
-  public override insertCell(address: Address, input: string) {
-    this.performAction(() => this.spreadsheetService.insertCellById(address, input));
-  }
-
-  public override deleteCell(address: Address) {
-    this.insertCell(address, '');
-  }
+    public ionViewDidEnter() {
+        this.communicationService.openChannel(this.channelName, this);
+        this.startTimeMeasuring();
+    }
 
 
-  public override get table(): Table<CellDto> {
-    return this.spreadsheetService.getTable();
-  }
+    public override selectCell(column: string, row: string) {
+        if (this.renderTable().rows.length > 0 && this.renderTable().columns.length > 0) {
+            const address: Address = {column: column, row: row};
+            this.currentCell = this.spreadsheetService.getTable().get(address)
+            if (this.currentCell === undefined) {
+                const index = this.spreadsheetService.getTable().getIndexByAddress(address);
+                if (index === undefined) {
+                    console.warn(`Cant select cell ${column}|${row}`);
+                    return;
+                }
+                this.currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
+            }
+            this.input = this.currentCell.input;
+            this.getInput()?.setFocus();
+        }
+    }
 
-  protected handleMessage(message: Uint8Array): void {
-    this.spreadsheetService.applyUpdate(message);
-  }
+
+    public override addRow() {
+        const id = this.communication.identifier.next();
+        this.performAction(() => this.spreadsheetService.addRow(id));
+    }
+
+    public override insertRow(row: string) {
+        const id = this.communication.identifier.next();
+        this.performAction(() => this.spreadsheetService.insertRow(id, row));
+    }
+
+    public override deleteRow(row: string) {
+        this.performAction(() => this.spreadsheetService.deleteRow(row));
+    }
+
+    public override addColumn() {
+        const id = this.communication.identifier.next();
+        this.performAction(() => this.spreadsheetService.addColumn(id));
+    }
+
+    public override insertColumn(column: string) {
+        const id = this.communication.identifier.next();
+        this.performAction(() => this.spreadsheetService.insertColumn(id, column));
+    }
+
+    public override deleteColumn(column: string) {
+        this.performAction(() => this.spreadsheetService.deleteColumn(column));
+    }
+
+    public override insertCell(address: Address, input: string) {
+        this.performAction(() => this.spreadsheetService.insertCellById(address, input));
+    }
+
+    public override deleteCell(address: Address) {
+        this.insertCell(address, '');
+    }
+
+
+    public override renderTable(): Table<OutputCell> {
+        return this.spreadsheetService.getTable();
+    }
+
+    protected override handleMessage(message: Uint8Array): void {
+        this.spreadsheetService.applyUpdate(message);
+    }
+
+    public getInput(): any | undefined {
+        return document.getElementsByName('eventual-consistent-input')[0];
+    }
 }

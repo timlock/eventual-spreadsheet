@@ -1,13 +1,16 @@
 import {Table} from "../spreadsheet/domain/Table";
-import {CellDto} from "../spreadsheet/controller/CellDto";
+import {OutputCell} from "../spreadsheet/domain/OutputCell";
 import {NgZone} from "@angular/core";
 import {Address} from "../spreadsheet/domain/Address";
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
 import {Communication} from "./Communication";
 
+
+
+
 export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver<T> {
-  private _currentCell: CellDto | undefined;
+  private _currentCell: OutputCell | undefined;
   private _input = '';
   protected nodes: Set<string> = new Set<string>();
   private _receivedMessageCounter = 0;
@@ -18,10 +21,9 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   protected constructor(
     protected ngZone: NgZone,
-    private consistencyChecker: ConsistencyCheckerService<CellDto>,
+    private consistencyChecker: ConsistencyCheckerService<OutputCell>,
     protected communication: Communication<T>
   ) {
-
   }
 
   public abstract selectCell(colId: string, rowId: string): void ;
@@ -42,24 +44,22 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   public abstract deleteCell(address: Address): void;
 
-  public abstract get table(): Table<CellDto>;
+  public abstract renderTable(): Table<OutputCell>;
 
   protected abstract handleMessage(message: T): void;
 
 
   public startTimeMeasuring() {
-    this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.table, (time: number) => {
-      console.log('All updates applied ', time);
+    this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.renderTable(), (time: number) => {
       this.ngZone.run(() => this._trackedTime = time);
     });
   }
 
-  get currentCell(): CellDto | undefined {
+  get currentCell(): OutputCell | undefined {
     return this._currentCell;
   }
 
-
-  protected set currentCell(value: CellDto | undefined) {
+  protected set currentCell(value: OutputCell | undefined) {
     this._currentCell = value;
   }
 
@@ -72,30 +72,30 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     }
     this.ngZone.run(() => this._trackedTime = undefined);
     const update = action();
-    this.consistencyChecker.updateApplied(this.table);
+    this.consistencyChecker.updateApplied(this.renderTable());
     if (update === undefined) {
       console.warn('Update is undefined');
       return;
     }
     this.communication.send(update);
-    if (this.table.rows.length === 1 && this.table.columns.length === 1) {
-      this.selectCell(this.table.columns[0], this.table.rows[0])
-    } else if (this.table.rows.length === 0 || this.table.columns.length === 0) {
+    if (this.renderTable().rows.length === 1 && this.renderTable().columns.length === 1) {
+      this.selectCell(this.renderTable().columns[0], this.renderTable().rows[0])
+    } else if (this.renderTable().rows.length === 0 || this.renderTable().columns.length === 0) {
       this.currentCell = undefined;
     }
   }
 
   public clear() {
-    for (let column of this.table.columns) {
-      for (let row of this.table.rows) {
+    for (let column of this.renderTable().columns) {
+      for (let row of this.renderTable().rows) {
         this.deleteCell({column: column, row: row});
       }
     }
-    const rows = Array.from(this.table.rows);
+    const rows = Array.from(this.renderTable().rows);
     for (let row of rows) {
       this.deleteRow(row);
     }
-    const columns = Array.from(this.table.columns);
+    const columns = Array.from(this.renderTable().columns);
     for (let column of columns) {
       this.deleteColumn(column);
     }
@@ -111,10 +111,9 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   public fillTable() {
     let counter = 0;
-    for (let column of this.table.columns) {
-      for (let row of this.table.rows) {
+    for (let column of this.renderTable().columns) {
+      for (let row of this.renderTable().rows) {
         counter++;
-        console.log(counter, column, row)
         this.insertCell({column: column, row: row}, counter + '');
       }
     }
@@ -124,7 +123,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   public onMessage(message: T): void {
     this.consistencyChecker.submittedState();
     this.handleMessage(message);
-    this.consistencyChecker.updateApplied(this.table);
+    this.consistencyChecker.updateApplied(this.renderTable());
     this.ngZone.run(() => {
     });
   }

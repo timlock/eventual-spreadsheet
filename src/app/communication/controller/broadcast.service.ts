@@ -7,7 +7,6 @@ import {MessageBuffer} from "../util/MessageBuffer";
 import {VersionVector} from "../domain/VersionVector";
 import {Communication} from "../../tabs/Communication";
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -15,7 +14,7 @@ export class BroadcastService<T> implements Communication<T> {
   private readonly _identifier: Identifier = Identifier.generate();
   private channel: BroadcastChannel | undefined;
   private observer: CommunicationServiceObserver<T> | undefined;
-  private _nodes: Set<string> = new Set<string>();
+  private _nodes: Set<string> = new Set();
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
   private _isConnected: boolean = true;
@@ -53,20 +52,18 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     this._sentMessageCounter++;
-    const jsonData = JSON.stringify(message);
-    this._totalBytes += new Blob([jsonData]).size;
-    this.channel.postMessage(jsonData);
+    this._totalBytes += new Blob([JSON.stringify(message)]).size;
+    this.channel.postMessage(message);
     this.observer?.onMessageCounterUpdate(this._receivedMessageCounter, this._sentMessageCounter);
   }
 
   private onMessage = (event: MessageEvent): any => {
-    const jsonData = event.data as string;
-    const bytes = new Blob([jsonData]).size;
+    const bytes = new Blob([JSON.stringify(event.data)]).size;
     this._totalBytes += bytes;
     if (!this._isConnected) {
       return;
     }
-    const message = JSON.parse(jsonData) as Message<T>;
+    const message = event.data as Message<T>;
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -147,5 +144,14 @@ export class BroadcastService<T> implements Communication<T> {
 
   get totalBytes(): number {
     return this._totalBytes;
+  }
+
+
+  get receivedMessageCounter(): number {
+    return this._receivedMessageCounter;
+  }
+
+  get sentMessageCounter(): number {
+    return this._sentMessageCounter;
   }
 }
