@@ -1,26 +1,22 @@
 import {Table} from "../spreadsheet/domain/Table";
 import {OutputCell} from "../spreadsheet/domain/OutputCell";
-import {NgZone} from "@angular/core";
 import {Address} from "../spreadsheet/domain/Address";
 import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
 import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
 import {Communication} from "./Communication";
+import {TestResult, TestType} from "./TestResult";
 
 export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver<T> {
   private _currentCell: OutputCell | undefined;
   private _input = '';
-  protected nodes: Set<string> = new Set<string>();
-  private _receivedMessageCounter = 0;
-  private _sentMessageCounter = 0;
-  private _trackedTime = 0;
-  private timerStart: number | undefined;
+  private startTime: number | undefined;
   private byteCounterStart = 0;
-  private _countedBytes = 0;
   private messageCounterStart = 0;
-  private _countedMessages = 0;
   protected growQuantity = 0;
   protected modifiedState = false;
-
+  private textExecution: number | undefined;
+  private testResults: TestResult[] = [];
+  private currentResult: TestResult = new TestResult(0, 0, 0, 0);
 
   protected constructor(
     private consistencyChecker: ConsistencyCheckerService<OutputCell>,
@@ -50,20 +46,68 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   protected abstract handleMessage(message: T): void;
 
   private startStopwatch() {
-    this.timerStart = Date.now();
-    this.byteCounterStart = this.communication.countedBytes;
-    this.messageCounterStart = this.communication.countedMessages;
+    if (this.startTime === undefined) {
+      this.startTime = Date.now();
+      this.byteCounterStart = this.communication.totalBytes;
+      this.messageCounterStart = this.communication.countedMessages;
+    }
   }
+
 
   public startTimeMeasuring() {
     this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.renderTable(), () => {
-      if (this.timerStart !== undefined) {
-        this._trackedTime = Date.now() - this.timerStart;
-        this.timerStart = undefined;
-        this._countedBytes = this.communication.countedBytes - this.byteCounterStart
-        this._countedMessages = this.communication.countedMessages - this.messageCounterStart;
+      if (this.startTime !== undefined) {
+        const time = Date.now() - this.startTime;
+        this.startTime = undefined;
+        const bytes = this.communication.totalBytes - this.byteCounterStart
+        const messages = this.communication.countedMessages - this.messageCounterStart;
+        const nodes = this.communication.nodes.size + 1;
+        let type: TestType | undefined;
+        if (this.renderTable().rows.length === 0 && this.renderTable().columns.length === 0) {
+          type = TestType.CLEAR;
+        }
+        if (this.renderTable().rows.length === 20 && this.renderTable().columns.length === 20) {
+          type = TestType.GROW;
+        }
+        this.currentResult = new TestResult(bytes, messages, time, nodes, type);
+        if (this.textExecution !== undefined && type !== undefined) {
+          this.testResults.push(this.currentResult);
+          console.log(this.currentResult.toCSVBody())
+          this.textExecution++;
+          if (this.textExecution < 10) {
+            switch (type) {
+              case TestType.CLEAR:
+                this.grow(20);
+                break;
+              case TestType.GROW:
+                this.clear();
+                break;
+            }
+            return;
+          } else if (this.textExecution == 10) {
+            this.clear();
+            return;
+          }
+          this.textExecution = undefined;
+          this.logResults();
+        }
       }
     });
+  }
+
+  private logResults() {
+    this.testResults
+      .sort((a, b) => a.compareType(b))
+      .map((result) => result.toCSVBody())
+      .forEach((csv) => console.info(csv));
+  }
+
+  public startTests() {
+    this.clear();
+    console.info('Begin tests')
+    this.textExecution = 0;
+    this.testResults = [];
+    this.grow(20);
   }
 
   public selectCell(column: string, row: string) {
@@ -166,7 +210,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   }
 
   public get totalBytes(): number {
-    return this.communication.countedBytes;
+    return this.communication.totalBytes;
   }
 
   public get isConnected(): boolean {
@@ -178,25 +222,17 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   }
 
 
-  get receivedMessageCounter(): number {
-    return this._receivedMessageCounter;
-  }
-
-  get sentMessageCounter(): number {
-    return this._sentMessageCounter;
-  }
-
-  get trackedTime(): number | undefined {
-    return this._trackedTime;
+  get trackedTime(): number {
+    return this.currentResult.time;
   }
 
 
   get countedBytes(): number {
-    return this._countedBytes;
+    return this.currentResult.bytes;
   }
 
   get countedMessages(): number {
-    return this._countedMessages;
+    return this.currentResult.messages;
   }
 
   get input(): string {

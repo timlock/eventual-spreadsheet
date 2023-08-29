@@ -33,6 +33,9 @@
                   <ion-button (click)="clear()">Clear table</ion-button>
                 </ion-item>
                 <ion-item>
+                  <ion-button (click)="startTests()">Execute tests</ion-button>
+                </ion-item>
+                <ion-item>
                   <form (submit)="grow(growQuantity)">
                     <ion-input name="growInput" type="number" fill="outline" label="Grow"
                                [(ngModel)]="growQuantity"></ion-input>

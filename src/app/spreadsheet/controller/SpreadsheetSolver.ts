@@ -26,7 +26,6 @@ export class SpreadsheetSolver {
       this.renderSimpleCells(this.table);
       const formulas = this.collectFormulas(this.table);
       this.renderFormulas(formulas, this.table);
-      console.log('Table rendered');
     }
     return this.result;
   }
