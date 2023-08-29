@@ -142,8 +142,12 @@ export class BroadcastService<T> implements Communication<T> {
     return this._identifier;
   }
 
-  get totalBytes(): number {
+  get countedBytes(): number {
     return this._totalBytes;
+  }
+
+  get countedMessages(): number {
+    return this._receivedMessageCounter + this._sentMessageCounter;
   }
 
 

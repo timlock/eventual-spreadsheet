@@ -8,94 +8,75 @@ import {Address} from "../../spreadsheet/domain/Address";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 
 @Component({
-    selector: 'app-eventual-consistent-spreadsheet',
-    templateUrl: './eventual-consistent-spreadsheet.page.html',
-    styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
+  selector: 'app-eventual-consistent-spreadsheet',
+  templateUrl: './eventual-consistent-spreadsheet.page.html',
+  styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
 export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Array> {
-    private channelName: string = 'eventual-consistent';
+  private static readonly TAG: string = 'eventual-consistent';
 
-    constructor(
-        private communicationService: BroadcastService<Uint8Array>,
-        private spreadsheetService: CrdtSpreadsheetService,
-        ngZone: NgZone,
-        consistencyChecker: ConsistencyCheckerService<OutputCell>
-    ) {
-        super(ngZone, consistencyChecker, communicationService);
-        this.currentCell = this.spreadsheetService.getTable().getCellByIndex(1, 1);
+
+  constructor(
+    private communicationService: BroadcastService<Uint8Array>,
+    private spreadsheetService: CrdtSpreadsheetService,
+    ngZone: NgZone,
+    consistencyChecker: ConsistencyCheckerService<OutputCell>
+  ) {
+    super(ngZone, consistencyChecker, communicationService, EventualConsistentSpreadsheetPage.TAG);
+    const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
+    if (address !== undefined) {
+      this.selectCell(address.column, address.row);
     }
+  }
 
 
-    public ionViewDidEnter() {
-        this.communicationService.openChannel(this.channelName, this);
-        this.startTimeMeasuring();
-    }
+  public ionViewDidEnter() {
+    this.communicationService.openChannel(EventualConsistentSpreadsheetPage.TAG, this);
+    this.startTimeMeasuring();
+  }
+
+  public override addRow() {
+    const id = this.communication.identifier.next();
+    this.performAction(() => this.spreadsheetService.addRow(id));
+  }
+
+  public override insertRow(row: string) {
+    const id = this.communication.identifier.next();
+    this.performAction(() => this.spreadsheetService.insertRow(id, row));
+  }
+
+  public override deleteRow(row: string) {
+    this.performAction(() => this.spreadsheetService.deleteRow(row));
+  }
+
+  public override addColumn() {
+    const id = this.communication.identifier.next();
+    this.performAction(() => this.spreadsheetService.addColumn(id));
+  }
+
+  public override insertColumn(column: string) {
+    const id = this.communication.identifier.next();
+    this.performAction(() => this.spreadsheetService.insertColumn(id, column));
+  }
+
+  public override deleteColumn(column: string) {
+    this.performAction(() => this.spreadsheetService.deleteColumn(column));
+  }
+
+  public override insertCell(address: Address, input: string) {
+    this.performAction(() => this.spreadsheetService.insertCellById(address, input));
+  }
+
+  public override deleteCell(address: Address) {
+    this.insertCell(address, '');
+  }
 
 
-    public override selectCell(column: string, row: string) {
-        if (this.renderTable().rows.length > 0 && this.renderTable().columns.length > 0) {
-            const address: Address = {column: column, row: row};
-            this.currentCell = this.spreadsheetService.getTable().get(address)
-            if (this.currentCell === undefined) {
-                const index = this.spreadsheetService.getTable().getIndexByAddress(address);
-                if (index === undefined) {
-                    console.warn(`Cant select cell ${column}|${row}`);
-                    return;
-                }
-                this.currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
-            }
-            this.input = this.currentCell.input;
-            this.getInput()?.setFocus();
-        }
-    }
+  public override renderTable(): Table<OutputCell> {
+    return this.spreadsheetService.renderTable();
+  }
 
-
-    public override addRow() {
-        const id = this.communication.identifier.next();
-        this.performAction(() => this.spreadsheetService.addRow(id));
-    }
-
-    public override insertRow(row: string) {
-        const id = this.communication.identifier.next();
-        this.performAction(() => this.spreadsheetService.insertRow(id, row));
-    }
-
-    public override deleteRow(row: string) {
-        this.performAction(() => this.spreadsheetService.deleteRow(row));
-    }
-
-    public override addColumn() {
-        const id = this.communication.identifier.next();
-        this.performAction(() => this.spreadsheetService.addColumn(id));
-    }
-
-    public override insertColumn(column: string) {
-        const id = this.communication.identifier.next();
-        this.performAction(() => this.spreadsheetService.insertColumn(id, column));
-    }
-
-    public override deleteColumn(column: string) {
-        this.performAction(() => this.spreadsheetService.deleteColumn(column));
-    }
-
-    public override insertCell(address: Address, input: string) {
-        this.performAction(() => this.spreadsheetService.insertCellById(address, input));
-    }
-
-    public override deleteCell(address: Address) {
-        this.insertCell(address, '');
-    }
-
-
-    public override renderTable(): Table<OutputCell> {
-        return this.spreadsheetService.getTable();
-    }
-
-    protected override handleMessage(message: Uint8Array): void {
-        this.spreadsheetService.applyUpdate(message);
-    }
-
-    public getInput(): any | undefined {
-        return document.getElementsByName('eventual-consistent-input')[0];
-    }
+  protected override handleMessage(message: Uint8Array): void {
+    this.spreadsheetService.applyUpdate(message);
+  }
 }

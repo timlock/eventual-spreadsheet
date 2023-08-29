@@ -6,27 +6,29 @@ import {CommunicationServiceObserver} from "../communication/controller/Communic
 import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
 import {Communication} from "./Communication";
 
-
-
-
 export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver<T> {
   private _currentCell: OutputCell | undefined;
   private _input = '';
   protected nodes: Set<string> = new Set<string>();
   private _receivedMessageCounter = 0;
   private _sentMessageCounter = 0;
-  private _trackedTime: number | undefined;
-  protected growQuantity: number = 0;
-  protected modifiedState: boolean = false;
+  private _trackedTime = 0;
+  private timerStart: number | undefined;
+  private byteCounterStart = 0;
+  private _countedBytes = 0;
+  private messageCounterStart = 0;
+  private _countedMessages = 0;
+  protected growQuantity = 0;
+  protected modifiedState = false;
+
 
   protected constructor(
     protected ngZone: NgZone,
     private consistencyChecker: ConsistencyCheckerService<OutputCell>,
-    protected communication: Communication<T>
+    protected communication: Communication<T>,
+    private readonly tag: string
   ) {
   }
-
-  public abstract selectCell(colId: string, rowId: string): void ;
 
   public abstract addRow(): void;
 
@@ -48,31 +50,55 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   protected abstract handleMessage(message: T): void;
 
+  private startStopwatch() {
+    this.timerStart = Date.now();
+    this.byteCounterStart = this.communication.countedBytes;
+    this.messageCounterStart = this.communication.countedMessages;
+  }
 
   public startTimeMeasuring() {
-    this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.renderTable(), (time: number) => {
-      this.ngZone.run(() => this._trackedTime = time);
+    this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.renderTable(), () => {
+      if (this.timerStart !== undefined) {
+        this._trackedTime = Date.now() - this.timerStart;
+        this.timerStart = undefined;
+        this._countedBytes = this.communication.countedBytes - this.byteCounterStart
+        this._countedMessages = this.communication.countedMessages - this.messageCounterStart;
+      }
     });
+  }
+
+  public selectCell(column: string, row: string) {
+    if (this.renderTable().rows.length > 0 && this.renderTable().columns.length > 0) {
+      const address: Address = {column: column, row: row};
+      this._currentCell = this.renderTable().get(address)
+      if (this.currentCell === undefined) {
+        const index = this.renderTable().getIndexByAddress(address);
+        if (index === undefined) {
+          console.warn(`Cant select cell ${column}|${row}`);
+          return;
+        }
+        this._currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
+      }
+      this.input = this._currentCell?.input || '';
+      const input = document.getElementsByName(this.tag)[0] as any;
+      input?.setFocus();
+    }
   }
 
   get currentCell(): OutputCell | undefined {
     return this._currentCell;
   }
 
-  protected set currentCell(value: OutputCell | undefined) {
-    this._currentCell = value;
-  }
 
   protected performAction(action: () => T | undefined) {
     if (this.communication.isConnected) {
-      this.consistencyChecker.submittedState();
+      this.startStopwatch();
       this.modifiedState = false;
     } else {
       this.modifiedState = true;
     }
-    this.ngZone.run(() => this._trackedTime = undefined);
     const update = action();
-    this.consistencyChecker.updateApplied(this.renderTable());
+    this.consistencyChecker.update(this.renderTable());
     if (update === undefined) {
       console.warn('Update is undefined');
       return;
@@ -81,7 +107,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     if (this.renderTable().rows.length === 1 && this.renderTable().columns.length === 1) {
       this.selectCell(this.renderTable().columns[0], this.renderTable().rows[0])
     } else if (this.renderTable().rows.length === 0 || this.renderTable().columns.length === 0) {
-      this.currentCell = undefined;
+      this._currentCell = undefined;
     }
   }
 
@@ -119,12 +145,12 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     }
   }
 
-
   public onMessage(message: T): void {
-    this.consistencyChecker.submittedState();
+    this.startStopwatch();
     this.handleMessage(message);
-    this.consistencyChecker.updateApplied(this.renderTable());
+    this.consistencyChecker.update(this.renderTable());
     this.ngZone.run(() => {
+      this.renderTable()
     });
   }
 
@@ -143,14 +169,14 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   public changeConnectionState(enabled: boolean) {
     if (enabled && this.modifiedState) {
-      this.consistencyChecker.submittedState();
+      this.startStopwatch();
       this.modifiedState = false;
     }
     this.communication.isConnected = enabled;
   }
 
   public get totalBytes(): number {
-    return this.communication.totalBytes;
+    return this.communication.countedBytes;
   }
 
   public get isConnected(): boolean {
@@ -174,6 +200,14 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     return this._trackedTime;
   }
 
+
+  get countedBytes(): number {
+    return this._countedBytes;
+  }
+
+  get countedMessages(): number {
+    return this._countedMessages;
+  }
 
   get input(): string {
     return this._input;

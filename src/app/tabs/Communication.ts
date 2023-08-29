@@ -9,5 +9,7 @@ export interface Communication<T> {
 
   get identifier(): Identifier;
 
-  get totalBytes(): number;
+  get countedBytes(): number;
+
+  get countedMessages() : number;
 }

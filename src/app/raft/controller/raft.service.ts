@@ -133,8 +133,12 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationService
     this.observer?.onMessageCounterUpdate(received, total);
   }
 
-  get totalBytes(): number {
-    return this.communicationService.totalBytes;
+  get countedBytes(): number {
+    return this.communicationService.countedBytes;
+  }
+
+  get countedMessages(): number {
+    return this.communicationService.countedMessages;
   }
 
 }

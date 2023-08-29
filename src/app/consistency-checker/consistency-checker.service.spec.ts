@@ -20,27 +20,22 @@ describe('ConsistencyCheckerService', () => {
 
   it('single node', () => {
     let stopped = false;
-    service.subscribe(identifier, new Table(), (time) => {
-      expect(time).toBeDefined();
+    service.subscribe(identifier, new Table(), () => {
       stopped = true;
     });
-    service.submittedState();
-    expect(stopped).toBeFalse();
-    service.updateApplied(new Table());
+    service.update(new Table());
     expect(stopped).toBeTrue();
   });
 
   it('two nodes', () => {
     let remoteId = 'remote';
     service.addNodes(remoteId);
-    service.persist(new Table(), remoteId);
+    service.update(new Table(), remoteId);
     let stopped = false;
-    service.subscribe(identifier,new Table(), (time) => {
-      expect(time).toBeDefined();
+    service.subscribe(identifier,new Table(), () => {
       stopped = true;
     });
-    service.submittedState();
-    service.updateApplied(new Table());
+    service.update(new Table());
     expect(stopped).toBeTrue();
   });
 

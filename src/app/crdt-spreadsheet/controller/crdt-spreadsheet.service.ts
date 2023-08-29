@@ -96,7 +96,7 @@ export class CrdtSpreadsheetService {
         return update;
     }
 
-    public getTable(): Table<OutputCell> {
+    public renderTable(): Table<OutputCell> {
         return this.spreadsheetSolver.solve();
     }
 

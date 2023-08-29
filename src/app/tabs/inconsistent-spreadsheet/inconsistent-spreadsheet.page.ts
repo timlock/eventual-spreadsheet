@@ -16,40 +16,27 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
 export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
-  private channelName: string = 'inconsistent';
+  private static readonly TAG: string = 'inconsistent';
+
   constructor(
     private communicationService: BroadcastService<Action>,
     private spreadsheetService: SpreadsheetService,
     ngZone: NgZone,
     consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
-    super(ngZone, consistencyChecker, communicationService);
-    const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0)!;
-    this.selectCell(address?.column, address?.row);
+    super(ngZone, consistencyChecker, communicationService, InconsistentSpreadsheetPage.TAG);
+    const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
+    if (address !== undefined) {
+      this.selectCell(address.column, address.row);
+    }
   }
 
 
   public ionViewDidEnter() {
-    this.communicationService.openChannel(this.channelName, this);
+    this.communicationService.openChannel(InconsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
   }
 
-  public override selectCell(column: string, row: string) {
-    if (this.renderTable().rows.length > 0 && this.renderTable().columns.length > 0) {
-      const address: Address = {column: column, row: row};
-      this.currentCell = this.spreadsheetService.renderTable().get(address)
-      if (this.currentCell === undefined) {
-        const index = this.spreadsheetService.renderTable().getIndexByAddress(address);
-        if (index === undefined) {
-          console.warn(`Cant select cell ${column}|${row}`);
-          return;
-        }
-        this.currentCell = {address: address, columnIndex: index[0], rowIndex: index[1], input: '', content: ''};
-      }
-      this.input = this.currentCell.input;
-      this.getInput()?.setFocus();
-    }
-  }
 
   public override addRow() {
     const id = this.communication.identifier.next();
@@ -143,8 +130,5 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
     return this.spreadsheetService.renderTable();
   }
 
-  public getInput() : any | undefined{
-    return document.getElementsByName('inconsistent-input')[0];
-  }
 }
 

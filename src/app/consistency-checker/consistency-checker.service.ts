@@ -6,29 +6,25 @@ import {Table} from "../spreadsheet/domain/Table";
 })
 export class ConsistencyCheckerService<T> {
   private id: string = '';
-  private callback: ((time: number) => void) | undefined;
+  private callback: (() => void) | undefined;
   private nodes: string[] = [];
   private totalUpdates = 0;
-  private start: number | undefined;
 
-  public subscribe(id: string, initialTable: Table<T>, callback: (time: number) => void) {
+  public subscribe(id: string, initialTable: Table<T>, callback: () => void) {
     this.unsubscribe();
     this.id = id;
     this.callback = callback;
-    this.persist(initialTable);
+    this.update(initialTable);
     window.onstorage = (event) => {
       if (event.key === null
         || event.key === this.id
         || event.newValue === null
-        || this.start === undefined
         || this.callback === undefined) {
         return;
       }
       this.totalUpdates++;
-      const possibleDuration = Date.now() - this.start;
       if (this.reachedConsistentState()) {
-        this.start = undefined;
-        this.callback(possibleDuration);
+        this.callback();
       }
     };
   }
@@ -56,27 +52,12 @@ export class ConsistencyCheckerService<T> {
     return stateList.every(other => myEntry === other);
   }
 
-
-  public submittedState() {
-    if (this.start === undefined) {
-      this.start = Date.now();
-    }
-  }
-
-  public updateApplied(newTable: Table<T>) {
-    this.persist(newTable);
-    if (this.start !== undefined && this.callback !== undefined) {
-      const possibleDuration = Date.now() - this.start;
-      if (this.reachedConsistentState()) {
-        this.start = undefined;
-        this.callback(possibleDuration);
-      }
-    }
-  }
-
-  public persist(entry: Table<T>, id = this.id) {
+  public update(entry: Table<T>, id = this.id) {
     const value: Entry<T> = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
     localStorage.setItem(id, JSON.stringify(value));
+    if(this.reachedConsistentState() && this.callback !== undefined){
+      this.callback();
+    }
   }
 
 }

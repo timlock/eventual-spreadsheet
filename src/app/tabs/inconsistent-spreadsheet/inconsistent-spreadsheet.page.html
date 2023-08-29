@@ -20,7 +20,10 @@
                 <ion-label>Time: {{trackedTime}}</ion-label>
               </ion-item>
               <ion-item>
-                <ion-label>Total bytes: {{totalBytes}}</ion-label>
+                <ion-label>Exchanged bytes: {{countedBytes}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Exchanged messages: {{countedMessages}}</ion-label>
               </ion-item>
               <ion-item>
                 <ion-button (click)="fillTable()">Fill table</ion-button>
@@ -33,6 +36,9 @@
                   <ion-input name="growInput" type="number" fill="outline" label="Grow"
                              [(ngModel)]="growQuantity"></ion-input>
                 </form>
+              </ion-item>
+              <ion-item>
+                <ion-label>Total bytes: {{totalBytes}}</ion-label>
               </ion-item>
               <ion-item>
                 <ion-label>Received messages: {{receivedMessageCounter}}</ion-label>
@@ -57,7 +63,7 @@
       <ion-col>
         <div *ngIf="currentCell !== undefined">
           <form (submit)="insertCell(currentCell!.address, input)">
-            <ion-input name="inconsistent-input" fill="outline" [(ngModel)]="input"></ion-input>
+            <ion-input name="inconsistent" fill="outline" [(ngModel)]="input"></ion-input>
           </form>
         </div>
       </ion-col>
