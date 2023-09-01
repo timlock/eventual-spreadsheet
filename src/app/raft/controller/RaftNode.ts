@@ -30,7 +30,8 @@ export class RaftNode<T> {
   constructor(
     private readonly _nodeId: NodeId,
     private readonly observer: RaftNodeObserver<T>,
-    private debug = false, logs: Log<T>[] = []
+    private debug = false,
+    logs: Log<T>[] = []
   ) {
     this.serverState = new ServerState(logs);
   }
@@ -67,9 +68,9 @@ export class RaftNode<T> {
       && (this.serverState.votedFor === undefined || this.serverState.votedFor === request.candidateId)
       && this.serverState.isUpToDate(request.lastLogIndex, request.lastLogTerm)
     ) {
+      this.observer.restartElectionTimer();
       this.serverState.votedFor = request.candidateId;
       voteGranted = true;
-      this.observer.restartElectionTimer();
     }
     this.requestVoteResponse(request.candidateId, voteGranted);
   }
@@ -90,18 +91,19 @@ export class RaftNode<T> {
 
   private handleAppendEntriesRequest(request: AppendEntriesRequest<T>) {
     this.print('Handle AppendEntriesRequest: ', request);
-    if (request.term > this.serverState.currentTerm || (this.role instanceof Candidate && this.serverState.currentTerm === request.term)) {
+    if (request.term > this.serverState.currentTerm || (!(this.role instanceof Follower) && this.serverState.currentTerm === request.term)) {
       this.becomeFollower(request.term, request.leaderId);
-    }
-    if (this.role instanceof Follower) {
-      this.role.leaderId = request.leaderId;
     }
     this.observer.restartElectionTimer();
     if (request.term < this.serverState.currentTerm
       || !this.serverState.hasLogAtIndex(request.prevLogIndex)
       || request.prevLogTerm !== this.serverState.getLogTerm(request.prevLogIndex)) {
+      this.print('Declined request term: ' + request.term + ' currentTerm: ' + this.serverState.currentTerm + ' request prevLogIndex: ' + request.prevLogIndex + ' current lastLogIndex: '+  this.serverState.lastLogIndex + ' request prevLogTerm: ' + request.prevLogTerm + ' current logTermAt: ' + this.serverState.getLogTerm(request.prevLogIndex));
       this.appendEntriesResponse(request.leaderId, false);
       return;
+    }
+    if (this.role instanceof Follower && this.role.leaderId !== undefined && this.serverState.currentTerm === request.term) {
+      this.role.leaderId = request.leaderId;
     }
     // const newIndex = request.prevLogIndex;
     // for (const log of request.entries) {
@@ -123,7 +125,7 @@ export class RaftNode<T> {
     }
     this.serverState.logs.push(...request.entries)
     if (request.leaderCommit > this.serverState.commitIndex) {
-      this.serverState.commitIndex = Math.min(request.leaderCommit, this.serverState.logs.length);
+      this.serverState.commitIndex = Math.min(request.leaderCommit, this.serverState.lastLogIndex);
       this.serverState.fetchCommittedLogs().forEach(log => this.observer.onLog(log));
       this.print('Leader increased commitIndex to: ', this.serverState.commitIndex);
       this.observer.onStateChange(this.getMetaData());
@@ -136,7 +138,8 @@ export class RaftNode<T> {
   private handleAppendEntriesResponse(response: AppendEntriesResponse) {
     this.print('Handle AppendEntriesResponse: ', response);
     if (response.term > this.serverState.currentTerm) {
-      this.becomeFollower(response.term, response.id);
+      this.becomeFollower(response.term);
+      return;
     }
     if (this.role instanceof Leader) {
       if (response.success) {
@@ -153,7 +156,7 @@ export class RaftNode<T> {
           return;
         }
         const prevLogTerm = this.serverState.getLogTerm(prevLogIndex)!;
-        const logs = this.serverState.logs.slice(prevLogIndex);
+        const logs = this.serverState.getMissingLogs(prevLogIndex);
         this.appendEntriesRequest(response.id, prevLogIndex, prevLogTerm, logs);
         return;
       }
@@ -285,10 +288,11 @@ export class RaftNode<T> {
         .filter(value => value > this.serverState.commitIndex && this.serverState.getLogTerm(value) === this.serverState.currentTerm);
       const majority = this.majority();
       if (matchingIndices.length < majority) {
+        this.print(`Cant advance commit index ${this.serverState.commitIndex} required ${matchingIndices.length}/${majority}`, this.role.matchIndex.values())
         return;
       }
       matchingIndices.sort((a, b) => a - b);
-      this.serverState.commitIndex = matchingIndices[majority - 1];
+      this.serverState.commitIndex = matchingIndices[0];
       this.serverState.fetchCommittedLogs().forEach(log => this.observer.onLog(log));
       this.print('Increased commitIndex to: ', this.serverState.commitIndex);
       this.observer.onStateChange(this.getMetaData());
@@ -403,10 +407,12 @@ export class RaftNode<T> {
 
   public getMetaData(): RaftMetaData {
     return {
-      lastLogIndex: this.lastLogIndex,
+      lastLogIndex: this.serverState.lastLogIndex,
       role: this.getCurrentRole(),
       term: this.term,
-      lastAppliedLog: this.serverState.lastApplied
+      commitIndex: this.serverState.commitIndex,
+      lastAppliedLog: this.serverState.lastApplied,
+
     };
   }
 }

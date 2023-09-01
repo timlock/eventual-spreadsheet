@@ -53,7 +53,7 @@ export class ServerState<T> {
   }
 
   public hasLogAtIndex(index: LogIndex): boolean {
-    return this._logs[index - 1] !== undefined || !(index !== 0);
+    return this._logs[index - 1] !== undefined || index === 0;
   }
 
   get logs(): Log<T>[] {
@@ -83,7 +83,7 @@ export class ServerState<T> {
 
   public isUpToDate(lastLogIndex: LogIndex, lastLogTerm?: Term): boolean {
     return (lastLogTerm !== undefined && this.lastLogTerm !== undefined &&
-        (lastLogTerm > this.lastLogTerm || lastLogTerm === this.lastLogTerm && lastLogIndex > this.lastLogIndex))
+        (lastLogTerm > this.lastLogTerm || lastLogTerm === this.lastLogTerm && lastLogIndex >= this.lastLogIndex))
       || (lastLogTerm === this.lastLogTerm && lastLogIndex >= this.lastLogIndex)
       || (lastLogTerm !== undefined && this.lastLogTerm === undefined);
   }

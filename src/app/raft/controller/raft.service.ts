@@ -23,7 +23,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationService
 
   constructor(private readonly communicationService: BroadcastService<RaftMessage<T>>) {
     this.timer = new Timer();
-    this.node = new RaftNode(this.identifier.uuid, this, false);
+    this.node = new RaftNode(this.identifier.uuid, this);
   }
 
   public openChannel(channelName: string, observer: RaftServiceObserver<T>) {
