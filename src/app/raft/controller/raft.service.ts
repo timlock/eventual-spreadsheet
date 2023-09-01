@@ -46,6 +46,12 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationService
     this.node.command(message);
   }
 
+  public sendLog(destination: NodeId, log: Log<T>) {
+    if(this._isConnected){
+      this.communicationService.send(log, destination, true);
+    }
+  }
+
   public onLog(log: Log<T>): void {
     this.observer?.onMessage(log.content);
     return;

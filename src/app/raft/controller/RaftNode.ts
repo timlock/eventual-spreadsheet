@@ -236,7 +236,7 @@ export class RaftNode<T> {
 
   private log(destination: NodeId, command: any) {
     const message: Log<T> = {term: this.serverState.currentTerm, content: command};
-    this.observer.sendRaftMessage(destination, message);
+    this.observer.sendLog(destination, message);
     this.print('Send command: ', message);
   }
 
