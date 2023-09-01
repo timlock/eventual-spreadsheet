@@ -9,6 +9,7 @@ export class ConsistencyCheckerService<T> {
   private callback: (() => void) | undefined;
   private nodes: string[] = [];
   private totalUpdates = 0;
+  private isConsistent = false;
 
   public subscribe(id: string, initialTable: Table<T>, callback: () => void) {
     this.unsubscribe();
@@ -23,8 +24,11 @@ export class ConsistencyCheckerService<T> {
         return;
       }
       this.totalUpdates++;
-      if (this.reachedConsistentState()) {
+      if (this.reachedConsistentState() && !this.isConsistent) {
+        this.isConsistent = true;
         this.callback();
+      } else {
+        this.isConsistent = false;
       }
     };
   }
@@ -32,6 +36,8 @@ export class ConsistencyCheckerService<T> {
   public unsubscribe() {
     localStorage.removeItem(this.id);
     this.totalUpdates = 0;
+    window.onstorage = null;
+    this.callback = undefined;
   }
 
   public addNodes(...nodes: string[]) {
@@ -53,11 +59,16 @@ export class ConsistencyCheckerService<T> {
   }
 
   public update(entry: Table<T>, id = this.id) {
-    const value: Entry<T> = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())}
-    localStorage.setItem(id, JSON.stringify(value));
-    // if(this.reachedConsistentState() && this.callback !== undefined){
-    //   this.callback();
-    // }
+    const value: Entry<T> = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())};
+    try {
+      localStorage.setItem(id, JSON.stringify(value));
+    } catch (e) {
+      console.error('Localstorage exceeds size limit and will be cleared');
+      localStorage.clear();
+    }
+    if (this.nodes.length === 1 && this.reachedConsistentState() && this.callback !== undefined) {
+      this.callback();
+    }
   }
 
 }
