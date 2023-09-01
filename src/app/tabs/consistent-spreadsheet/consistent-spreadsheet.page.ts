@@ -1,4 +1,4 @@
-import {ApplicationRef, Component} from '@angular/core';
+import {Component} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {RaftService} from "../../raft/controller/raft.service";
 import {ActionType} from "../../spreadsheet/util/ActionType";

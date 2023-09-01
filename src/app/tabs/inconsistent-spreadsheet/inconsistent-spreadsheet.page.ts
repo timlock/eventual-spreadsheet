@@ -4,7 +4,6 @@ import {BroadcastService} from "../../communication/controller/broadcast.service
 import {ActionType} from "../../spreadsheet/util/ActionType";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {Address} from "../../spreadsheet/domain/Address";
-import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {SpreadsheetPage} from "../SpreadsheetPage";
@@ -37,48 +36,34 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
 
   public override addRow() {
     const id = this.communication.identifier.next();
-    const message = PayloadFactory.addRow(id);
-    this.spreadsheetService.addRow(id);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.addRow(id));
   }
 
   public override insertRow(row: string) {
     const id = this.communication.identifier.next();
-    const message = PayloadFactory.insertRow(id, row);
-    this.spreadsheetService.insertRow(id, row);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.insertRow(id, row));
   }
 
   public override deleteRow(row: string) {
-    const message = PayloadFactory.deleteRow(row);
-    this.spreadsheetService.deleteRow(row);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.deleteRow(row));
   }
 
   public override addColumn() {
     const id = this.communication.identifier.next();
-    const message = PayloadFactory.addColumn(id);
-    this.spreadsheetService.addColumn(id);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.addColumn(id));
   }
 
   public override insertColumn(column: string) {
     const id = this.communication.identifier.next();
-    const message = PayloadFactory.insertColumn(id, column);
-    this.spreadsheetService.insertColumn(id, column);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.insertColumn(id, column));
   }
 
   public override deleteColumn(column: string) {
-    const message = PayloadFactory.deleteColumn(column);
-    this.spreadsheetService.deleteColumn(column);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.deleteColumn(column));
   }
 
   public override insertCell(address: Address, input: string) {
-    const message = PayloadFactory.insertCell(address, input);
-    this.spreadsheetService.insertCellById(address, input);
-    this.performAction(() => message!);
+    this.performAction(() => this.spreadsheetService.insertCellById(address, input));
   }
 
   public override deleteCell(address: Address) {

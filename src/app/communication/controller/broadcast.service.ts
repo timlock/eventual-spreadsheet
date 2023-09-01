@@ -47,7 +47,6 @@ export class BroadcastService<T> implements Communication<T> {
     this._totalBytes = 0;
   }
 
-
   private postMessage(message: Message<any>) {
     if (this.channel === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
@@ -65,7 +64,7 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     const message = event.data as Message<T>;
-    if(message.payload === BroadcastService.QUIT){
+    if (message.payload === BroadcastService.QUIT) {
       this._nodes.delete(message.source);
       return;
     }
@@ -126,8 +125,8 @@ export class BroadcastService<T> implements Communication<T> {
     this.postMessage(message);
   }
 
-  private announceQuit(){
-    const message: Message<string> ={
+  private announceQuit() {
+    const message: Message<string> = {
       source: this._identifier.uuid,
       payload: BroadcastService.QUIT
     }
@@ -161,7 +160,6 @@ export class BroadcastService<T> implements Communication<T> {
   get countedMessages(): number {
     return this._totalReceivedMessages + this._totalSentMessages;
   }
-
 
   get totalReceivedMessages(): number {
     return this._totalReceivedMessages;

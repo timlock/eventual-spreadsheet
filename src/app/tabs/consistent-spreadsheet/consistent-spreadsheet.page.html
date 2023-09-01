@@ -14,11 +14,24 @@
           <ion-card-content>
             <ion-list>
               <ion-item>
-                <form (submit)="startTests()">
-                  <ion-input name="growInput" type="number" fill="outline" label="Test size"
-                             [(ngModel)]="testSize"></ion-input>
-                </form>
+                <ion-grid>
+                  <ion-row>
+                    <ion-input type="number" fill="outline" label="Test size" [(ngModel)]="testSize"></ion-input>
+                  </ion-row>
+                  <ion-row>
+                    <ion-input type="number" fill="outline" label="Number of tests" [(ngModel)]="testRuns"></ion-input>
+                  </ion-row>
+                  <ion-row>
+                    <ion-button (click)="startTests()">Start test</ion-button>
+                  </ion-row>
+                </ion-grid>
               </ion-item>
+              <!--              <ion-item>-->
+              <!--                <form (submit)="startTests()">-->
+              <!--                  <ion-input name="growInput" type="number" fill="outline" label="Test size"-->
+              <!--                             [(ngModel)]="testSize"></ion-input>-->
+              <!--                </form>-->
+              <!--              </ion-item>-->
               <ion-item>
                 <ion-label>Remote nodes: {{communication.nodes.size}}</ion-label>
               </ion-item>

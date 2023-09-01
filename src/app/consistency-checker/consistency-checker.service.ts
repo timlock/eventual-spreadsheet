@@ -1,15 +1,17 @@
 import {Injectable} from '@angular/core';
 import {Table} from "../spreadsheet/domain/Table";
 
+
 @Injectable({
   providedIn: 'root'
 })
 export class ConsistencyCheckerService<T> {
-  private id: string = '';
+  private id = '';
+  private currentState = '';
+  private lastConsistentState: string = '';
   private callback: (() => void) | undefined;
-  private nodes: string[] = [];
-  private totalUpdates = 0;
-  private isConsistent = false;
+  private nodes: Map<string, string> = new Map();
+  private _isConsistent = false;
 
   public subscribe(id: string, initialTable: Table<T>, callback: () => void) {
     this.unsubscribe();
@@ -23,54 +25,63 @@ export class ConsistencyCheckerService<T> {
         || this.callback === undefined) {
         return;
       }
-      this.totalUpdates++;
-      if (this.reachedConsistentState() && !this.isConsistent) {
-        this.isConsistent = true;
-        this.callback();
+      this.nodes.set(event.key, event.newValue);
+      if (this.reachedConsistentState()) {
+        const currentState = localStorage.getItem(this.id) || '';
+        if (currentState !== this.lastConsistentState) {
+          this.lastConsistentState = currentState
+          this._isConsistent = true;
+          this.callback();
+        }
       } else {
-        this.isConsistent = false;
+        this._isConsistent = false;
       }
     };
   }
 
   public unsubscribe() {
     localStorage.removeItem(this.id);
-    this.totalUpdates = 0;
     window.onstorage = null;
     this.callback = undefined;
   }
 
   public addNodes(...nodes: string[]) {
     for (const node of nodes) {
-      if (this.nodes.indexOf(node) === -1) {
-        this.nodes.push(node);
+      if (this.nodes.get(node) === undefined) {
+        const state = localStorage.getItem(node) || '';
+        this.nodes.set(node, state);
       }
     }
   }
 
-
   public reachedConsistentState(): boolean {
-    const myEntry = localStorage.getItem(this.id);
-    if (myEntry === undefined) {
-      return false;
+    for (const node of this.nodes) {
+      if (node[1] !== this.currentState) {
+        return false;
+      }
     }
-    const stateList = this.nodes.map(nodeId => localStorage.getItem(nodeId));
-    return stateList.every(other => myEntry === other);
+    return true;
   }
 
-  public update(entry: Table<T>, id = this.id) {
-    const value: Entry<T> = {rows: entry.rows, columns: entry.columns, cells: Array.from(entry.cells.entries())};
+  public update(state: Table<T>, id = this.id) {
+    const value: Entry<T> = {rows: state.rows, columns: state.columns, cells: Array.from(state.cells.entries())};
+    const entry = JSON.stringify(value);
     try {
-      localStorage.setItem(id, JSON.stringify(value));
+      localStorage.setItem(id, entry);
     } catch (e) {
       console.error('Localstorage exceeds size limit and will be cleared');
       localStorage.clear();
     }
-    if (this.nodes.length === 1 && this.reachedConsistentState() && this.callback !== undefined) {
+    this.currentState = entry;
+    if (this.nodes.size === 0 && this.callback !== undefined) {
       this.callback();
     }
   }
 
+
+  get isConsistent(): boolean {
+    return this._isConsistent;
+  }
 }
 
 interface Entry<T> {
