@@ -4,13 +4,12 @@ export class TestResult {
     public readonly bytes: number,
     public readonly messages: number,
     public readonly time: number,
-    public readonly nodes: number,
     public readonly type?: TestType
   ) {
   }
 
   public toCSVBody(): string {
-    return `${this.type},${this.nodes},${this.time},${this.bytes},${this.messages}`
+    return `${this.type},${this.time},${this.bytes},${this.messages}`
   }
 
   public compareType(other: TestResult): number {
@@ -24,6 +23,10 @@ export class TestResult {
       return -1;
     }
     throw new Error('Should not be reached');
+  }
+
+  public static empty() : TestResult{
+    return new TestResult(0,0,0)
   }
 }
 

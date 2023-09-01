@@ -7,13 +7,21 @@ export class Table<T> implements Spreadsheet<T> {
   private readonly _cells: Map<string, T> = new Map();
 
   public addRow(id: string) {
+    if(this._rows.indexOf(id) !== -1){
+      console.warn(`Can't add row twice ${id}`)
+      return;
+    }
     this._rows.push(id);
   }
 
   public insertRow(id: string, row: string) {
+    if(this._rows.indexOf(id) !== -1){
+      console.warn(`Can't insert row twice ${id}`)
+      return;
+    }
     const index = this._rows.indexOf(row);
     if (index === -1) {
-      console.log("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
+      console.warn("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
       return;
     }
     this._rows.splice(index, 0, id);
@@ -22,17 +30,25 @@ export class Table<T> implements Spreadsheet<T> {
   public deleteRow(id: string) {
     const index = this._rows.indexOf(id);
     if (index === -1) {
-      console.log("Failed to remove id:" + id + " in rows: " + this._rows);
+      console.warn("Failed to remove id:" + id + " in rows: " + this._rows);
       return;
     }
     this._rows.splice(index, 1);
   }
 
   public addColumn(id: string) {
+    if(this._columns.indexOf(id) !== -1){
+      console.warn(`Can't add column twice ${id}`)
+      return;
+    }
     this._columns.push(id);
   }
 
   public insertColumn(id: string, column: string) {
+    if(this._columns.indexOf(id) !== -1){
+      console.warn(`Can't insert column twice ${id}`)
+      return;
+    }
     const index = this._columns.indexOf(column);
     if (index === -1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);

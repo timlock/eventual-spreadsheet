@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ApplicationRef, Component} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {RaftService} from "../../raft/controller/raft.service";
 import {ActionType} from "../../spreadsheet/util/ActionType";
@@ -20,13 +20,13 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 })
 export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implements RaftServiceObserver<Action> {
   private static readonly TAG: string = 'consistent';
-  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0, lastAppliedLog: 0};
+  private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0, commitIndex: 0, lastAppliedLog: 0};
 
   constructor(
     private raftService: RaftService<Action>,
     private alertController: AlertController,
     private spreadsheetService: SpreadsheetService,
-    consistencyChecker: ConsistencyCheckerService<OutputCell>,
+    consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
     super(consistencyChecker, raftService, ConsistentSpreadsheetPage.TAG);
     const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
@@ -41,12 +41,33 @@ export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implement
     this.startTimeMeasuring();
   }
 
-  public ionViewDidLeave(){
-    this.raftService.closeChannel();
-  }
 
   public start() {
     this.raftService.start();
+  }
+
+  public override grow(quantity: number) {
+    if (!this.raftService.isActive() || !this.raftService.isConnected) {
+      this.presentAlert().finally();
+      return;
+    }
+    super.grow(quantity);
+  }
+
+  public override clear() {
+    if (!this.raftService.isActive() || !this.raftService.isConnected) {
+      this.presentAlert().finally();
+      return;
+    }
+    super.clear();
+  }
+
+  public override startTests() {
+    if (!this.raftService.isActive() || !this.raftService.isConnected) {
+      this.presentAlert().finally();
+      return;
+    }
+    super.startTests();
   }
 
   public override addRow() {

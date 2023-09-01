@@ -10,9 +10,12 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
   private readonly _keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
   private readonly _keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
-  private static UPDATE_MODE = 'updateV2';
+  private static readonly UPDATE_V2: string = 'updateV2';
+  private static readonly UPDATE_V1: string = 'update';
+  private static readonly UPDATE_MODE = CrdtTable.UPDATE_V2;
 
-  private catchUpdate(action: () => void): Uint8Array {
+
+  private catchUpdate(action: () => void): Uint8Array | undefined {
     const updates: Uint8Array[] = [];
     this.ydoc.on(CrdtTable.UPDATE_MODE, (update: Uint8Array) => {
       updates.push(update);
@@ -20,10 +23,28 @@ export class CrdtTable<T> implements Spreadsheet<T> {
     action();
     this.ydoc.off(CrdtTable.UPDATE_MODE, () => {
     });
-    return Y.mergeUpdatesV2(updates);
+    const merged = CrdtTable.UPDATE_MODE === CrdtTable.UPDATE_V2 ? Y.mergeUpdatesV2(updates) : Y.mergeUpdates(updates)
+    if (merged.length === 0) {
+      return undefined;
+    }
+    return merged;
+  }
+  public applyUpdate(update: Uint8Array) {
+    if (CrdtTable.UPDATE_MODE === CrdtTable.UPDATE_V2) {
+      Y.applyUpdateV2(this.ydoc, update, this);
+    } else {
+      Y.applyUpdate(this.ydoc, update, this);
+    }
   }
 
-  public addRow(id: string): Uint8Array {
+  public encodeStateAsUpdate(encodedStateVector?: Uint8Array): Uint8Array | undefined {
+    if (CrdtTable.UPDATE_MODE === CrdtTable.UPDATE_V2) {
+      return Y.encodeStateAsUpdateV2(this.ydoc, encodedStateVector);
+    }
+    return Y.encodeStateAsUpdate(this.ydoc, encodedStateVector);
+  }
+
+  public addRow(id: string): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._rows.push([id]);
       this._keepRows.set(id, this.ydoc.clientID)
@@ -32,7 +53,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
   public insertRow(id: string, before: string): Uint8Array | undefined {
     const index = this.rows.indexOf(before);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to insert id:" + id + " before id: " + before + " in rows: " + this.rows);
       return undefined;
     }
@@ -45,7 +66,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
   public deleteRow(id: string): Uint8Array | undefined {
     const index = this.rows.indexOf(id);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to remove id:" + id + " in rows: " + this.rows);
       return undefined;
     }
@@ -57,7 +78,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
     return undefined;
   }
 
-  public addColumn(id: string): Uint8Array {
+  public addColumn(id: string): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._columns.push([id]);
       this._keepColumns.set(id, this.ydoc.clientID);
@@ -67,7 +88,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
   public insertColumn(id: string, column: string): Uint8Array | undefined {
     const index = this.columns.indexOf(column);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this.columns);
       return undefined;
     }
@@ -79,7 +100,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
 
   public deleteColumn(id: string): Uint8Array | undefined {
     const index = this.columns.indexOf(id);
-    if (index ===-1) {
+    if (index === -1) {
       console.log("Failed to remove id:" + id + " in columns: " + this.columns);
       return;
     }
@@ -92,7 +113,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   }
 
 
-  public deleteValue(address: Address): Uint8Array {
+  public deleteValue(address: Address): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._cells.delete(JSON.stringify(address));
     });
@@ -121,7 +142,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
     const beginRow = this.rows.indexOf(begin.row);
     const endCol = this.columns.indexOf(end.column);
     const endRow = this.rows.indexOf(end.row);
-    if (beginCol ===-1 || beginRow ===-1 || endCol ===-1 || endRow ===-1) {
+    if (beginCol === -1 || beginRow === -1 || endCol === -1 || endRow === -1) {
       return [];
     }
     const rowIds = this.rows.slice(beginRow, endRow + 1);
@@ -133,14 +154,6 @@ export class CrdtTable<T> implements Spreadsheet<T> {
       }
     }
     return result;
-  }
-
-  public applyUpdate(update: Uint8Array) {
-    Y.applyUpdateV2(this.ydoc, update, this);
-  }
-
-  public encodeStateAsUpdate(encodedStateVector?: Uint8Array): Uint8Array | undefined {
-    return Y.encodeStateAsUpdateV2(this.ydoc, encodedStateVector);
   }
 
   get rows(): string[] {

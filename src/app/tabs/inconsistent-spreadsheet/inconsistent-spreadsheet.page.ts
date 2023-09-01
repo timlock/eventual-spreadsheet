@@ -1,4 +1,4 @@
-import {Component, NgZone} from '@angular/core';
+import {Component} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {ActionType} from "../../spreadsheet/util/ActionType";
@@ -30,16 +30,10 @@ export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
     }
   }
 
-
   public ionViewDidEnter() {
     this.communicationService.openChannel(InconsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
   }
-
-  public ionViewDidLeave(){
-    this.communicationService.closeChannel();
-  }
-
 
   public override addRow() {
     const id = this.communication.identifier.next();

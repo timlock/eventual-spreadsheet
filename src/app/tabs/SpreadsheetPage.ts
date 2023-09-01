@@ -16,7 +16,8 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   protected modifiedState = false;
   private textExecution: number | undefined;
   private testResults: TestResult[] = [];
-  private currentResult: TestResult = new TestResult(0, 0, 0, 0);
+  private _testSize = 10;
+  private currentResult: TestResult = TestResult.empty();
 
   protected constructor(
     private consistencyChecker: ConsistencyCheckerService<OutputCell>,
@@ -53,62 +54,68 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     }
   }
 
+  public startTests() {
+    this.clear();
+    this.textExecution = 0;
+    this.testResults = [];
+    console.info(`${this.tag},${this.communication.nodes.size + 1},${this.testSize}`);
+    this.grow(this._testSize);
+    this.fillTable();
+  }
+
 
   public startTimeMeasuring() {
     this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.renderTable(), () => {
       if (this.startTime !== undefined) {
-        const time = Date.now() - this.startTime;
-        this.startTime = undefined;
-        const bytes = this.communication.totalBytes - this.byteCounterStart
-        const messages = this.communication.countedMessages - this.messageCounterStart;
-        const nodes = this.communication.nodes.size + 1;
-        let type: TestType | undefined;
-        if (this.renderTable().rows.length === 0 && this.renderTable().columns.length === 0) {
-          type = TestType.CLEAR;
-        }
-        if (this.renderTable().rows.length === 20 && this.renderTable().columns.length === 20) {
-          type = TestType.GROW;
-        }
-        this.currentResult = new TestResult(bytes, messages, time, nodes, type);
-        if (this.textExecution !== undefined && type !== undefined) {
+        this.updateCurrentResult();
+        if (this.textExecution !== undefined && this.currentResult.type !== undefined) {
+          console.log(`${this.textExecution}. test round`);
           this.testResults.push(this.currentResult);
-          console.log(this.currentResult.toCSVBody())
           this.textExecution++;
-          if (this.textExecution < 10) {
-            switch (type) {
+          if (this.textExecution <= 10) {
+            switch (this.currentResult.type) {
               case TestType.CLEAR:
-                this.grow(20);
+                this.grow(this._testSize);
+                this.fillTable();
                 break;
               case TestType.GROW:
                 this.clear();
                 break;
             }
-            return;
-          } else if (this.textExecution == 10) {
-            this.clear();
-            return;
+          } else {
+            this.textExecution = undefined;
+            this.logResults();
           }
-          this.textExecution = undefined;
-          this.logResults();
         }
       }
     });
   }
 
+  private updateCurrentResult() {
+    if (this.startTime !== undefined) {
+      const time = Date.now() - this.startTime;
+      this.startTime = undefined;
+      const bytes = this.communication.totalBytes - this.byteCounterStart
+      const messages = this.communication.countedMessages - this.messageCounterStart;
+      let type: TestType | undefined;
+      if (this.renderTable().rows.length === 0 && this.renderTable().columns.length === 0 && this.currentResult.type !== TestType.CLEAR) {
+        type = TestType.CLEAR;
+      }
+      if (this.renderTable().rows.length === this.testSize && this.renderTable().columns.length === this.testSize && this.currentResult.type !== TestType.GROW) {
+        type = TestType.GROW;
+      }
+      this.currentResult = new TestResult(bytes, messages, time, type);
+    }
+  }
+
   private logResults() {
+    console.info('type, time, bytes, messages')
     this.testResults
       .sort((a, b) => a.compareType(b))
       .map((result) => result.toCSVBody())
       .forEach((csv) => console.info(csv));
   }
 
-  public startTests() {
-    this.clear();
-    console.info('Begin tests')
-    this.textExecution = 0;
-    this.testResults = [];
-    this.grow(20);
-  }
 
   public selectCell(column: string, row: string) {
     if (this.renderTable().rows.length > 0 && this.renderTable().columns.length > 0) {
@@ -241,5 +248,14 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
   set input(value: string) {
     this._input = value;
+  }
+
+
+  get testSize(): number {
+    return this._testSize;
+  }
+
+  set testSize(value: number) {
+    this._testSize = value;
   }
 }

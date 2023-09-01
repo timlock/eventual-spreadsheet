@@ -14,6 +14,12 @@
           <ion-card-content>
             <ion-list>
               <ion-item>
+                <form (submit)="startTests()">
+                  <ion-input name="growInput" type="number" fill="outline" label="Test size"
+                             [(ngModel)]="testSize"></ion-input>
+                </form>
+              </ion-item>
+              <ion-item>
                 <ion-label>Remote nodes: {{communication.nodes.size}}</ion-label>
               </ion-item>
               <ion-item>
@@ -31,9 +37,6 @@
                 </ion-item>
                 <ion-item>
                   <ion-button (click)="clear()">Clear table</ion-button>
-                </ion-item>
-                <ion-item>
-                  <ion-button (click)="startTests()">Execute tests</ion-button>
                 </ion-item>
                 <ion-item>
                   <form (submit)="grow(growQuantity)">
@@ -75,6 +78,9 @@
               </ion-item>
               <ion-item>
                 <ion-label>Last log index: {{raftMetaData.lastLogIndex}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Commit index: {{raftMetaData.commitIndex}}</ion-label>
               </ion-item>
               <ion-item>
                 <ion-label>Last applied log: {{raftMetaData.lastAppliedLog}}</ion-label>

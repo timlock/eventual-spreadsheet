@@ -34,9 +34,6 @@ export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Arra
     this.startTimeMeasuring();
   }
 
-  public ionViewDidLeave(){
-    this.communicationService.closeChannel();
-  }
 
   public override addRow() {
     const id = this.communication.identifier.next();
