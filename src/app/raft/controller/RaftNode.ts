@@ -102,7 +102,7 @@ export class RaftNode<T> {
       this.appendEntriesResponse(request.leaderId, false);
       return;
     }
-    if (this.role instanceof Follower && this.role.leaderId !== undefined && this.serverState.currentTerm === request.term) {
+    if (this.role instanceof Follower && this.role.leaderId === undefined && this.serverState.currentTerm === request.term) {
       this.role.leaderId = request.leaderId;
     }
     // const newIndex = request.prevLogIndex;
@@ -166,6 +166,7 @@ export class RaftNode<T> {
   }
 
   public command(command: T) {
+    console.log(command, this.role)
     if (this.role instanceof Follower && this.role.leaderId !== undefined) {
       this.log(this.role.leaderId, command)
     } else if (this.role instanceof Leader) {
