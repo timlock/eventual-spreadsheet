@@ -21,13 +21,16 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalReceivedMessages = 0;
   private _totalSentMessages = 0;
   private _totalBytes = 0;
-  private static readonly QUIT = 'QUIT';
+  private readonly textEncoder = new TextEncoder();
+  private readonly textDecoder = new TextDecoder();
+  private useCompression = false;
 
-  public openChannel(channelName: string, observer: CommunicationServiceObserver<T>) {
+  public openChannel(channelName: string, observer: CommunicationServiceObserver<T>, useCompression = false) {
     if (this.channel !== undefined) {
       this.closeChannel();
     }
     this.observer = observer;
+    this.useCompression = useCompression;
     this.channel = new BroadcastChannel(channelName);
     this.channel.onmessage = this.onMessage;
     this.advertiseSelf();
@@ -35,7 +38,6 @@ export class BroadcastService<T> implements Communication<T> {
 
   public closeChannel() {
     if (this.channel !== undefined) {
-      this.announceQuit();
       this.channel.close();
     }
     this.channel = undefined;
@@ -53,20 +55,21 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     this._totalSentMessages++;
-    this._totalBytes += new Blob([JSON.stringify(message)]).size;
+    if (message.payload !== undefined && this.useCompression) {
+      message.payload = this.encode(message.payload);
+    }
+    this.updateByteCounter(message.payload);
     this.channel.postMessage(message);
   }
 
   private onMessage = (event: MessageEvent): any => {
-    const bytes = new Blob([JSON.stringify(event.data)]).size;
-    this._totalBytes += bytes;
+    this.updateByteCounter(event.data);
     if (!this._isConnected) {
       return;
     }
-    const message = event.data as Message<T>;
-    if (message.payload === BroadcastService.QUIT) {
-      this._nodes.delete(message.source);
-      return;
+    const message = event.data as Message<any>;
+    if (message.payload !== undefined && this.useCompression) {
+      message.payload = this.decode(message.payload)
     }
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
@@ -79,6 +82,24 @@ export class BroadcastService<T> implements Communication<T> {
       this._totalReceivedMessages++;
       this.observer?.onMessage(message.payload);
     }
+  }
+
+  private decode(encoded: Uint8Array): T {
+    return JSON.parse(this.textDecoder.decode(encoded)) as T;
+  }
+
+  private encode(decoded: T): Uint8Array {
+    return this.textEncoder.encode(JSON.stringify(decoded));
+  }
+
+
+  private updateByteCounter(payload: any) {
+    if (payload instanceof Uint8Array) {
+      this._totalBytes += payload.byteLength;
+      return;
+    }
+    const bytes = new Blob([JSON.stringify(payload)]).size;
+    this._totalBytes += bytes;
   }
 
   private sendMissingMessages(destination: string, versionVector: VersionVector) {
@@ -121,14 +142,6 @@ export class BroadcastService<T> implements Communication<T> {
     const message: Message<undefined> = {
       source: this._identifier.uuid,
       versionVector: this.versionVectorManager.versionVector
-    }
-    this.postMessage(message);
-  }
-
-  private announceQuit() {
-    const message: Message<string> = {
-      source: this._identifier.uuid,
-      payload: BroadcastService.QUIT
     }
     this.postMessage(message);
   }

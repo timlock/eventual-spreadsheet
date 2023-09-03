@@ -18,8 +18,8 @@ export function isRequestVoteRequest<T>(message: RaftMessage<T>): message is Req
     typeof message === 'object' &&
     'term' in message &&
     'candidateId' in message &&
-    'lastLogIndex' in message &&
-    'lastLogTerm' in message
+    'lastLogIndex' in message //&&
+    // 'lastLogTerm' in message
   );
 }
 

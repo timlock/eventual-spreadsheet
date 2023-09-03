@@ -23,7 +23,7 @@ export function isAppendEntriesRequest<T>(message: RaftMessage<T>): message is A
     'term' in message &&
     'leaderId' in message &&
     'prevLogIndex' in message &&
-    'prevLogTerm' in message &&
+    // 'prevLogTerm' in message &&
     'entries' in message &&
     'leaderCommit' in message
   );

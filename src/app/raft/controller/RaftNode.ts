@@ -53,7 +53,7 @@ export class RaftNode<T> {
       } else if (isLog<T>(message)) {
         this.handleCommand(message);
       } else {
-        this.warn('invalid message: ', message);
+        console.warn('invalid message: ', message);
       }
     }
   }
