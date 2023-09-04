@@ -63,19 +63,21 @@ export class ConsistencyCheckerService<T> {
     return true;
   }
 
-  public update(state: Table<T>, id = this.id) {
+  public update(state: Table<T>) {
     const value: Entry<T> = {rows: state.rows, columns: state.columns, cells: Array.from(state.cells.entries())};
     const entry = JSON.stringify(value);
-    try {
-      localStorage.setItem(id, entry);
-    } catch (e) {
-      console.error('Localstorage exceeds size limit and will be cleared');
-      localStorage.clear();
+    if (entry !== this.currentState) {
+      try {
+        localStorage.setItem(this.id, entry);
+        this.currentState = entry;
+      } catch (e) {
+        console.error('Localstorage exceeds size limit and will be cleared');
+        localStorage.clear();
+      }
     }
-    this.currentState = entry;
-    if (this.nodes.size === 0 && this.callback !== undefined) {
-      this.callback();
-    }
+    // if (this.nodes.size === 0 && this.callback !== undefined) {
+    //   this.callback();
+    // }
   }
 
 
