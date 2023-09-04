@@ -1,11 +1,12 @@
 import {Injectable} from '@angular/core';
-import {CommunicationServiceObserver} from "./CommunicationServiceObserver";
+import {CommunicationObserver} from "./CommunicationObserver";
 import {Message} from "../domain/Message";
 import {Identifier} from "../../identifier/Identifier";
 import {VersionVectorManager} from "../util/VersionVectorManager";
 import {MessageBuffer} from "../util/MessageBuffer";
 import {VersionVector} from "../domain/VersionVector";
 import {Communication} from "../../tabs/Communication";
+import {ConsoleHook} from "../../ConsoleHook";
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ import {Communication} from "../../tabs/Communication";
 export class BroadcastService<T> implements Communication<T> {
   private readonly _identifier: Identifier = Identifier.generate();
   private channel: BroadcastChannel | undefined;
-  private observer: CommunicationServiceObserver<T> | undefined;
+  private observer: CommunicationObserver<T> | undefined;
   private _nodes: Set<string> = new Set();
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VersionVectorManager = new VersionVectorManager();
@@ -21,16 +22,13 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalReceivedMessages = 0;
   private _totalSentMessages = 0;
   private _totalBytes = 0;
-  private readonly textEncoder = new TextEncoder();
-  private readonly textDecoder = new TextDecoder();
-  private useCompression = false;
+  private consoleHook = new ConsoleHook();
 
-  public openChannel(channelName: string, observer: CommunicationServiceObserver<T>, useCompression = false) {
+  public openChannel(channelName: string, observer: CommunicationObserver<T>) {
     if (this.channel !== undefined) {
       this.closeChannel();
     }
     this.observer = observer;
-    this.useCompression = useCompression;
     this.channel = new BroadcastChannel(channelName);
     this.channel.onmessage = this.onMessage;
     this.advertiseSelf();
@@ -55,10 +53,8 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     this._totalSentMessages++;
-    if (message.payload !== undefined && this.useCompression) {
-      message.payload = this.encode(message.payload);
-    }
-    this.updateByteCounter(message.payload);
+    this.updateByteCounter(message);
+    // console.log(`SEND: `, message.payload)
     this.channel.postMessage(message);
   }
 
@@ -68,9 +64,7 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     const message = event.data as Message<any>;
-    if (message.payload !== undefined && this.useCompression) {
-      message.payload = this.decode(message.payload)
-    }
+    // console.log(`RECEIVED: `, message.payload)
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -84,22 +78,20 @@ export class BroadcastService<T> implements Communication<T> {
     }
   }
 
-  private decode(encoded: Uint8Array): T {
-    return JSON.parse(this.textDecoder.decode(encoded)) as T;
-  }
 
-  private encode(decoded: T): Uint8Array {
-    return this.textEncoder.encode(JSON.stringify(decoded));
-  }
-
-
-  private updateByteCounter(payload: any) {
-    if (payload instanceof Uint8Array) {
-      this._totalBytes += payload.byteLength;
-      return;
+  private updateByteCounter(message: Message<T>) {
+    if (message.payload instanceof Uint8Array) {
+      const payload = message.payload;
+      message.payload = undefined;
+      this._totalBytes += new Blob([JSON.stringify(message)]).size;
+      message.payload = payload;
+      const size = this.consoleHook.getUpdateSize(payload);
+      // console.log('compressed size: ', payload.length, ' uncompressed size: ',size)
+      this._totalBytes += size;
+    } else {
+      const bytes = new Blob([JSON.stringify(message)]).size;
+      this._totalBytes += bytes;
     }
-    const bytes = new Blob([JSON.stringify(payload)]).size;
-    this._totalBytes += bytes;
   }
 
   private sendMissingMessages(destination: string, versionVector: VersionVector) {

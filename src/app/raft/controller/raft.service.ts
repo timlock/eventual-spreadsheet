@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {NodeId, RaftMessage} from "../domain/Types";
-import {CommunicationServiceObserver} from "../../communication/controller/CommunicationServiceObserver";
+import {CommunicationObserver} from "../../communication/controller/CommunicationObserver";
 import {Timer} from "../util/Timer";
 import {RaftNode} from "./RaftNode";
 import {Identifier} from "../../identifier/Identifier";
@@ -14,7 +14,7 @@ import {Communication} from "../../tabs/Communication";
 @Injectable({
   providedIn: 'root'
 })
-export class RaftService<T> implements RaftNodeObserver<T>, CommunicationServiceObserver<RaftMessage<T>>, Communication<T> {
+export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserver<RaftMessage<T>>, Communication<T> {
   private readonly timer: Timer;
   private readonly node: RaftNode<T>;
   private observer: RaftServiceObserver<T> | undefined;
