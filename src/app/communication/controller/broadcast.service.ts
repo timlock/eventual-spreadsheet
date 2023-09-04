@@ -5,7 +5,7 @@ import {Identifier} from "../../identifier/Identifier";
 import {VersionVectorManager} from "../util/VersionVectorManager";
 import {MessageBuffer} from "../util/MessageBuffer";
 import {VersionVector} from "../domain/VersionVector";
-import {Communication} from "../../tabs/Communication";
+import {Communication} from "../../test-environment/Communication";
 import {ConsoleHook} from "../../ConsoleHook";
 
 @Injectable({

@@ -1,20 +1,20 @@
 import {Injectable} from '@angular/core';
-import {OutputCell} from "../domain/OutputCell";
-import {CellParser} from "../util/CellParser";
-import {InputCell} from "../domain/InputCell";
-import {Address} from "../domain/Address";
-import {Table} from "../domain/Table";
-import {SpreadsheetSolver} from "./SpreadsheetSolver";
-import {Identifier} from "../../identifier/Identifier";
-import {Action} from "../util/Action";
-import {PayloadFactory} from "../util/PayloadFactory";
-import {Spreadsheet} from "../../test-environment/Spreadsheet";
-import {ActionType} from "../util/ActionType";
+import {Table} from "../spreadsheet/domain/Table";
+import {InputCell} from "../spreadsheet/domain/InputCell";
+import {SpreadsheetSolver} from "../spreadsheet/controller/SpreadsheetSolver";
+import {Identifier} from "../identifier/Identifier";
+import {Action} from "../spreadsheet/util/Action";
+import {PayloadFactory} from "../spreadsheet/util/PayloadFactory";
+import {Address} from "../spreadsheet/domain/Address";
+import {CellParser} from "../spreadsheet/util/CellParser";
+import {ActionType} from "../spreadsheet/util/ActionType";
+import {OutputCell} from "../spreadsheet/domain/OutputCell";
+import {Spreadsheet} from "../test-environment/Spreadsheet";
 
 @Injectable({
   providedIn: 'root'
 })
-export class SpreadsheetService implements Spreadsheet<Action>{
+export class RaftSpreadsheetService implements Spreadsheet<Action> {
   private table: Table<InputCell> = new Table();
   private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.table);
 
@@ -33,50 +33,30 @@ export class SpreadsheetService implements Spreadsheet<Action>{
 
 
   public addRow(id: string): Action {
-    this.table.addRow(id);
-    this.spreadsheetSolver.reset();
     return PayloadFactory.addRow(id);
-
   }
 
   public insertRow(id: string, row: string): Action {
-    this.table.insertRow(id, row);
-    this.spreadsheetSolver.reset();
     return PayloadFactory.insertRow(id, row);
   }
 
   public deleteRow(id: string): Action {
-    this.table.deleteRow(id);
-    this.spreadsheetSolver.reset();
     return PayloadFactory.deleteRow(id);
   }
 
   public addColumn(id: string): Action {
-    this.table.addColumn(id);
-    this.spreadsheetSolver.reset();
     return PayloadFactory.addColumn(id);
   }
 
   public insertColumn(id: string, column: string): Action {
-    this.table.insertColumn(id, column);
-    this.spreadsheetSolver.reset();
     return PayloadFactory.insertColumn(id, column);
   }
 
   public deleteColumn(id: string): Action {
-    this.table.deleteColumn(id);
-    this.spreadsheetSolver.reset();
     return PayloadFactory.deleteColumn(id);
   }
 
   public insertCellById(address: Address, input: string): Action {
-    if (input.trim().length === 0) {
-      this.deleteCell(address);
-    } else {
-      const cell = CellParser.parseCell(input);
-      this.table.set(address, cell);
-    }
-    this.spreadsheetSolver.reset();
     return PayloadFactory.insertCell(address, input);
   }
 
@@ -87,27 +67,46 @@ export class SpreadsheetService implements Spreadsheet<Action>{
 
   public applyUpdate(update: Action) {
     switch (update.action) {
-      case ActionType.INSERT_CELL:
+      case ActionType.INSERT_CELL: {
         const address: Address = {column: update.column!, row: update.row!};
-        this.insertCellById(address, update.input!);
+        if (update.input!.trim().length === 0) {
+          this.deleteCell(address);
+        } else {
+          const cell = CellParser.parseCell(update.input!);
+          this.table.set(address, cell);
+        }
+        this.spreadsheetSolver.reset();
+      }
         break;
-      case ActionType.ADD_ROW:
-        this.addRow(update.input!);
+      case ActionType.ADD_ROW: {
+        this.table.addRow(update.input!);
+        this.spreadsheetSolver.reset();
+      }
         break;
-      case ActionType.INSERT_ROW:
-        this.insertRow(update.input!, update.row!)
+      case ActionType.INSERT_ROW: {
+        this.table.insertRow(update.input!, update.row!);
+        this.spreadsheetSolver.reset();
+      }
         break;
-      case ActionType.ADD_COLUMN:
-        this.addColumn(update.input!);
+      case ActionType.ADD_COLUMN: {
+        this.table.addColumn(update.input!);
+        this.spreadsheetSolver.reset();
+      }
         break;
-      case ActionType.INSERT_COLUMN:
-        this.insertColumn(update.input!, update.column!);
+      case ActionType.INSERT_COLUMN: {
+        this.table.insertColumn(update.input!, update.column!);
+        this.spreadsheetSolver.reset();
+      }
         break;
-      case ActionType.DELETE_COLUMN:
-        this.deleteColumn(update.column!);
+      case ActionType.DELETE_COLUMN: {
+        this.table.deleteColumn(update.column!);
+        this.spreadsheetSolver.reset();
+      }
         break;
-      case ActionType.DELETE_ROW:
-        this.deleteRow(update.row!)
+      case ActionType.DELETE_ROW: {
+        this.table.deleteRow(update.row!);
+        this.spreadsheetSolver.reset();
+      }
         break;
       default:
         console.warn('Cant perform update for update: ', update);

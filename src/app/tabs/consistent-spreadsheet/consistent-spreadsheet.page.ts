@@ -10,8 +10,9 @@ import {Table} from "../../spreadsheet/domain/Table";
 import {RaftMetaData} from "../../raft/util/RaftMetaData";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {AlertController} from "@ionic/angular";
-import {TestEnvironment} from "../TestEnvironment";
+import {TestEnvironment} from "../../test-environment/TestEnvironment";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
+import {RaftSpreadsheetService} from "../../raft-spreadsheet/raft-spreadsheet.service";
 
 @Component({
   selector: 'app-consistent-spreadsheet',
@@ -25,14 +26,10 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
   constructor(
     private raftService: RaftService<Action>,
     private alertController: AlertController,
-    private spreadsheetService: SpreadsheetService,
+    spreadsheetService: RaftSpreadsheetService,
     consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
-    super(consistencyChecker, raftService, ConsistentSpreadsheetPage.TAG);
-    const address = this.spreadsheetService.renderTable().getAddressByIndex(0, 0);
-    if (address !== undefined) {
-      this.selectCell(address.column, address.row);
-    }
+    super(consistencyChecker, raftService, spreadsheetService, ConsistentSpreadsheetPage.TAG);
   }
 
 
@@ -70,48 +67,6 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
     super.startTests();
   }
 
-  public override addRow() {
-    const id = this.communication.identifier.next();
-    const message = PayloadFactory.addRow(id);
-    this.performAction(() => message);
-  }
-
-  public override insertRow(row: string) {
-    const id = this.communication.identifier.next();
-    const message = PayloadFactory.insertRow(id, row);
-    this.performAction(() => message);
-  }
-
-  public override deleteRow(row: string) {
-    const message = PayloadFactory.deleteRow(row);
-    this.performAction(() => message);
-  }
-
-  public override addColumn() {
-    const id = this.communication.identifier.next();
-    const message = PayloadFactory.addColumn(id);
-    this.performAction(() => message);
-  }
-
-  public override insertColumn(column: string) {
-    const id = this.communication.identifier.next();
-    const message = PayloadFactory.insertColumn(id, column);
-    this.performAction(() => message);
-  }
-
-  public override deleteColumn(column: string) {
-    const message = PayloadFactory.deleteColumn(column);
-    this.performAction(() => message);
-  }
-
-  public override insertCell(address: Address, input: string) {
-    const message = PayloadFactory.insertCell(address, input);
-    this.performAction(() => message)
-  }
-
-  public override deleteCell(address: Address) {
-    this.insertCell(address, '');
-  }
 
   protected override performAction(action: () => Action) {
     if (!this.raftService.isActive() || !this.raftService.isConnected) {
@@ -134,7 +89,7 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
       alert = await this.alertController.create({
         header: 'Can not alter spreadsheet!',
         subHeader: 'Raft needs to be started first',
-        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.communication.nodes.size}/3`,
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.raftService.nodes.size}/3`,
         buttons: [{
           text: 'Cancel',
           role: 'cancel'
@@ -151,7 +106,7 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
       alert = await this.alertController.create({
         header: 'Can not alter spreadsheet!',
         subHeader: 'Raft needs to be started first',
-        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.communication.nodes.size}/3`,
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.raftService.nodes.size}/3`,
         buttons: ['OK'],
       });
     }
@@ -171,42 +126,9 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
     this._raftMetaData = state;
   }
 
-  protected override handleMessage(message: Action) {
-    switch (message.action) {
-      case ActionType.INSERT_CELL:
-        const address: Address = {column: message.column!, row: message.row!};
-        this.spreadsheetService.insertCellById(address, message.input!);
-        break;
-      case ActionType.ADD_ROW:
-        this.spreadsheetService.addRow(message.input!);
-        break;
-      case ActionType.INSERT_ROW:
-        this.spreadsheetService.insertRow(message.input!, message.row!)
-        break;
-      case ActionType.ADD_COLUMN:
-        this.spreadsheetService.addColumn(message.input!);
-        break;
-      case ActionType.INSERT_COLUMN:
-        this.spreadsheetService.insertColumn(message.input!, message.column!);
-        break;
-      case ActionType.DELETE_COLUMN:
-        this.spreadsheetService.deleteColumn(message.column!);
-        break;
-      case ActionType.DELETE_ROW:
-        this.spreadsheetService.deleteRow(message.row!)
-        break;
-      default:
-        console.warn('Cant perform action for message: ', message);
-        break;
-    }
-  }
 
   public canBeStarted(): boolean {
     return this.raftService.canBeStarted();
-  }
-
-  public override renderTable(): Table<OutputCell> {
-    return this.spreadsheetService.renderTable();
   }
 
 

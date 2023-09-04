@@ -9,7 +9,7 @@ import {RaftNodeObserver} from "./RaftNodeObserver";
 import {Log} from "../domain/message/Log";
 import {RaftServiceObserver} from "../util/RaftServiceObserver";
 import {RaftMetaData} from "../util/RaftMetaData";
-import {Communication} from "../../tabs/Communication";
+import {Communication} from "../../test-environment/Communication";
 
 @Injectable({
   providedIn: 'root'

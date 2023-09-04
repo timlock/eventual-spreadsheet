@@ -1,10 +1,11 @@
-import {Table} from "../spreadsheet/domain/Table";
 import {OutputCell} from "../spreadsheet/domain/OutputCell";
 import {Address} from "../spreadsheet/domain/Address";
 import {CommunicationObserver} from "../communication/controller/CommunicationObserver";
 import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
 import {Communication} from "./Communication";
 import {TestResult, TestType} from "./TestResult";
+import {Spreadsheet} from "./Spreadsheet";
+
 
 export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private _currentCell: OutputCell | undefined;
@@ -22,36 +23,61 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   protected constructor(
     private consistencyChecker: ConsistencyCheckerService<OutputCell>,
-    protected communication: Communication<T>,
+    private _communication: Communication<T>,
+    private _spreadsheet: Spreadsheet<T>,
     private readonly tag: string
   ) {
+    const address = this._spreadsheet.renderTable().getAddressByIndex(0, 0);
+    if (address !== undefined) {
+      this.selectCell(address.column, address.row);
+    }
   }
 
-  public abstract addRow(): void;
+  public addRow() {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.addRow(id));
+  }
 
-  public abstract insertRow(row: string): void;
+  public insertRow(row: string) {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.insertRow(id, row));
+  }
 
-  public abstract deleteRow(row: string): void;
+  public deleteRow(row: string) {
+    this.performAction(() => this._spreadsheet.deleteRow(row));
+  }
 
-  public abstract addColumn(): void;
+  public addColumn() {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.addColumn(id));
+  }
 
-  public abstract insertColumn(column: string): void;
+  public insertColumn(column: string) {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.insertColumn(id, column));
+  }
 
-  public abstract deleteColumn(column: string): void;
+  public deleteColumn(column: string) {
+    this.performAction(() => this._spreadsheet.deleteColumn(column));
+  }
 
-  public abstract insertCell(address: Address, input: string): void;
+  public insertCell(address: Address, input: string) {
+    this.performAction(() => this._spreadsheet.insertCellById(address, input));
+  }
 
-  public abstract deleteCell(address: Address): void;
+  public deleteCell(address: Address) {
+    this.insertCell(address, '');
+  }
 
-  public abstract renderTable(): Table<OutputCell>;
-
-  protected abstract handleMessage(message: T): void;
+  public handleMessage(message: T) {
+    this._spreadsheet.applyUpdate(message);
+  }
 
   private startStopwatch() {
     if (this.startTime === undefined) {
       this.startTime = Date.now();
-      this.byteCounterStart = this.communication.totalBytes;
-      this.messageCounterStart = this.communication.countedMessages;
+      this.byteCounterStart = this._communication.totalBytes;
+      this.messageCounterStart = this._communication.countedMessages;
     }
   }
 
@@ -65,7 +91,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
 
   public startTimeMeasuring() {
-    this.consistencyChecker.subscribe(this.communication.identifier.uuid, this.renderTable(), () => {
+    this.consistencyChecker.subscribe(this._communication.identifier.uuid, this._spreadsheet.renderTable(), () => {
       if (this.startTime !== undefined) {
         this.updateCurrentResult();
         if (this.currentTestRun !== undefined && this.currentResult.type !== undefined) {
@@ -96,7 +122,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private evaluateTest() {
     this.currentTestRun = undefined;
     console.info('type, nodes, testSize, testRuns')
-    console.info(`${this.tag},${this.communication.nodes.size + 1},${this.testSize},${this.testRuns}`);
+    console.info(`${this.tag},${this._communication.nodes.size + 1},${this.testSize},${this.testRuns}`);
     console.info('type, time, bytes, messages')
     this.logResults(...this.testResults);
     console.info('End of test')
@@ -106,13 +132,13 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
     if (this.startTime !== undefined) {
       const time = Date.now() - this.startTime;
       this.startTime = undefined;
-      const bytes = this.communication.totalBytes - this.byteCounterStart
-      const messages = this.communication.countedMessages - this.messageCounterStart;
+      const bytes = this._communication.totalBytes - this.byteCounterStart
+      const messages = this._communication.countedMessages - this.messageCounterStart;
       let type: TestType | undefined;
       if (this.currentTestRun !== undefined) {
-        if (this.renderTable().rows.length === 0 && this.renderTable().columns.length === 0 && this.currentResult.type !== TestType.CLEAR) {
+        if (this._spreadsheet.renderTable().rows.length === 0 && this._spreadsheet.renderTable().columns.length === 0 && this.currentResult.type !== TestType.CLEAR) {
           type = TestType.CLEAR;
-        } else if (this.renderTable().rows.length === this.testSize && this.renderTable().columns.length === this.testSize && this.currentResult.type !== TestType.GROW) {
+        } else if (this._spreadsheet.renderTable().rows.length === this.testSize && this._spreadsheet.renderTable().columns.length === this.testSize && this.currentResult.type !== TestType.GROW) {
           type = TestType.GROW;
         }
       }
@@ -128,11 +154,11 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   }
 
   public selectCell(column: string, row: string) {
-    if (this.renderTable().rows.length > 0 && this.renderTable().columns.length > 0) {
+    if (this._spreadsheet.renderTable().rows.length > 0 && this._spreadsheet.renderTable().columns.length > 0) {
       const address: Address = {column: column, row: row};
-      this._currentCell = this.renderTable().get(address)
+      this._currentCell = this._spreadsheet.renderTable().get(address)
       if (this.currentCell === undefined) {
-        const index = this.renderTable().getIndexByAddress(address);
+        const index = this._spreadsheet.renderTable().getIndexByAddress(address);
         if (index === undefined) {
           console.warn(`Cant select cell ${column}|${row}`);
           return;
@@ -145,14 +171,11 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
     }
   }
 
-  get currentCell(): OutputCell | undefined {
-    return this._currentCell;
-  }
 
 
   protected performAction(action: () => T | undefined) {
     const startedStopWatch = this.startTime === undefined;
-    if (this.communication.isConnected) {
+    if (this._communication.isConnected) {
       this.startStopwatch();
       this.modifiedState = false;
     } else {
@@ -166,26 +189,26 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
       }
       return;
     }
-    this.consistencyChecker.update(this.renderTable());
-    this.communication.send(update);
-    if (this.renderTable().rows.length === 1 && this.renderTable().columns.length === 1) {
-      this.selectCell(this.renderTable().columns[0], this.renderTable().rows[0])
-    } else if (this.renderTable().rows.length === 0 || this.renderTable().columns.length === 0) {
+    this.consistencyChecker.update(this._spreadsheet.renderTable());
+    this._communication.send(update);
+    if (this._spreadsheet.renderTable().rows.length === 1 && this._spreadsheet.renderTable().columns.length === 1) {
+      this.selectCell(this._spreadsheet.renderTable().columns[0], this._spreadsheet.renderTable().rows[0])
+    } else if (this._spreadsheet.renderTable().rows.length === 0 || this._spreadsheet.renderTable().columns.length === 0) {
       this._currentCell = undefined;
     }
   }
 
   public clear() {
-    for (let column of this.renderTable().columns) {
-      for (let row of this.renderTable().rows) {
+    for (let column of this._spreadsheet.renderTable().columns) {
+      for (let row of this._spreadsheet.renderTable().rows) {
         this.deleteCell({column: column, row: row});
       }
     }
-    const rows = Array.from(this.renderTable().rows);
+    const rows = Array.from(this._spreadsheet.renderTable().rows);
     for (let row of rows) {
       this.deleteRow(row);
     }
-    const columns = Array.from(this.renderTable().columns);
+    const columns = Array.from(this._spreadsheet.renderTable().columns);
     for (let column of columns) {
       this.deleteColumn(column);
     }
@@ -200,8 +223,8 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   public fillTable() {
     let counter = 0;
-    for (let column of this.renderTable().columns) {
-      for (let row of this.renderTable().rows) {
+    for (let column of this._spreadsheet.renderTable().columns) {
+      for (let row of this._spreadsheet.renderTable().rows) {
         counter++;
         this.insertCell({column: column, row: row}, counter + '');
       }
@@ -210,8 +233,8 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   public onMessage(message: T): void {
     this.handleMessage(message);
-    this.consistencyChecker.update(this.renderTable());
-    if (this.renderTable().rows.length === 0 || this.renderTable().columns.length === 0) {
+    this.consistencyChecker.update(this._spreadsheet.renderTable());
+    if (this._spreadsheet.renderTable().rows.length === 0 || this._spreadsheet.renderTable().columns.length === 0) {
       this._currentCell = undefined;
     }
   }
@@ -226,15 +249,20 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
       this.startStopwatch();
       this.modifiedState = false;
     }
-    this.communication.isConnected = enabled;
+    this._communication.isConnected = enabled;
+  }
+
+
+  get currentCell(): OutputCell | undefined {
+    return this._currentCell;
   }
 
   public get totalBytes(): number {
-    return this.communication.totalBytes;
+    return this._communication.totalBytes;
   }
 
   public get isConnected(): boolean {
-    return this.communication.isConnected;
+    return this._communication.isConnected;
   }
 
   public set isConnected(enabled: boolean) {
@@ -279,5 +307,14 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   set testRuns(value: number) {
     this._testRuns = value;
+  }
+
+
+  get communication(): Communication<T> {
+    return this._communication;
+  }
+
+  get spreadsheet(): Spreadsheet<T> {
+    return this._spreadsheet;
   }
 }

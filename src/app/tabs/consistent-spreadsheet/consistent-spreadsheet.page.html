@@ -126,7 +126,7 @@
       <thead>
       <tr>
         <th class="table-header small-cell"></th>
-        <th class="table-header cell" *ngFor="let col of renderTable().columns;let i = index">
+        <th class="table-header cell" *ngFor="let col of spreadsheet.renderTable().columns;let i = index">
           <ion-toolbar>
             <ion-buttons slot="start">
               <ion-button fill="clear" size="small" color="success" (click)="insertColumn(col)">
@@ -147,7 +147,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let row of renderTable().rows;let r = index">
+      <tr *ngFor="let row of spreadsheet.renderTable().rows;let r = index">
         <td class="table-header small-cell ">
           <ion-toolbar>
             <ion-buttons slot="start">
@@ -164,15 +164,15 @@
           </ion-toolbar>
         </td>
         <td class="ion-text-right cell" (click)=selectCell(column,row)
-            *ngFor="let column of renderTable().columns; let c = index">
+            *ngFor="let column of spreadsheet.renderTable().columns; let c = index">
           <div
             *ngIf="currentCell !== undefined && (currentCell!.address.row === row && currentCell!.address.column === column); else cellValue">
             <div class="selected">
-              {{ renderTable().get({column: column, row: row})?.content }}
+              {{ spreadsheet.renderTable().get({column: column, row: row})?.content }}
             </div>
           </div>
           <ng-template #cellValue>
-            {{ renderTable().get({column: column, row: row})?.content }}
+            {{ spreadsheet.renderTable().get({column: column, row: row})?.content }}
           </ng-template>
         </td>
       </tr>

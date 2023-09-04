@@ -6,13 +6,15 @@ import {InputCell} from "../../spreadsheet/domain/InputCell";
 import {Address} from "../../spreadsheet/domain/Address";
 import {Table} from "../../spreadsheet/domain/Table";
 import {SpreadsheetSolver} from "../../spreadsheet/controller/SpreadsheetSolver";
+import {Spreadsheet} from "../../test-environment/Spreadsheet";
 
 @Injectable({
     providedIn: 'root'
 })
-export class CrdtSpreadsheetService {
+export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     private table: CrdtTable<InputCell> = new CrdtTable();
     private spreadsheetSolver = new SpreadsheetSolver(this.table);
+
 
     public applyUpdate(update: Uint8Array) {
         this.table.applyUpdate(update);
@@ -95,6 +97,8 @@ export class CrdtSpreadsheetService {
         }
         return update;
     }
+
+
 
     public renderTable(): Table<OutputCell> {
         return this.spreadsheetSolver.solve();
