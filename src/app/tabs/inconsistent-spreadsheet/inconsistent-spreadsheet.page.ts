@@ -6,7 +6,7 @@ import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {Address} from "../../spreadsheet/domain/Address";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
-import {SpreadsheetPage} from "../SpreadsheetPage";
+import {TestEnvironment} from "../TestEnvironment";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 
 @Component({
@@ -14,7 +14,7 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage extends SpreadsheetPage<Action> {
+export class InconsistentSpreadsheetPage extends TestEnvironment<Action> {
   private static readonly TAG: string = 'inconsistent';
 
   constructor(

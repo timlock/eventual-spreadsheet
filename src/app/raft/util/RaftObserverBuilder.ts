@@ -9,6 +9,7 @@ export class RaftObserverBuilder<T> {
   private _restartHearBeatTimer: (() => void) | undefined;
   private _restartElectionTimer: (() => void) | undefined;
   private _onStateChange: ((state: RaftMetaData) => void) | undefined;
+  private _sendLog: ((destination: NodeId, log: Log<T>) => void) | undefined;
 
   public sendMessage(value: ((receiver: NodeId, message: RaftMessage<T>) => void)): RaftObserverBuilder<T> {
     this._sendMessage = value;
@@ -35,7 +36,10 @@ export class RaftObserverBuilder<T> {
     return this;
   }
 
-
+  public sendLog(value: ((destination: NodeId, log: Log<T>) => void)): RaftObserverBuilder<T> {
+    this._sendLog = value;
+    return this;
+  }
 
 
   public build(): RaftNodeObserver<T> {
@@ -44,6 +48,7 @@ export class RaftObserverBuilder<T> {
     const restartHearBeatTimer = this._restartHearBeatTimer;
     const sendMessage = this._sendMessage;
     const onStateChange = this._onStateChange;
+    const sendLog = this._sendLog;
 
     return new class implements RaftNodeObserver<T> {
       onLog(log: Log<T>): void {
@@ -76,6 +81,11 @@ export class RaftObserverBuilder<T> {
         }
       }
 
+      sendLog(destination: NodeId, log: Log<T>): void {
+        if (sendLog !== undefined) {
+          sendLog(destination, log);
+        }
+      }
 
 
     }

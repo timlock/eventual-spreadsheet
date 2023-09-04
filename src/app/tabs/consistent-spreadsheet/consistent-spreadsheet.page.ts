@@ -10,7 +10,7 @@ import {Table} from "../../spreadsheet/domain/Table";
 import {RaftMetaData} from "../../raft/util/RaftMetaData";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {AlertController} from "@ionic/angular";
-import {SpreadsheetPage} from "../SpreadsheetPage";
+import {TestEnvironment} from "../TestEnvironment";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 
 @Component({
@@ -18,7 +18,7 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
   templateUrl: './consistent-spreadsheet.page.html',
   styleUrls: ['./consistent-spreadsheet.page.scss'],
 })
-export class ConsistentSpreadsheetPage extends SpreadsheetPage<Action> implements RaftServiceObserver<Action> {
+export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implements RaftServiceObserver<Action> {
   private static readonly TAG: string = 'consistent';
   private _raftMetaData: RaftMetaData = {term: 0, role: '', lastLogIndex: 0, commitIndex: 0, lastAppliedLog: 0};
 

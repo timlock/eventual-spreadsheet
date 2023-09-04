@@ -1,7 +1,7 @@
 import {Address} from "./Address";
-import {Spreadsheet} from "../controller/Spreadsheet";
+import {Solvable} from "../controller/Solvable";
 
-export class Table<T> implements Spreadsheet<T> {
+export class Table<T> implements Solvable<T> {
   private readonly _rows: string[] = [];
   private readonly _columns: string[] = [];
   private readonly _cells: Map<string, T> = new Map();

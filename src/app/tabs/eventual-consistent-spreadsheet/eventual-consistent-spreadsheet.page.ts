@@ -3,7 +3,7 @@ import {BroadcastService} from "../../communication/controller/broadcast.service
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
-import {SpreadsheetPage} from "../SpreadsheetPage";
+import {TestEnvironment} from "../TestEnvironment";
 import {Address} from "../../spreadsheet/domain/Address";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 
@@ -12,7 +12,7 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
   templateUrl: './eventual-consistent-spreadsheet.page.html',
   styleUrls: ['./eventual-consistent-spreadsheet.page.scss'],
 })
-export class EventualConsistentSpreadsheetPage extends SpreadsheetPage<Uint8Array> {
+export class EventualConsistentSpreadsheetPage extends TestEnvironment<Uint8Array> {
   private static readonly TAG: string = 'eventual-consistent';
 
 

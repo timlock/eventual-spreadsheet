@@ -1,12 +1,12 @@
 import {Table} from "../spreadsheet/domain/Table";
 import {OutputCell} from "../spreadsheet/domain/OutputCell";
 import {Address} from "../spreadsheet/domain/Address";
-import {CommunicationServiceObserver} from "../communication/controller/CommunicationServiceObserver";
+import {CommunicationObserver} from "../communication/controller/CommunicationObserver";
 import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
 import {Communication} from "./Communication";
 import {TestResult, TestType} from "./TestResult";
 
-export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver<T> {
+export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private _currentCell: OutputCell | undefined;
   private _input = '';
   private startTime: number | undefined;
@@ -16,8 +16,8 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
   protected modifiedState = false;
   private currentTestRun: number | undefined;
   private testResults: TestResult[] = [];
-  private _testSize = 10;
-  private _testRuns = 5;
+  private _testSize = 3;
+  private _testRuns = 3;
   private currentResult: TestResult = TestResult.empty();
 
   protected constructor(
@@ -55,8 +55,8 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
     }
   }
 
+
   public startTests() {
-    this.clear();
     this.currentTestRun = 0;
     this.testResults = [];
     this.grow(this._testSize);
@@ -151,6 +151,7 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
 
 
   protected performAction(action: () => T | undefined) {
+    const startedStopWatch = this.startTime === undefined;
     if (this.communication.isConnected) {
       this.startStopwatch();
       this.modifiedState = false;
@@ -158,11 +159,14 @@ export abstract class SpreadsheetPage<T> implements CommunicationServiceObserver
       this.modifiedState = true;
     }
     const update = action();
-    this.consistencyChecker.update(this.renderTable());
     if (update === undefined) {
       console.warn('Update is undefined');
+      if (startedStopWatch) {
+        this.startTime = undefined;
+      }
       return;
     }
+    this.consistencyChecker.update(this.renderTable());
     this.communication.send(update);
     if (this.renderTable().rows.length === 1 && this.renderTable().columns.length === 1) {
       this.selectCell(this.renderTable().columns[0], this.renderTable().rows[0])

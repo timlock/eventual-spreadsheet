@@ -4,14 +4,14 @@ import {Address} from "../domain/Address";
 import {Formula, isFormula} from "../domain/Formula";
 import {GraphSorter} from "../util/GraphSorter";
 import {FormulaType} from "../domain/FormulaType";
-import {Spreadsheet} from "./Spreadsheet";
+import {Solvable} from "./Solvable";
 import {OutputCell} from "../domain/OutputCell";
 
 
 export class SpreadsheetSolver {
   private result: Table<OutputCell> | undefined;
 
-  constructor(private readonly table: Spreadsheet<InputCell>) {
+  constructor(private readonly table: Solvable<InputCell>) {
   }
 
   public reset() {
@@ -30,7 +30,7 @@ export class SpreadsheetSolver {
     return this.result;
   }
 
-  private renderSimpleCells(table: Spreadsheet<InputCell>) {
+  private renderSimpleCells(table: Solvable<InputCell>) {
     let rowIndex = 0;
     for (const row of table.rows) {
       let columnIndex = 0;
@@ -52,7 +52,7 @@ export class SpreadsheetSolver {
     }
   }
 
-  private collectFormulas(table: Spreadsheet<InputCell>): [Address, Address[]][] {
+  private collectFormulas(table: Solvable<InputCell>): [Address, Address[]][] {
     const formulas: [Address, Address[]][] = [];
     for (const rowId of table.rows) {
       for (const colId of table.columns) {
@@ -68,7 +68,7 @@ export class SpreadsheetSolver {
     return formulas;
   }
 
-  private renderFormulas(formulas: [Address, Address[]][], table: Spreadsheet<InputCell>) {
+  private renderFormulas(formulas: [Address, Address[]][], table: Solvable<InputCell>) {
     const sorter = new GraphSorter();
     formulas.filter(formula => this.result?.get(formula[0]) === undefined).forEach(v => sorter.addCell(v));
     for (const group of sorter.sort()) {

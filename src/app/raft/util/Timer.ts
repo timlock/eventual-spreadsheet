@@ -2,9 +2,9 @@ export class Timer {
   private end: number | undefined;
 
   constructor(
-    private readonly min = 1500,
-    private readonly max = 3000,
-    private readonly fixed = 500
+    private readonly min = 150,
+    private readonly max = 300,
+    private readonly fixed = 50
   ) {
   }
 

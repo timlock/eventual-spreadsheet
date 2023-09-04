@@ -1,9 +1,9 @@
 import * as Y from 'yjs'
 import {Address} from "../../spreadsheet/domain/Address";
-import {Spreadsheet} from "../../spreadsheet/controller/Spreadsheet";
+import {Solvable} from "../../spreadsheet/controller/Solvable";
 
 
-export class CrdtTable<T> implements Spreadsheet<T> {
+export class CrdtTable<T> implements Solvable<T> {
   private readonly ydoc = new Y.Doc();
   private readonly _cells: Y.Map<T> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
@@ -12,7 +12,7 @@ export class CrdtTable<T> implements Spreadsheet<T> {
   private readonly _keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
   private static readonly UPDATE_V2: string = 'updateV2';
   private static readonly UPDATE_V1: string = 'update';
-  private static readonly UPDATE_MODE = CrdtTable.UPDATE_V2;
+  private static readonly UPDATE_MODE = CrdtTable.UPDATE_V1;
 
 
   private catchUpdate(action: () => void): Uint8Array | undefined {

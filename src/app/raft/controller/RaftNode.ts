@@ -166,7 +166,6 @@ export class RaftNode<T> {
   }
 
   public command(command: T) {
-    console.log(command, this.role)
     if (this.role instanceof Follower && this.role.leaderId !== undefined) {
       this.log(this.role.leaderId, command)
     } else if (this.role instanceof Leader) {
