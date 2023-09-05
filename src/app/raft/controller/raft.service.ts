@@ -150,4 +150,12 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
     return this.communicationService.totalSentMessages;
   }
 
+  get countBytes(): boolean{
+    return this.communicationService.countBytes;
+  }
+
+  set countBytes(value: boolean){
+    this.communicationService.countBytes = value;
+  }
+
 }

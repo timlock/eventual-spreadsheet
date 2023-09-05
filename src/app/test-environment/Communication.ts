@@ -18,4 +18,8 @@ export interface Communication<T> {
   get totalSentMessages(): number;
 
   get nodes(): Set<string>;
+
+  get countBytes(): boolean;
+
+  set countBytes(value: boolean);
 }

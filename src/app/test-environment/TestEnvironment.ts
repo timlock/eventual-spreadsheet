@@ -20,6 +20,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private _testSize = 3;
   private _testRuns = 3;
   private currentResult: TestResult = TestResult.empty();
+  private _measureTime = true;
 
   protected constructor(
     private consistencyChecker: ConsistencyCheckerService<OutputCell>,
@@ -100,7 +101,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
           && this.currentResult.type !== undefined
           && this.currentTestRun < this.testRuns
         ) {
-          if(this.currentTestRun > -1){
+          if (this.currentTestRun > -1) {
             this.testResults.push(this.currentResult);
           }
           switch (this.currentResult.type) {
@@ -134,7 +135,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   private updateCurrentResult() {
     if (this.startTime !== undefined) {
-      const time = Date.now() - this.startTime;
+      const time = this.measureTime ? Date.now() - this.startTime : 0;
       this.startTime = undefined;
       const bytes = this._communication.totalBytes - this.byteCounterStart
       const messages = this._communication.countedMessages - this.messageCounterStart;
@@ -327,5 +328,22 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   set growQuantity(value: number) {
     this._growQuantity = value;
+  }
+
+  get countBytes(): boolean {
+    return this._communication.countBytes;
+  }
+
+  set countBytes(value: boolean) {
+    this._communication.countBytes = value;
+  }
+
+
+  get measureTime(): boolean {
+    return this._measureTime;
+  }
+
+  set measureTime(value: boolean) {
+    this._measureTime = value;
   }
 }

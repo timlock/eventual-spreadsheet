@@ -14,19 +14,6 @@
           <ion-card-content>
             <ion-list>
               <ion-item>
-                <ion-grid>
-                  <ion-row>
-                    <ion-input type="number" fill="outline" label="Test size" [(ngModel)]="testSize"></ion-input>
-                  </ion-row>
-                  <ion-row>
-                    <ion-input type="number" fill="outline" label="Number of tests" [(ngModel)]="testRuns"></ion-input>
-                  </ion-row>
-                  <ion-row>
-                    <ion-button (click)="startTests()">Start test</ion-button>
-                  </ion-row>
-                </ion-grid>
-              </ion-item>
-              <ion-item>
                 <ion-label>Remote nodes: {{communication.nodes.size}}</ion-label>
               </ion-item>
               <ion-item>
@@ -38,20 +25,18 @@
               <ion-item>
                 <ion-label>Exchanged messages: {{countedMessages}}</ion-label>
               </ion-item>
-              <div *ngIf="isActive">
-                <ion-item>
-                  <ion-button (click)="fillTable()">Fill table</ion-button>
-                </ion-item>
-                <ion-item>
-                  <ion-button (click)="clear()">Clear table</ion-button>
-                </ion-item>
-                <ion-item>
-                  <form (submit)="grow(growQuantity)">
-                    <ion-input name="growInput" type="number" fill="outline" label="Grow"
-                               [(ngModel)]="growQuantity"></ion-input>
-                  </form>
-                </ion-item>
-              </div>
+              <ion-item>
+                <ion-button (click)="fillTable()">Fill table</ion-button>
+              </ion-item>
+              <ion-item>
+                <ion-button (click)="clear()">Clear table</ion-button>
+              </ion-item>
+              <ion-item>
+                <form (submit)="grow(growQuantity)">
+                  <ion-input name="growInput" type="number" fill="outline" label="Grow"
+                             [(ngModel)]="growQuantity"></ion-input>
+                </form>
+              </ion-item>
               <ion-item>
                 <ion-label>Total bytes: {{totalBytes}}</ion-label>
               </ion-item>
@@ -102,6 +87,42 @@
                 <div *ngIf="isActive || communication.nodes.size <= 1">
                   <ion-button [disabled]="true">Start</ion-button>
                 </div>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>State</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list>
+              <ion-item>
+                <ion-grid>
+                  <ion-row>
+                    <ion-input type="number" fill="outline" label="Test size" [(ngModel)]="testSize"></ion-input>
+                  </ion-row>
+                  <ion-row>
+                    <ion-input type="number" fill="outline" label="Number of tests" [(ngModel)]="testRuns"></ion-input>
+                  </ion-row>
+                  <ion-row>
+                    <ion-col size="auto">
+                      <ion-toggle [(ngModel)]="countBytes">
+                        <ion-title>Count bytes</ion-title>
+                      </ion-toggle>
+                    </ion-col>
+                    <ion-col size="auto">
+                      <ion-toggle [(ngModel)]="measureTime">
+                        <ion-title>Measure time</ion-title>
+                      </ion-toggle>
+                    </ion-col>
+                  </ion-row>
+                  <ion-row>
+                    <ion-button (click)="startTests()">Start test</ion-button>
+                  </ion-row>
+                </ion-grid>
               </ion-item>
             </ion-list>
           </ion-card-content>

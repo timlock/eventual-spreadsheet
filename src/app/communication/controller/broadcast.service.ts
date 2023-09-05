@@ -23,6 +23,7 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalSentMessages = 0;
   private _totalBytes = 0;
   private consoleHook = new ConsoleHook();
+  private _countBytes = true;
 
   public openChannel(channelName: string, observer: CommunicationObserver<T>) {
     if (this.channel !== undefined) {
@@ -53,18 +54,20 @@ export class BroadcastService<T> implements Communication<T> {
       return;
     }
     this._totalSentMessages++;
-    this.updateByteCounter(message);
-    // console.log(`SEND: `, message.payload)
+    if (this.countBytes) {
+      this.updateByteCounter(message);
+    }
     this.channel.postMessage(message);
   }
 
   private onMessage = (event: MessageEvent): any => {
-    this.updateByteCounter(event.data);
+    if (this.countBytes) {
+      this.updateByteCounter(event.data);
+    }
     if (!this._isConnected) {
       return;
     }
     const message = event.data as Message<any>;
-    // console.log(`RECEIVED: `, message.payload)
     this.onNode(message.source);
     if (message.versionVector !== undefined) {
       this.sendMissingMessages(message.source, message.versionVector);
@@ -86,7 +89,6 @@ export class BroadcastService<T> implements Communication<T> {
       this._totalBytes += new Blob([JSON.stringify(message)]).size;
       message.payload = payload;
       const size = this.consoleHook.getUpdateSize(payload);
-      // console.log('compressed size: ', payload.length, ' uncompressed size: ',size)
       this._totalBytes += size;
     } else {
       const bytes = new Blob([JSON.stringify(message)]).size;
@@ -172,5 +174,14 @@ export class BroadcastService<T> implements Communication<T> {
 
   get totalSentMessages(): number {
     return this._totalSentMessages;
+  }
+
+
+  get countBytes(): boolean {
+    return this._countBytes;
+  }
+
+  set countBytes(value: boolean) {
+    this._countBytes = value;
   }
 }
