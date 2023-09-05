@@ -1,12 +1,7 @@
 import {Component} from '@angular/core';
-import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {RaftService} from "../../raft/controller/raft.service";
-import {ActionType} from "../../spreadsheet/util/ActionType";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
-import {Address} from "../../spreadsheet/domain/Address";
-import {PayloadFactory} from "../../spreadsheet/util/PayloadFactory";
-import {Table} from "../../spreadsheet/domain/Table";
 import {RaftMetaData} from "../../raft/util/RaftMetaData";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {AlertController} from "@ionic/angular";

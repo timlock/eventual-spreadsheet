@@ -13,8 +13,8 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private startTime: number | undefined;
   private byteCounterStart = 0;
   private messageCounterStart = 0;
-  protected growQuantity = 0;
-  protected modifiedState = false;
+  private _growQuantity = 0;
+  private modifiedState = false;
   private currentTestRun: number | undefined;
   private testResults: TestResult[] = [];
   private _testSize = 3;
@@ -83,7 +83,9 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
 
   public startTests() {
-    this.currentTestRun = 0;
+    this.clear();
+    console.info('Begin of tests')
+    this.currentTestRun = -1;
     this.testResults = [];
     this.grow(this._testSize);
     this.fillTable();
@@ -94,30 +96,32 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
     this.consistencyChecker.subscribe(this._communication.identifier.uuid, this._spreadsheet.renderTable(), () => {
       if (this.startTime !== undefined) {
         this.updateCurrentResult();
-        if (this.currentTestRun !== undefined && this.currentResult.type !== undefined) {
-          if (this.currentTestRun < this.testRuns) {
+        if (this.currentTestRun !== undefined
+          && this.currentResult.type !== undefined
+          && this.currentTestRun < this.testRuns
+        ) {
+          if(this.currentTestRun > -1){
             this.testResults.push(this.currentResult);
-            switch (this.currentResult.type) {
-              case TestType.CLEAR: {
-                this.currentTestRun++;
-                this.grow(this._testSize);
-                this.fillTable();
-              }
-                break;
-              case TestType.GROW:
-                console.log(`${this.currentTestRun + 1}. test round`);
-                this.clear();
-                break;
+          }
+          switch (this.currentResult.type) {
+            case TestType.CLEAR: {
+              this.currentTestRun++;
+              this.grow(this._testSize);
+              this.fillTable();
             }
+              break;
+            case TestType.GROW:
+              this.clear();
+              break;
           }
         }
-        this.logResults(this.currentResult);
         if (this.currentTestRun === this._testRuns) {
           this.evaluateTest();
         }
       }
     });
   }
+
 
   private evaluateTest() {
     this.currentTestRun = undefined;
@@ -170,7 +174,6 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
       input?.setFocus();
     }
   }
-
 
 
   protected performAction(action: () => T | undefined) {
@@ -316,5 +319,13 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   get spreadsheet(): Spreadsheet<T> {
     return this._spreadsheet;
+  }
+
+  get growQuantity(): number {
+    return this._growQuantity;
+  }
+
+  set growQuantity(value: number) {
+    this._growQuantity = value;
   }
 }

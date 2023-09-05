@@ -1,10 +1,7 @@
 import {Component} from '@angular/core';
 import {SpreadsheetService} from "../../spreadsheet/controller/spreadsheet.service";
 import {BroadcastService} from "../../communication/controller/broadcast.service";
-import {ActionType} from "../../spreadsheet/util/ActionType";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
-import {Address} from "../../spreadsheet/domain/Address";
-import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {TestEnvironment} from "../../test-environment/TestEnvironment";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";

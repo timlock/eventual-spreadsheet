@@ -1,7 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Table} from "../spreadsheet/domain/Table";
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -27,9 +26,8 @@ export class ConsistencyCheckerService<T> {
       }
       this.nodes.set(event.key, event.newValue);
       if (this.reachedConsistentState()) {
-        const currentState = localStorage.getItem(this.id) || '';
-        if (currentState !== this.lastConsistentState) {
-          this.lastConsistentState = currentState
+        if (this.currentState !== this.lastConsistentState) {
+          this.lastConsistentState = this.currentState
           this._isConsistent = true;
           this.callback();
         }

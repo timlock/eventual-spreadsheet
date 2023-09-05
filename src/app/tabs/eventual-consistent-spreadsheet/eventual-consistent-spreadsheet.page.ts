@@ -1,10 +1,8 @@
 import {Component} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
-import {Table} from "../../spreadsheet/domain/Table";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
 import {TestEnvironment} from "../../test-environment/TestEnvironment";
-import {Address} from "../../spreadsheet/domain/Address";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 
 @Component({
