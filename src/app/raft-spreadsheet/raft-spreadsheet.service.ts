@@ -25,8 +25,10 @@ export class RaftSpreadsheetService implements Spreadsheet<Action> {
   private fillTable() {
     const counter = new Identifier('init')
     for (let i = 0; i < 10; i++) {
-      this.addRow(counter.next());
-      this.addColumn(counter.next());
+      const addRow = this.addRow(counter.next());
+      const addColumn = this.addColumn(counter.next());
+      this.applyUpdate(addRow);
+      this.applyUpdate(addColumn);
     }
     this.spreadsheetSolver.reset();
   }
