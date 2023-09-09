@@ -11,7 +11,7 @@ import {OutputCell} from "../../spreadsheet/domain/OutputCell";
   templateUrl: './inconsistent-spreadsheet.page.html',
   styleUrls: ['./inconsistent-spreadsheet.page.scss'],
 })
-export class InconsistentSpreadsheetPage extends TestEnvironment<Action> {
+export class InconsistentSpreadsheetPage extends TestEnvironment<Action>{
   private static readonly TAG: string = 'inconsistent';
 
   constructor(
@@ -20,11 +20,6 @@ export class InconsistentSpreadsheetPage extends TestEnvironment<Action> {
     consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
     super(consistencyChecker, communicationService, spreadsheetService, InconsistentSpreadsheetPage.TAG);
-  }
-
-  public ionViewDidEnter() {
-    this.communicationService.openChannel(InconsistentSpreadsheetPage.TAG, this);
-    this.startTimeMeasuring();
   }
 
   public override onMessage(message: Action) {

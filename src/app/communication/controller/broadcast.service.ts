@@ -6,7 +6,8 @@ import {VersionVectorManager} from "../util/VersionVectorManager";
 import {MessageBuffer} from "../util/MessageBuffer";
 import {VersionVector} from "../domain/VersionVector";
 import {Communication} from "../../test-environment/Communication";
-import {ConsoleHook} from "../../ConsoleHook";
+import * as Y from "yjs";
+
 
 @Injectable({
   providedIn: 'root'
@@ -22,8 +23,9 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalReceivedMessages = 0;
   private _totalSentMessages = 0;
   private _totalBytes = 0;
-  private consoleHook = new ConsoleHook();
-  private _countBytes = true;
+  private _countBytes = false;
+  private _delay = 500;
+  private delayStart = 0;
 
   public openChannel(channelName: string, observer: CommunicationObserver<T>) {
     if (this.channel !== undefined) {
@@ -49,10 +51,12 @@ export class BroadcastService<T> implements Communication<T> {
   }
 
   private postMessage(message: Message<any>) {
+    // console.log(`delay: ${this.delay} actual delay is:`, Date.now() - this.delayStart);
     if (this.channel === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
       return;
     }
+    // console.log('SEND: ',message.payload);
     this._totalSentMessages++;
     if (this.countBytes) {
       this.updateByteCounter(message);
@@ -77,6 +81,7 @@ export class BroadcastService<T> implements Communication<T> {
     }
     if (message.destination === this._identifier.uuid && message.payload !== undefined) {
       this._totalReceivedMessages++;
+      // console.log('RECEIVED: ',message.payload);
       this.observer?.onMessage(message.payload);
     }
   }
@@ -88,8 +93,10 @@ export class BroadcastService<T> implements Communication<T> {
       message.payload = undefined;
       this._totalBytes += new Blob([JSON.stringify(message)]).size;
       message.payload = payload;
-      const size = this.consoleHook.getUpdateSize(payload);
-      this._totalBytes += size;
+      const decoded = Y.decodeUpdate(payload);
+      this._totalBytes += new Blob([JSON.stringify(decoded)]).size;
+      // const size = this.consoleHook.getUpdateSize(payload);
+      // this._totalBytes += size;
     } else {
       const bytes = new Blob([JSON.stringify(message)]).size;
       this._totalBytes += bytes;
@@ -109,12 +116,19 @@ export class BroadcastService<T> implements Communication<T> {
     if (this._isConnected) {
       if (destination === undefined) {
         this._nodes.forEach(dest => {
-          message.destination = dest;
-          this.postMessage(message);
+          this.delayStart = Date.now();
+          setTimeout(() => {
+            message.destination = dest;
+            this.postMessage(message)
+          }, this._delay);
         });
         return;
       }
-      this.postMessage(message);
+      this.delayStart = Date.now();
+      setTimeout(() => {
+        this.postMessage(message);
+      }, this._delay);
+      // this.postMessage(message);
     }
   }
 
@@ -183,5 +197,14 @@ export class BroadcastService<T> implements Communication<T> {
 
   set countBytes(value: boolean) {
     this._countBytes = value;
+  }
+
+
+  get delay(): number {
+    return this._delay;
+  }
+
+  set delay(value: number) {
+    this._delay = value;
   }
 }

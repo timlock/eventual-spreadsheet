@@ -6,7 +6,6 @@ import {Communication} from "./Communication";
 import {TestResult, TestType} from "./TestResult";
 import {Spreadsheet} from "./Spreadsheet";
 
-
 export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private _currentCell: OutputCell | undefined;
   private _input = '';
@@ -16,9 +15,10 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private _growQuantity = 0;
   private modifiedState = false;
   private currentTestRun: number | undefined;
-  private testResults: TestResult[] = [];
+  private clearResults: TestResult[] = [];
+  private growResults: TestResult[] = [];
   private _testSize = 3;
-  private _testRuns = 3;
+  private _testRuns = 10;
   private currentResult: TestResult = TestResult.empty();
   private _measureTime = true;
 
@@ -32,6 +32,11 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
     if (address !== undefined) {
       this.selectCell(address.column, address.row);
     }
+  }
+
+  public ionViewDidEnter() {
+    this._communication.openChannel(this.tag, this);
+    this.startTimeMeasuring();
   }
 
   public addRow() {
@@ -70,9 +75,6 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
     this.insertCell(address, '');
   }
 
-  public handleMessage(message: T) {
-    this._spreadsheet.applyUpdate(message);
-  }
 
   private startStopwatch() {
     if (this.startTime === undefined) {
@@ -85,52 +87,85 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   public startTests() {
     this.clear();
-    console.info('Begin of tests')
     this.currentTestRun = -1;
-    this.testResults = [];
+    this.clearResults = [];
+    this.growResults = [];
     this.grow(this._testSize);
-    this.fillTable();
+    // this.fillTable();
   }
 
 
   public startTimeMeasuring() {
     this.consistencyChecker.subscribe(this._communication.identifier.uuid, this._spreadsheet.renderTable(), () => {
+      // console.log('Consistent', this._communication.countedMessages - this.messageCounterStart)
       if (this.startTime !== undefined) {
         this.updateCurrentResult();
+        if (this.currentTestRun === undefined) {
+          console.info(this.currentResult.toCSVBody());
+        }
         if (this.currentTestRun !== undefined
           && this.currentResult.type !== undefined
           && this.currentTestRun < this.testRuns
         ) {
-          if (this.currentTestRun > -1) {
-            this.testResults.push(this.currentResult);
-          }
           switch (this.currentResult.type) {
             case TestType.CLEAR: {
+              if (this.currentTestRun > -1) {
+                this.clearResults.push(this.currentResult);
+              }
               this.currentTestRun++;
-              this.grow(this._testSize);
-              this.fillTable();
+              if (this.currentTestRun < this.testRuns) {
+                this.grow(this._testSize);
+                // this.fillTable();
+              }
             }
               break;
             case TestType.GROW:
+              if (this.currentTestRun > -1) {
+                this.growResults.push(this.currentResult);
+              }
               this.clear();
               break;
           }
         }
         if (this.currentTestRun === this._testRuns) {
           this.evaluateTest();
+          if (this._measureTime && this.countBytes) {
+            this._measureTime = false;
+            this.startTests();
+          } else if (this._measureTime && !this.countBytes) {
+            this._measureTime = false;
+            this.countBytes = true;
+            this.startTests();
+          }
         }
       }
     });
   }
 
-
   private evaluateTest() {
     this.currentTestRun = undefined;
-    console.info('type, nodes, testSize, testRuns')
-    console.info(`${this.tag},${this._communication.nodes.size + 1},${this.testSize},${this.testRuns}`);
-    console.info('type, time, bytes, messages')
-    this.logResults(...this.testResults);
-    console.info('End of test')
+    console.info(this.createFile(TestType.GROW, this.growResults));
+    console.info(this.createFile(TestType.CLEAR, this.clearResults));
+  }
+
+  private createFile(type: TestType, results: TestResult[]): string {
+    let file = `${this.tag}_${type}_${this._communication.nodes.size + 1}nodes_${this._testSize}testSize`;
+    if (this.measureTime) {
+      file += '_measuredTime';
+    }
+    if (this.countBytes) {
+      file += '_countedBytes';
+    }
+    file += '_';
+    file += this.communication.delay;
+    file += 'delay.csv\n';
+    file += 'time,bytes,messages,nodes,testSize,delay\n';
+    results.sort((a, b) => a.time === 0 ? a.bytes - b.bytes : a.time - b.time);
+    for (const result of results) {
+      file += result.toCSVBody();
+      file += `,${this._communication.nodes.size + 1},${this._testSize},${this._communication.delay}\n`;
+    }
+    return file;
   }
 
   private updateCurrentResult() {
@@ -149,13 +184,6 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
       }
       this.currentResult = new TestResult(bytes, messages, time, type);
     }
-  }
-
-  private logResults(...results: TestResult[]) {
-    results
-      .sort((a, b) => a.compareType(b))
-      .map((result) => result.toCSVBody())
-      .forEach((csv) => console.info(csv));
   }
 
   public selectCell(column: string, row: string) {
@@ -219,9 +247,20 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   }
 
   public grow(quantity: number) {
+    let columns = [];
+    let rows = [];
     for (let i = 0; i < quantity; i++) {
       this.addColumn();
+      columns.push(this._communication.identifier.getLastId());
       this.addRow();
+      rows.push(this._communication.identifier.getLastId());
+    }
+    let counter = 0;
+    for (let column of columns) {
+      for (let row of rows) {
+        counter++;
+        this.insertCell({column: column, row: row}, counter + '');
+      }
     }
   }
 
@@ -236,7 +275,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   }
 
   public onMessage(message: T): void {
-    this.handleMessage(message);
+    this._spreadsheet.applyUpdate(message);
     this.consistencyChecker.update(this._spreadsheet.renderTable());
     if (this._spreadsheet.renderTable().rows.length === 0 || this._spreadsheet.renderTable().columns.length === 0) {
       this._currentCell = undefined;
@@ -345,5 +384,13 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   set measureTime(value: boolean) {
     this._measureTime = value;
+  }
+
+  get delay(): number {
+    return this._communication.delay;
+  }
+
+  set delay(value: number) {
+    this._communication.delay = value;
   }
 }

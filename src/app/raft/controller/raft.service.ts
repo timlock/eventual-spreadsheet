@@ -47,7 +47,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   }
 
   public sendLog(destination: NodeId, log: Log<T>) {
-    if(this._isConnected){
+    if (this._isConnected) {
       this.communicationService.send(log, destination, true);
     }
   }
@@ -150,12 +150,20 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
     return this.communicationService.totalSentMessages;
   }
 
-  get countBytes(): boolean{
+  get countBytes(): boolean {
     return this.communicationService.countBytes;
   }
 
-  set countBytes(value: boolean){
+  set countBytes(value: boolean) {
     this.communicationService.countBytes = value;
+  }
+
+  get delay(): number {
+    return this.communicationService.delay;
+  }
+
+  set delay(value: number) {
+    this.communicationService.delay = value;
   }
 
 }

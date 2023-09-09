@@ -22,10 +22,4 @@ export class EventualConsistentSpreadsheetPage extends TestEnvironment<Uint8Arra
     super(consistencyChecker, communicationService, spreadsheetService, EventualConsistentSpreadsheetPage.TAG);
 
   }
-
-
-  public ionViewDidEnter() {
-    this.communicationService.openChannel(EventualConsistentSpreadsheetPage.TAG, this);
-    this.startTimeMeasuring();
-  }
 }

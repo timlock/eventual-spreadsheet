@@ -9,7 +9,7 @@ export class TestResult {
   }
 
   public toCSVBody(): string {
-    return `${this.type},${this.time},${this.bytes},${this.messages}`
+    return `${this.time},${this.bytes},${this.messages}`
   }
 
   public compareType(other: TestResult): number {

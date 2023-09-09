@@ -1,7 +1,10 @@
 import {Identifier} from "../identifier/Identifier";
+import {CommunicationObserver} from "../communication/controller/CommunicationObserver";
 
 export interface Communication<T> {
   send(update: T): void;
+
+  openChannel(channelName: string, observer: CommunicationObserver<T>): void;
 
   get isConnected(): boolean;
 
@@ -22,4 +25,8 @@ export interface Communication<T> {
   get countBytes(): boolean;
 
   set countBytes(value: boolean);
+
+  get delay(): number;
+
+  set delay(value: number);
 }

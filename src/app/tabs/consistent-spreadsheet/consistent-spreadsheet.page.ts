@@ -25,14 +25,9 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
     consistencyChecker: ConsistencyCheckerService<OutputCell>
   ) {
     super(consistencyChecker, raftService, spreadsheetService, ConsistentSpreadsheetPage.TAG);
-  }
-
-
-  public ionViewDidEnter() {
     this.raftService.openChannel(ConsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
   }
-
 
   public start() {
     this.raftService.start();

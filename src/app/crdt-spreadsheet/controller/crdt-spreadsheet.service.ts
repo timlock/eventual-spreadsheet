@@ -7,14 +7,15 @@ import {Address} from "../../spreadsheet/domain/Address";
 import {Table} from "../../spreadsheet/domain/Table";
 import {SpreadsheetSolver} from "../../spreadsheet/controller/SpreadsheetSolver";
 import {Spreadsheet} from "../../test-environment/Spreadsheet";
+import {CrdtTableNoKeep} from "../domain/CrdtTableNoKeep";
 
 @Injectable({
     providedIn: 'root'
 })
 export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     private table: CrdtTable<InputCell> = new CrdtTable();
+    // private table: CrdtTableNoKeep<InputCell> = new CrdtTableNoKeep();
     private spreadsheetSolver = new SpreadsheetSolver(this.table);
-
 
     public applyUpdate(update: Uint8Array) {
         this.table.applyUpdate(update);
