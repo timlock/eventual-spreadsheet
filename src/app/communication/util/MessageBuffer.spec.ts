@@ -18,8 +18,8 @@ describe('MessageBuffer', () => {
       destination: identifier.next()
     };
     messageBuffer.add(message);
-    expect(message.timestamp).toBeDefined();
-    expect(message.timestamp).toEqual(0);
+    expect(message.logicalTimestamp).toBeDefined();
+    expect(message.logicalTimestamp).toEqual(0);
   });
 
   it('get missing message', () => {

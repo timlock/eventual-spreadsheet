@@ -4,12 +4,13 @@ export class TestResult {
     public readonly bytes: number,
     public readonly messages: number,
     public readonly time: number,
-    public readonly type?: TestType
+    public readonly type?: TestType,
+    public readonly medianDelay?: number
   ) {
   }
 
   public toCSVBody(): string {
-    return `${this.time},${this.bytes},${this.messages}`
+    return `${this.time},${this.bytes},${this.messages},${this.medianDelay}`
   }
 
   public compareType(other: TestResult): number {

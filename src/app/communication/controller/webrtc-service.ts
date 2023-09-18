@@ -1,23 +1,26 @@
 import {Injectable} from '@angular/core';
-import {CommunicationObserver} from "./CommunicationObserver";
-import {Message} from "../domain/Message";
 import {Identifier} from "../../identifier/Identifier";
-import {VectorClockManager} from "../util/VectorClockManager";
+import {CommunicationObserver} from "./CommunicationObserver";
 import {MessageBuffer} from "../util/MessageBuffer";
-import {VectorClock} from "../domain/VectorClock";
-import {Communication} from "../../test-environment/Communication";
+import {VectorClockManager} from "../util/VectorClockManager";
+import {Message} from "../domain/Message";
 import * as Y from "yjs";
-import {ConsoleHook} from "../../ConsoleHook";
+import {VectorClock} from "../domain/VectorClock";
+import {WebRTCPeer} from "./WebRTCPeer";
+import {Communication} from "../../test-environment/Communication";
+
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class BroadcastService<T> implements Communication<T> {
+export class WebrtcService<T> implements Communication<T> {
   private readonly _identifier: Identifier = Identifier.generate();
   private channel: BroadcastChannel | undefined;
   private observer: CommunicationObserver<T> | undefined;
-  private _nodes: Set<string> = new Set();
+  // private _nodes: Set<string> = new Set();
+  private _nodes: Map<string, WebRTCPeer<T>> = new Map();
+  private nodesSet: Set<string> = new Set();
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
   private versionVectorManager: VectorClockManager = new VectorClockManager();
   private _isConnected: boolean = true;
@@ -26,10 +29,10 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalBytes = 0;
   private _countBytes = false;
   private _delay = 0;
-  private consoleHook: ConsoleHook = new ConsoleHook();
+  private delayStart = 0;
 
   public openChannel(channelName: string, observer: CommunicationObserver<T>) {
-    if (this.channel !== undefined) { 
+    if (this.channel !== undefined) {
       this.closeChannel();
     }
     this.observer = observer;
@@ -51,41 +54,50 @@ export class BroadcastService<T> implements Communication<T> {
     this._totalBytes = 0;
   }
 
-  private postMessage(message: Message<any>) {
+  private sendSignalingMessage(message: Message<any>) {
+    console.log('SEND: ', message)
+    // console.log(`delay: ${this.delay} actual delay is:`, Date.now() - this.delayStart);
     if (this.channel === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
       return;
     }
+    // console.log('SEND: ',message.payload);
     this._totalSentMessages++;
     if (this.countBytes) {
       this.updateByteCounter(message);
     }
-    message.timestamp = Date.now();
     this.channel.postMessage(message);
   }
 
   private onMessage = (event: MessageEvent): any => {
+    // if (this.countBytes) {
+    //   this.updateByteCounter(event.data);
+    // }
+    // if (!this._isConnected) {
+    //   return;
+    // }
     const message = event.data as Message<any>;
-    const delay = message.timestamp !== undefined ? Date.now() - message.timestamp : undefined;
-    if (this.countBytes) {
-      this.updateByteCounter(message);
-    }
-    this._totalReceivedMessages++;
-    if (!this._isConnected) {
-      return;
-    }
     this.onNode(message.source);
-    if (message.vectorClock !== undefined) {
-      this.sendMissingMessages(message.source, message.vectorClock);
+    if (message.destination === this.identifier.uuid && typeof message.payload !== undefined) {
+      console.log('RECEIVED: ', message);
+      const peer = this._nodes.get(message.source);
+      if (peer === undefined) {
+        console.error('Peer for :', message.source, ' is undefined');
+        return;
+      }
+      peer.handleMessage(message.payload);
     }
-    if (message.logicalTimestamp !== undefined) {
-      this.versionVectorManager.update(message.source, message.logicalTimestamp);
-    }
-    if (message.destination === this._identifier.uuid && message.payload !== undefined) {
-      setTimeout(() => {
-        this.observer?.onMessage(message.payload, delay);
-      })
-    }
+    // if (message.versionVector !== undefined) {
+    //   this.sendMissingMessages(message.source, message.versionVector);
+    // }
+    // if (message.timestamp !== undefined) {
+    //   this.versionVectorManager.update(message.source, message.timestamp);
+    // }
+    // if (message.destination === this._identifier.uuid && message.payload !== undefined) {
+    //   this._totalReceivedMessages++;
+    //   // console.log('RECEIVED: ',message.payload);
+    //   this.observer?.onMessage(message.payload);
+    // }
   }
 
 
@@ -95,8 +107,8 @@ export class BroadcastService<T> implements Communication<T> {
       message.payload = undefined;
       this._totalBytes += new Blob([JSON.stringify(message)]).size;
       message.payload = payload;
-      const bytes = this.consoleHook.getUpdateSize(payload);
-      this._totalBytes += bytes;
+      const decoded = Y.decodeUpdate(payload);
+      this._totalBytes += new Blob([JSON.stringify(decoded)]).size;
     } else {
       const bytes = new Blob([JSON.stringify(message)]).size;
       this._totalBytes += bytes;
@@ -105,61 +117,68 @@ export class BroadcastService<T> implements Communication<T> {
 
   private sendMissingMessages(destination: string, versionVector: VectorClock) {
     const timestamp = versionVector[this._identifier.uuid];
-    this.messageBuffer.getMissingMessages(destination, timestamp).forEach(message => this.postMessage(message));
+    this.messageBuffer.getMissingMessages(destination, timestamp).forEach(message => this._nodes.get(destination)?.sendData(JSON.stringify(message)));
   }
 
   public send(payload: T, destination?: string, atLeastOnce = true) {
-    let message: Message<T> = {
-      source: this._identifier.uuid,
-      destination: destination,
-      payload: payload
-    };
-    if (atLeastOnce) {
-      message = this.messageBuffer.add(message);
-    }
+    let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
+    // if (atLeastOnce) {
+    //   message = this.messageBuffer.add(message);
+    // }
     if (this._isConnected) {
       if (destination === undefined) {
-        this._nodes.forEach(dest => {
+        this._nodes.forEach((p, dest) => {
+          this.delayStart = Date.now();
           setTimeout(() => {
             message.destination = dest;
-            this.postMessage(message)
+            this._nodes.get(dest)?.sendData(JSON.stringify(message))
           }, this._delay);
         });
         return;
       }
+      this.delayStart = Date.now();
       setTimeout(() => {
-        this.postMessage(message);
+        const peer = this._nodes.get(destination);
+        peer?.sendData(JSON.stringify(message));
       }, this._delay);
     }
   }
 
   public onNode(nodeId: string) {
-    const oldSize = this._nodes.size;
-    this._nodes.add(nodeId);
-    if (this._nodes.size > oldSize) {
+    if (this._nodes.get(nodeId) === undefined) {
       if (this.observer === undefined) {
         console.warn('Observer is undefined');
         return;
       }
+      const peer = new WebRTCPeer<T>(
+        this._identifier.uuid,
+        nodeId,
+        (destination, payload) => {
+          const message: Message<any> = {source: this._identifier.uuid, destination: destination, payload: payload};
+          this.sendSignalingMessage(message)
+        },
+        message => this.observer?.onMessage(message.payload!))
+      this._nodes.set(nodeId, peer);
+      this.nodesSet.add(nodeId);
       this.observer.onNode(nodeId);
       this.messageBuffer.addNode(nodeId);
       this.advertiseSelf();
     }
   }
 
+
   private advertiseSelf() {
     const message: Message<undefined> = {
       source: this._identifier.uuid,
       vectorClock: this.versionVectorManager.vectorClock
     }
-    this.postMessage(message);
+    this.sendSignalingMessage(message);
   }
-
 
   set isConnected(value: boolean) {
     this._isConnected = value;
     if (this._isConnected) {
-      this.messageBuffer.getUnsentMessages().forEach(message => this.postMessage(message));
+      this.messageBuffer.getUnsentMessages().forEach(message => this.sendSignalingMessage(message));
       this.advertiseSelf();
     }
   }
@@ -169,8 +188,12 @@ export class BroadcastService<T> implements Communication<T> {
   }
 
   get nodes(): Set<string> {
-    return this._nodes;
+    return this.nodesSet;
   }
+
+  shareDelay(): void {
+  }
+
 
   get identifier(): Identifier {
     return this._identifier;

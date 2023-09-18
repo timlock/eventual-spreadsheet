@@ -37,7 +37,7 @@ export class RaftNode<T> {
   }
 
   public start() {
-    this.observer.restartElectionTimer();
+    this.timeout();
   }
 
   public handleMessage(message: RaftMessage<T>) {
@@ -98,7 +98,7 @@ export class RaftNode<T> {
     if (request.term < this.serverState.currentTerm
       || !this.serverState.hasLogAtIndex(request.prevLogIndex)
       || request.prevLogTerm !== this.serverState.getLogTerm(request.prevLogIndex)) {
-      this.print('Declined request term: ' + request.term + ' currentTerm: ' + this.serverState.currentTerm + ' request prevLogIndex: ' + request.prevLogIndex + ' current lastLogIndex: '+  this.serverState.lastLogIndex + ' request prevLogTerm: ' + request.prevLogTerm + ' current logTermAt: ' + this.serverState.getLogTerm(request.prevLogIndex));
+      this.print('Declined request term: ' + request.term + ' currentTerm: ' + this.serverState.currentTerm + ' request prevLogIndex: ' + request.prevLogIndex + ' current lastLogIndex: ' + this.serverState.lastLogIndex + ' request prevLogTerm: ' + request.prevLogTerm + ' current logTermAt: ' + this.serverState.getLogTerm(request.prevLogIndex));
       this.appendEntriesResponse(request.leaderId, false);
       return;
     }

@@ -6,7 +6,7 @@ export class MessageBuffer<T> {
   private buffer: Message<T>[] = [];
 
   public add(message: Message<T>): Message<T> {
-    message.timestamp = this.buffer.length;
+    message.logicalTimestamp = this.buffer.length;
     this.buffer.push(message);
     return message;
   }
@@ -24,7 +24,7 @@ export class MessageBuffer<T> {
       source: message.source,
       destination: destination,
       payload: message.payload,
-      timestamp: message.timestamp
+      logicalTimestamp: message.logicalTimestamp
     }
   }
 

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ApplicationRef, Component, NgZone} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
 import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
@@ -15,11 +15,12 @@ export class EventualConsistentSpreadsheetPage extends TestEnvironment<Uint8Arra
 
 
   constructor(
-    private communicationService: BroadcastService<Uint8Array>,
+    communicationService: BroadcastService<Uint8Array>,
     spreadsheetService: CrdtSpreadsheetService,
-    consistencyChecker: ConsistencyCheckerService<OutputCell>
+    consistencyChecker: ConsistencyCheckerService<OutputCell>,
+    applicationRef: ApplicationRef
   ) {
-    super(consistencyChecker, communicationService, spreadsheetService, EventualConsistentSpreadsheetPage.TAG);
+    super(consistencyChecker, communicationService, spreadsheetService, EventualConsistentSpreadsheetPage.TAG, applicationRef);
 
   }
 }

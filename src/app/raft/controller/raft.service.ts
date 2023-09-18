@@ -20,6 +20,8 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   private observer: RaftServiceObserver<T> | undefined;
   private channelName: string = 'raft';
   private _isConnected: boolean = true;
+  private messageDelays: number[] = [];
+  private lastMedianDelay: number | undefined;
 
   constructor(private readonly communicationService: BroadcastService<RaftMessage<T>>) {
     this.timer = new Timer();
@@ -43,6 +45,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   }
 
   public send(message: T) {
+    // console.log('\n\n\nCOMMAND: ', message,'\n\n');
     this.node.command(message);
   }
 
@@ -53,8 +56,23 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   }
 
   public onLog(log: Log<T>): void {
-    this.observer?.onMessage(log.content);
+    const median = this.calculateMedianMessageDelay();
+    this.observer?.onMessage(log.content, median);
     return;
+  }
+
+  private calculateMedianMessageDelay(): number | undefined {
+    if (this.messageDelays.length === 0) {
+      return this.lastMedianDelay;
+    }
+    this.messageDelays.sort((a, b) => a - b);
+    // const median = this.messageDelays[Math.floor(this.messageDelays.length / 2)];
+    const median = this.messageDelays[this.messageDelays.length - Math.floor(((this.messageDelays.length / 10) + 1))];
+    // const median = this.messageDelays[this.messageDelays.length - 1];
+    // console.log('Median: ', median);
+    this.messageDelays = [];
+    this.lastMedianDelay = median;
+    return median;
   }
 
   public sendRaftMessage(destination: NodeId, raftMessage: RaftMessage<T>): void {
@@ -63,7 +81,10 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
     }
   }
 
-  public onMessage(message: RaftMessage<T>): void {
+  public onMessage(message: RaftMessage<T>, delay?: number): void {
+    if (delay !== undefined) {
+      this.messageDelays.push(delay);
+    }
     if (this._isConnected) {
       this.node.handleMessage(message);
     }
@@ -105,6 +126,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   public canBeStarted(): boolean {
     return this.isConnected && !this.isActive() && this.nodes.size > 1;
   }
+
 
   get nodes(): Set<string> {
     return this.node.cluster;

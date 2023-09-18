@@ -7,15 +7,14 @@ import {MessageBuffer} from "../util/MessageBuffer";
 import {VectorClock} from "../domain/VectorClock";
 import {Communication} from "../../test-environment/Communication";
 import * as Y from "yjs";
-import {ConsoleHook} from "../../ConsoleHook";
+
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class BroadcastService<T> implements Communication<T> {
+export class WebSocketService<T> implements Communication<T> {
   private readonly _identifier: Identifier = Identifier.generate();
-  private channel: BroadcastChannel | undefined;
   private observer: CommunicationObserver<T> | undefined;
   private _nodes: Set<string> = new Set();
   private messageBuffer: MessageBuffer<T> = new MessageBuffer<T>();
@@ -26,23 +25,24 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalBytes = 0;
   private _countBytes = false;
   private _delay = 0;
-  private consoleHook: ConsoleHook = new ConsoleHook();
+  private delayStart = 0;
+  private websocket ?: WebSocket;
 
   public openChannel(channelName: string, observer: CommunicationObserver<T>) {
-    if (this.channel !== undefined) { 
+    if (this.websocket !== undefined){
       this.closeChannel();
     }
     this.observer = observer;
-    this.channel = new BroadcastChannel(channelName);
-    this.channel.onmessage = this.onMessage;
-    this.advertiseSelf();
+    this.websocket = new WebSocket('ws://localhost:8025/ws/server')
+    this.websocket.onopen = ev => this.advertiseSelf();
+    this.websocket.onmessage = this.onMessage;
   }
 
   public closeChannel() {
-    if (this.channel !== undefined) {
-      this.channel.close();
+    if (this.websocket !== undefined) {
+      this.websocket.close();
     }
-    this.channel = undefined;
+    this.websocket = undefined;
     this._nodes.clear();
     this.messageBuffer = new MessageBuffer<T>();
     this.versionVectorManager = new VectorClockManager();
@@ -52,7 +52,8 @@ export class BroadcastService<T> implements Communication<T> {
   }
 
   private postMessage(message: Message<any>) {
-    if (this.channel === undefined || this.observer === undefined) {
+    // console.log(`delay: ${this.delay} actual delay is:`, Date.now() - this.delayStart);
+    if (this.websocket === undefined || this.observer === undefined) {
       console.warn('Cant post message, channel is undefined');
       return;
     }
@@ -60,20 +61,18 @@ export class BroadcastService<T> implements Communication<T> {
     if (this.countBytes) {
       this.updateByteCounter(message);
     }
-    message.timestamp = Date.now();
-    this.channel.postMessage(message);
+    const msg = JSON.stringify(message);
+    this.websocket!.send(msg);
   }
 
   private onMessage = (event: MessageEvent): any => {
-    const message = event.data as Message<any>;
-    const delay = message.timestamp !== undefined ? Date.now() - message.timestamp : undefined;
     if (this.countBytes) {
-      this.updateByteCounter(message);
+      this.updateByteCounter(event.data);
     }
-    this._totalReceivedMessages++;
     if (!this._isConnected) {
       return;
     }
+    const message = JSON.parse(event.data) as Message<any>;
     this.onNode(message.source);
     if (message.vectorClock !== undefined) {
       this.sendMissingMessages(message.source, message.vectorClock);
@@ -81,10 +80,9 @@ export class BroadcastService<T> implements Communication<T> {
     if (message.logicalTimestamp !== undefined) {
       this.versionVectorManager.update(message.source, message.logicalTimestamp);
     }
-    if (message.destination === this._identifier.uuid && message.payload !== undefined) {
-      setTimeout(() => {
-        this.observer?.onMessage(message.payload, delay);
-      })
+    if (message.payload !== undefined) {
+      this._totalReceivedMessages++;
+      this.observer?.onMessage(message.payload);
     }
   }
 
@@ -95,8 +93,8 @@ export class BroadcastService<T> implements Communication<T> {
       message.payload = undefined;
       this._totalBytes += new Blob([JSON.stringify(message)]).size;
       message.payload = payload;
-      const bytes = this.consoleHook.getUpdateSize(payload);
-      this._totalBytes += bytes;
+      const decoded = Y.decodeUpdate(payload);
+      this._totalBytes += new Blob([JSON.stringify(decoded)]).size;
     } else {
       const bytes = new Blob([JSON.stringify(message)]).size;
       this._totalBytes += bytes;
@@ -109,24 +107,22 @@ export class BroadcastService<T> implements Communication<T> {
   }
 
   public send(payload: T, destination?: string, atLeastOnce = true) {
-    let message: Message<T> = {
-      source: this._identifier.uuid,
-      destination: destination,
-      payload: payload
-    };
+    let message: Message<T> = {source: this._identifier.uuid, destination: destination, payload: payload};
     if (atLeastOnce) {
       message = this.messageBuffer.add(message);
     }
     if (this._isConnected) {
-      if (destination === undefined) {
-        this._nodes.forEach(dest => {
-          setTimeout(() => {
-            message.destination = dest;
-            this.postMessage(message)
-          }, this._delay);
-        });
-        return;
-      }
+      // if (destination === undefined) {
+      //   this._nodes.forEach(dest => {
+      //     this.delayStart = Date.now();
+      //     setTimeout(() => {
+      //       message.destination = dest;
+      //       this.postMessage(message)
+      //     }, this._delay);
+      //   });
+      //   return;
+      // }
+      this.delayStart = Date.now();
       setTimeout(() => {
         this.postMessage(message);
       }, this._delay);
@@ -155,13 +151,15 @@ export class BroadcastService<T> implements Communication<T> {
     this.postMessage(message);
   }
 
-
   set isConnected(value: boolean) {
     this._isConnected = value;
     if (this._isConnected) {
       this.messageBuffer.getUnsentMessages().forEach(message => this.postMessage(message));
       this.advertiseSelf();
     }
+  }
+
+  shareDelay(): void {
   }
 
   get isConnected(): boolean {

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {ApplicationRef, Component, NgZone} from '@angular/core';
 import {RaftService} from "../../raft/controller/raft.service";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
@@ -22,9 +22,10 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
     private raftService: RaftService<Action>,
     private alertController: AlertController,
     spreadsheetService: RaftSpreadsheetService,
-    consistencyChecker: ConsistencyCheckerService<OutputCell>
+    consistencyChecker: ConsistencyCheckerService<OutputCell>,
+    applicationRef: ApplicationRef
   ) {
-    super(consistencyChecker, raftService, spreadsheetService, ConsistentSpreadsheetPage.TAG);
+    super(consistencyChecker, raftService, spreadsheetService, ConsistentSpreadsheetPage.TAG, applicationRef);
     this.raftService.openChannel(ConsistentSpreadsheetPage.TAG, this);
     this.startTimeMeasuring();
   }
@@ -104,12 +105,12 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
   }
 
 
-  public override onMessage(message: Action) {
+  public override onMessage(message: Action, delay?: number) {
     if (!isPayload(message)) {
       console.warn('Invalid message', message);
       return;
     }
-    super.onMessage(message);
+    super.onMessage(message, delay);
   }
 
   public onStateChange(state: RaftMetaData) {

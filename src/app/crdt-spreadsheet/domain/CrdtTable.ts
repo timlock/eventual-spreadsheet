@@ -8,8 +8,8 @@ export class CrdtTable<T> implements Solvable<T> {
   private readonly _cells: Y.Map<T> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
-  private readonly _keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
-  private readonly _keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
+  private readonly keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
+  private readonly keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
   private cachedRows: string[] = [];
   private cachedColumns: string[] = [];
   private static readonly UPDATE_V2: string = 'updateV2';
@@ -38,8 +38,8 @@ export class CrdtTable<T> implements Solvable<T> {
     } else {
       Y.applyUpdate(this.ydoc, update, this);
     }
-    this.cachedRows = this._rows.toArray().filter(row => this._keepRows.get(row) !== undefined);
-    this.cachedColumns = this._columns.toArray().filter(row => this._keepColumns.get(row) !== undefined);
+    this.cachedRows = this._rows.toArray().filter(row => this.keepRows.get(row) !== undefined);
+    this.cachedColumns = this._columns.toArray().filter(row => this.keepColumns.get(row) !== undefined);
   }
 
   public encodeStateAsUpdate(encodedStateVector?: Uint8Array): Uint8Array | undefined {
@@ -52,7 +52,7 @@ export class CrdtTable<T> implements Solvable<T> {
   public addRow(id: string): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._rows.push([id]);
-      this._keepRows.set(id, this.ydoc.clientID);
+      this.keepRows.set(id, this.ydoc.clientID);
       this.cachedRows.push(id);
     })
   }
@@ -65,7 +65,7 @@ export class CrdtTable<T> implements Solvable<T> {
     }
     return this.catchUpdate(() => {
       this._rows.insert(index, [id]);
-      this._keepRows.set(id, this.ydoc.clientID);
+      this.keepRows.set(id, this.ydoc.clientID);
       this.cachedRows.splice(index, 0, id);
     });
   }
@@ -77,9 +77,9 @@ export class CrdtTable<T> implements Solvable<T> {
       console.log("Failed to remove id:" + id + " in rows: " + this.rows);
       return undefined;
     }
-    if (this._keepRows.has(id)) {
+    if (this.keepRows.has(id)) {
       return this.catchUpdate(() => {
-        this._keepRows.delete(id);
+        this.keepRows.delete(id);
         this.cachedRows.splice(index, 1);
       });
     }
@@ -89,7 +89,7 @@ export class CrdtTable<T> implements Solvable<T> {
   public addColumn(id: string): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._columns.push([id]);
-      this._keepColumns.set(id, this.ydoc.clientID);
+      this.keepColumns.set(id, this.ydoc.clientID);
       this.cachedColumns.push(id);
     });
   }
@@ -103,7 +103,7 @@ export class CrdtTable<T> implements Solvable<T> {
     }
     return this.catchUpdate(() => {
       this._columns.insert(index, [id]);
-      this._keepColumns.set(id, this.ydoc.clientID);
+      this.keepColumns.set(id, this.ydoc.clientID);
       this.cachedColumns.splice(index, 0, id);
     });
   }
@@ -114,9 +114,9 @@ export class CrdtTable<T> implements Solvable<T> {
       console.log("Failed to remove id:" + id + " in columns: " + this.columns);
       return;
     }
-    if (this._keepColumns.has(id)) {
+    if (this.keepColumns.has(id)) {
       return this.catchUpdate(() => {
-        this._keepColumns.delete(id);
+        this.keepColumns.delete(id);
         this.cachedColumns.splice(index,1);
       });
     }
@@ -137,8 +137,8 @@ export class CrdtTable<T> implements Solvable<T> {
   public set(address: Address, value: T): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._cells.set(JSON.stringify(address), value);
-      this._keepRows.set(address.row, this.ydoc.clientID);
-      this._keepColumns.set(address.column, this.ydoc.clientID);
+      this.keepRows.set(address.row, this.ydoc.clientID);
+      this.keepColumns.set(address.column, this.ydoc.clientID);
     });
   }
 
@@ -168,23 +168,15 @@ export class CrdtTable<T> implements Solvable<T> {
   }
 
   get rows(): string[] {
-    // return this._rows.toArray().filter(row => this._keepRows.get(row) !== undefined);
+    // return this._rows.toArray().filter(row => this.keepRows.get(row) !== undefined);
     return this.cachedRows
   }
 
   get columns(): string[] {
-    // return this._columns.toArray().filter(row => this._keepColumns.get(row) !== undefined);
+    // return this._columns.toArray().filter(row => this.keepColumns.get(row) !== undefined);
     return this.cachedColumns;
   }
 
-
-  get keepRows(): Y.Map<number> {
-    return this._keepRows;
-  }
-
-  get keepColumns(): Y.Map<number> {
-    return this._keepColumns;
-  }
 
   get yjsId(): number {
     return this.ydoc.clientID;
