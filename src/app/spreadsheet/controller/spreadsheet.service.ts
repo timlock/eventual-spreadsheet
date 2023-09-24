@@ -1,104 +1,130 @@
 import {Injectable} from '@angular/core';
-import {CellDto} from "./CellDto";
+import {OutputCell} from "../domain/OutputCell";
 import {CellParser} from "../util/CellParser";
-import {Cell} from "../domain/Cell";
+import {InputCell} from "../domain/InputCell";
 import {Address} from "../domain/Address";
 import {Table} from "../domain/Table";
 import {SpreadsheetSolver} from "./SpreadsheetSolver";
+import {Identifier} from "../../identifier/Identifier";
+import {Action} from "../util/Action";
+import {PayloadFactory} from "../util/PayloadFactory";
+import {Spreadsheet} from "../../test-environment/Spreadsheet";
+import {ActionType} from "../util/ActionType";
 
 @Injectable({
   providedIn: 'root'
 })
-export class SpreadsheetService {
-  private table: Table<Cell> = new Table();
-  private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.table);
+export class SpreadsheetService implements Spreadsheet<Action>{
+  private inputTable: Table<InputCell> = new Table();
+  private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.inputTable);
 
   public constructor() {
     this.fillTable();
   }
 
   private fillTable() {
-    let counter = 0;
-    let tag = 'init';
+    const counter = new Identifier('init')
     for (let i = 0; i < 10; i++) {
-      this.addRow(tag + counter++);
-      this.addColumn(tag + counter++);
+      this.addRow(counter.next());
+      this.addColumn(counter.next());
     }
     this.spreadsheetSolver.reset();
   }
 
 
-  public addRow(id: string) {
-    this.table.addRow(id);
+  public addRow(id: string): Action {
+    this.inputTable.addRow(id);
     this.spreadsheetSolver.reset();
+    return PayloadFactory.addRow(id);
+
   }
 
-  public insertRow(id: string, row: string) {
-    this.table.insertRow(id, row);
+  public insertRow(id: string, row: string): Action {
+    this.inputTable.insertRow(id, row);
     this.spreadsheetSolver.reset();
+    return PayloadFactory.insertRow(id, row);
   }
 
-  public deleteRow(id: string) {
-    this.table.deleteRow(id);
+  public deleteRow(id: string): Action {
+    this.inputTable.deleteRow(id);
     this.spreadsheetSolver.reset();
+    return PayloadFactory.deleteRow(id);
   }
 
-  public addColumn(id: string) {
-    this.table.addColumn(id);
+  public addColumn(id: string): Action {
+    this.inputTable.addColumn(id);
     this.spreadsheetSolver.reset();
+    return PayloadFactory.addColumn(id);
   }
 
-  public insertColumn(id: string, column: string) {
-    this.table.insertColumn(id, column);
+  public insertColumn(id: string, column: string): Action {
+    this.inputTable.insertColumn(id, column);
     this.spreadsheetSolver.reset();
+    return PayloadFactory.insertColumn(id, column);
   }
 
-  public deleteColumn(id: string) {
-    this.table.deleteColumn(id);
+  public deleteColumn(id: string): Action {
+    this.inputTable.deleteColumn(id);
     this.spreadsheetSolver.reset();
+    return PayloadFactory.deleteColumn(id);
   }
 
-  public insertCellById(address: Address, input: string) {
+  public set(address: Address, input: string): Action {
     if (input.trim().length === 0) {
       this.deleteCell(address);
     } else {
-      let cell = CellParser.parseCell(input);
-      this.table.set(address, cell);
+      const cell = CellParser.parseCell(input);
+      this.inputTable.set(address, cell);
     }
     this.spreadsheetSolver.reset();
+    return PayloadFactory.insertCell(address, input);
   }
 
-  public deleteCell(address: Address) {
-    this.table.deleteValue(address);
+  private deleteCell(address: Address) {
+    this.inputTable.deleteValue(address);
     this.spreadsheetSolver.reset();
   }
 
-  public getTable(): Table<Cell> {
+  public applyUpdate(update: Action) {
+    switch (update.action) {
+      case ActionType.INSERT_CELL:
+        const address: Address = {column: update.column!, row: update.row!};
+        this.set(address, update.input!);
+        break;
+      case ActionType.ADD_ROW:
+        this.addRow(update.input!);
+        break;
+      case ActionType.INSERT_ROW:
+        this.insertRow(update.input!, update.row!)
+        break;
+      case ActionType.ADD_COLUMN:
+        this.addColumn(update.input!);
+        break;
+      case ActionType.INSERT_COLUMN:
+        this.insertColumn(update.input!, update.column!);
+        break;
+      case ActionType.DELETE_COLUMN:
+        this.deleteColumn(update.column!);
+        break;
+      case ActionType.DELETE_ROW:
+        this.deleteRow(update.row!)
+        break;
+      default:
+        console.warn('Cant perform update for update: ', update);
+        break;
+    }
+  }
+
+  public renderTable(): Table<OutputCell> {
     return this.spreadsheetSolver.solve();
   }
 
-  public getCellById(address: Address): CellDto {
-    let cell = this.getTable().get(address);
-    let colIndex = this.columns.indexOf(address.column) + 1;
-    let rowIndex = this.rows.indexOf(address.row) + 1;
-    if (cell === undefined) {
-      return new CellDto(address, colIndex, rowIndex, '');
-    }
-    return new CellDto(address, colIndex, rowIndex, cell.rawInput);
-  }
-
-  public getCellByIndex(columnIndex: number, rowIndex: number): CellDto {
-    let column = this.columns[columnIndex - 1];
-    let row = this.rows[rowIndex - 1];
-    return this.getCellById({column: column, row: row});
-  }
-
   get rows(): string[] {
-    return this.table.rows;
+    return this.inputTable.rows;
   }
 
   get columns(): string[] {
-    return this.table.columns;
+    return this.inputTable.columns;
   }
 
 }

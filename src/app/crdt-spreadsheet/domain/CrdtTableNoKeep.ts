@@ -3,29 +3,25 @@ import {Address} from "../../spreadsheet/domain/Address";
 import {Solvable} from "../../spreadsheet/controller/Solvable";
 
 
-export class CrdtTable<T> implements Solvable<T> {
+export class CrdtTableNoKeep<T> implements Solvable<T> {
   private readonly ydoc = new Y.Doc();
   private readonly _cells: Y.Map<T> = this.ydoc.getMap('cells');
   private readonly _columns: Y.Array<string> = this.ydoc.getArray('columns');
   private readonly _rows: Y.Array<string> = this.ydoc.getArray('rows');
-  private readonly keepRows: Y.Map<number> = this.ydoc.getMap('keepRows');
-  private readonly keepColumns: Y.Map<number> = this.ydoc.getMap('keepColumns');
-  private cachedRows: string[] = [];
-  private cachedColumns: string[] = [];
   private static readonly UPDATE_V2: string = 'updateV2';
   private static readonly UPDATE_V1: string = 'update';
-  private static readonly UPDATE_MODE = CrdtTable.UPDATE_V1;
+  private static readonly UPDATE_MODE = CrdtTableNoKeep.UPDATE_V1;
 
 
   private catchUpdate(action: () => void): Uint8Array | undefined {
     const updates: Uint8Array[] = [];
-    this.ydoc.on(CrdtTable.UPDATE_MODE, (update: Uint8Array) => {
+    this.ydoc.on(CrdtTableNoKeep.UPDATE_MODE, (update: Uint8Array) => {
       updates.push(update);
     });
     action();
-    this.ydoc.off(CrdtTable.UPDATE_MODE, () => {
+    this.ydoc.off(CrdtTableNoKeep.UPDATE_MODE, () => {
     });
-    const merged = CrdtTable.UPDATE_MODE === CrdtTable.UPDATE_V2 ? Y.mergeUpdatesV2(updates) : Y.mergeUpdates(updates)
+    const merged = CrdtTableNoKeep.UPDATE_MODE === CrdtTableNoKeep.UPDATE_V2 ? Y.mergeUpdatesV2(updates) : Y.mergeUpdates(updates)
     if (merged.length === 0) {
       return undefined;
     }
@@ -33,17 +29,15 @@ export class CrdtTable<T> implements Solvable<T> {
   }
 
   public applyUpdate(update: Uint8Array) {
-    if (CrdtTable.UPDATE_MODE === CrdtTable.UPDATE_V2) {
+    if (CrdtTableNoKeep.UPDATE_MODE === CrdtTableNoKeep.UPDATE_V2) {
       Y.applyUpdateV2(this.ydoc, update, this);
     } else {
       Y.applyUpdate(this.ydoc, update, this);
     }
-    this.cachedRows = this._rows.toArray().filter(row => this.keepRows.get(row) !== undefined);
-    this.cachedColumns = this._columns.toArray().filter(row => this.keepColumns.get(row) !== undefined);
   }
 
   public encodeStateAsUpdate(encodedStateVector?: Uint8Array): Uint8Array | undefined {
-    if (CrdtTable.UPDATE_MODE === CrdtTable.UPDATE_V2) {
+    if (CrdtTableNoKeep.UPDATE_MODE === CrdtTableNoKeep.UPDATE_V2) {
       return Y.encodeStateAsUpdateV2(this.ydoc, encodedStateVector);
     }
     return Y.encodeStateAsUpdate(this.ydoc, encodedStateVector);
@@ -52,8 +46,6 @@ export class CrdtTable<T> implements Solvable<T> {
   public addRow(id: string): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._rows.push([id]);
-      this.keepRows.set(id, this.ydoc.clientID);
-      this.cachedRows.push(id);
     })
   }
 
@@ -65,8 +57,6 @@ export class CrdtTable<T> implements Solvable<T> {
     }
     return this.catchUpdate(() => {
       this._rows.insert(index, [id]);
-      this.keepRows.set(id, this.ydoc.clientID);
-      this.cachedRows.splice(index, 0, id);
     });
   }
 
@@ -77,20 +67,14 @@ export class CrdtTable<T> implements Solvable<T> {
       console.log("Failed to remove id:" + id + " in rows: " + this.rows);
       return undefined;
     }
-    if (this.keepRows.has(id)) {
-      return this.catchUpdate(() => {
-        this.keepRows.delete(id);
-        this.cachedRows.splice(index, 1);
-      });
-    }
-    return undefined;
+    return this.catchUpdate(() => {
+      this._rows.delete(index);
+    });
   }
 
   public addColumn(id: string): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._columns.push([id]);
-      this.keepColumns.set(id, this.ydoc.clientID);
-      this.cachedColumns.push(id);
     });
   }
 
@@ -103,8 +87,6 @@ export class CrdtTable<T> implements Solvable<T> {
     }
     return this.catchUpdate(() => {
       this._columns.insert(index, [id]);
-      this.keepColumns.set(id, this.ydoc.clientID);
-      this.cachedColumns.splice(index, 0, id);
     });
   }
 
@@ -114,13 +96,9 @@ export class CrdtTable<T> implements Solvable<T> {
       console.log("Failed to remove id:" + id + " in columns: " + this.columns);
       return;
     }
-    if (this.keepColumns.has(id)) {
-      return this.catchUpdate(() => {
-        this.keepColumns.delete(id);
-        this.cachedColumns.splice(index,1);
-      });
-    }
-    return undefined;
+    return this.catchUpdate(() => {
+      this._columns.delete(index);
+    });
   }
 
 
@@ -137,8 +115,6 @@ export class CrdtTable<T> implements Solvable<T> {
   public set(address: Address, value: T): Uint8Array | undefined {
     return this.catchUpdate(() => {
       this._cells.set(JSON.stringify(address), value);
-      this.keepRows.set(address.row, this.ydoc.clientID);
-      this.keepColumns.set(address.column, this.ydoc.clientID);
     });
   }
 
@@ -168,13 +144,11 @@ export class CrdtTable<T> implements Solvable<T> {
   }
 
   get rows(): string[] {
-    // return this._rows.toArray().filter(row => this.keepRows.get(row) !== undefined);
-    return this.cachedRows
+    return this._rows.toArray();
   }
 
   get columns(): string[] {
-    // return this._columns.toArray().filter(row => this.keepColumns.get(row) !== undefined);
-    return this.cachedColumns;
+    return this._columns.toArray();
   }
 
 

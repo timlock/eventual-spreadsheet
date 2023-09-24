@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { RaftService } from './raft.service';
 
 describe('RaftService', () => {
-  let service: RaftService;
+  let service: RaftService<string>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});

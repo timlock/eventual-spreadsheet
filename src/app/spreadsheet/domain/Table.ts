@@ -1,40 +1,56 @@
 import {Address} from "./Address";
-import {Spreadsheet} from "../controller/Spreadsheet";
+import {Solvable} from "../controller/Solvable";
 
-export class Table<T> implements Spreadsheet<T> {
+export class Table<T> implements Solvable<T> {
   private readonly _rows: string[] = [];
   private readonly _columns: string[] = [];
-  private readonly _cells: Map<string, Map<string, T>> = new Map();
+  private readonly _cells: Map<string, T> = new Map();
 
   public addRow(id: string) {
+    if(this._rows.indexOf(id) !== -1){
+      console.warn(`Can't add row twice ${id}`)
+      return;
+    }
     this._rows.push(id);
   }
 
   public insertRow(id: string, row: string) {
-    let index = this._rows.indexOf(row);
-    if (index == -1) {
-      console.log("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
+    if(this._rows.indexOf(id) !== -1){
+      console.warn(`Can't insert row twice ${id}`)
+      return;
+    }
+    const index = this._rows.indexOf(row);
+    if (index === -1) {
+      console.warn("Failed to insert id:" + id + " before id: " + row + " in rows: " + this._rows);
       return;
     }
     this._rows.splice(index, 0, id);
   }
 
   public deleteRow(id: string) {
-    let index = this._rows.indexOf(id);
-    if (index == -1) {
-      console.log("Failed to remove id:" + id + " in rows: " + this._rows);
+    const index = this._rows.indexOf(id);
+    if (index === -1) {
+      console.warn("Failed to remove id:" + id + " in rows: " + this._rows);
       return;
     }
     this._rows.splice(index, 1);
   }
 
   public addColumn(id: string) {
+    if(this._columns.indexOf(id) !== -1){
+      console.warn(`Can't add column twice ${id}`)
+      return;
+    }
     this._columns.push(id);
   }
 
   public insertColumn(id: string, column: string) {
-    let index = this._columns.indexOf(column);
-    if (index == -1) {
+    if(this._columns.indexOf(id) !== -1){
+      console.warn(`Can't insert column twice ${id}`)
+      return;
+    }
+    const index = this._columns.indexOf(column);
+    if (index === -1) {
       console.log("Failed to insert id:" + id + " before id: " + column + " in columns: " + this._columns);
       return;
     }
@@ -42,8 +58,8 @@ export class Table<T> implements Spreadsheet<T> {
   }
 
   public deleteColumn(id: string) {
-    let index = this._columns.indexOf(id);
-    if (index == -1) {
+    const index = this._columns.indexOf(id);
+    if (index === -1) {
       console.log("Failed to remove id:" + id + " in columns: " + this._columns);
       return;
     }
@@ -52,42 +68,60 @@ export class Table<T> implements Spreadsheet<T> {
 
 
   public deleteValue(address: Address) {
-    this.cells.get(address.row)?.delete(address.column);
+    this._cells.delete(JSON.stringify(address));
   }
 
   public get(address: Address): T | undefined {
-    return this.cells.get(address.row)?.get(address.column);
+    return this._cells.get(JSON.stringify(address));
   }
+
 
   public set(address: Address, value: T) {
-    let row = this.cells.get(address.row) || new Map();
-    row.set(address.column, value);
-    this.cells.set(address.row, row);
+    this._cells.set(JSON.stringify(address), value);
   }
 
-  public getCellRange(range: [Address, Address]): T[] {
-    return this.getAddressRange(range)
-      .filter(a => this.cells.get(a.row)?.get(a.column) != undefined)
-      .map(a => this.cells.get(a.row)!.get(a.column)!);
+  public getCellRange(begin: Address, end: Address): T[] {
+    return this.getAddressRange(begin, end)
+      .filter(a => this.get(a) != undefined)
+      .map(a => this.get(a)!);
   }
 
-  public getAddressRange(range: [Address, Address]): Address[] {
-    let beginCol = this._columns.indexOf(range[0].column);
-    let beginRow = this._rows.indexOf(range[0].row);
-    let endCol = this._columns.indexOf(range[1].column);
-    let endRow = this._rows.indexOf(range[1].row);
-    if (beginCol == -1 || beginRow == -1 || endCol == -1 || endRow == -1) {
+  public getAddressRange(begin: Address, end: Address): Address[] {
+    const beginCol = this._columns.indexOf(begin.column);
+    const beginRow = this._rows.indexOf(begin.row);
+    const endCol = this._columns.indexOf(end.column);
+    const endRow = this._rows.indexOf(end.row);
+    if (beginCol === -1 || beginRow === -1 || endCol === -1 || endRow === -1) {
       return [];
     }
-    let rowIds = this._rows.slice(beginRow, endRow + 1);
-    let colIds = this._columns.slice(beginCol, endCol + 1);
-    let result: Address[] = [];
+    const rowIds = this._rows.slice(beginRow, endRow + 1);
+    const colIds = this._columns.slice(beginCol, endCol + 1);
+    const result: Address[] = [];
     for (const r of rowIds) {
       for (const c of colIds) {
         result.push({column: c, row: r});
       }
     }
     return result;
+  }
+
+  public getAddressByIndex(columnIndex: number, rowIndex: number): Address | undefined {
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
+    if (column === undefined || row === undefined) {
+      return undefined;
+    }
+    return {column: column, row: row};
+  }
+
+  public getIndexByAddress(address: Address): [number,number] | undefined{
+    return [this.columns.indexOf(address.column) + 1, this.rows.indexOf(address.row) + 1];
+  }
+
+  public getCellByIndex(columnIndex: number, rowIndex: number): T | undefined {
+    const column = this.columns[columnIndex];
+    const row = this.rows[rowIndex];
+    return this.get({column: column, row: row});
   }
 
   get rows(): string[] {
@@ -98,13 +132,10 @@ export class Table<T> implements Spreadsheet<T> {
     return this._columns;
   }
 
-  get cells(): Map<string, Map<string, T>> {
+
+  get cells(): Map<string, T> {
     return this._cells;
   }
 
-  public equals(other: Table<T>): boolean {
-    return JSON.stringify(this._columns) === JSON.stringify(other._columns)
-      && JSON.stringify(this._rows) === JSON.stringify(other._rows)
-      && JSON.stringify(this._cells) === JSON.stringify(other._cells)
-  }
+
 }

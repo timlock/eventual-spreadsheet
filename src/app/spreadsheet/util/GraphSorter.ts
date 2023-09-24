@@ -17,9 +17,9 @@ export class GraphSorter {
   }
 
   public sort(): Address[][] {
-    let undiscovered = Array.from(this.vertices.values());
+    const undiscovered = Array.from(this.vertices.values());
     while (undiscovered.length > 0) {
-      let current = undiscovered.pop()!;
+      const current = undiscovered.pop()!;
       this.visit(current);
     }
     return this.sortedVertices;
@@ -35,13 +35,13 @@ export class GraphSorter {
     }
     vertices.visited = true;
     for (const address of vertices.neighbours) {
-      let neighbour = this.vertices.get(address.column + '|' + address.row);
+      const neighbour = this.vertices.get(address.column + '|' + address.row);
       if(neighbour != undefined){
         this.visit(neighbour);
       }
     }
     vertices.discovered = true;
-    let currentComponent = this.sortedVertices.pop() ||[];
+    const currentComponent = this.sortedVertices.pop() ||[];
     currentComponent.push(vertices.address);
     this.sortedVertices.push(currentComponent);
   }

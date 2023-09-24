@@ -6,7 +6,7 @@ export class MessageBuffer<T> {
   private buffer: Message<T>[] = [];
 
   public add(message: Message<T>): Message<T> {
-    message.timestamp = this.buffer.length;
+    message.logicalTimestamp = this.buffer.length;
     this.buffer.push(message);
     return message;
   }
@@ -24,12 +24,12 @@ export class MessageBuffer<T> {
       source: message.source,
       destination: destination,
       payload: message.payload,
-      timestamp: message.timestamp
+      logicalTimestamp: message.logicalTimestamp
     }
   }
 
   public getUnsentMessages(): Message<T>[] {
-    let result = Array.from(this.records).flatMap(record => this.getMissingMessages(record[0], record[1]));
+    const result = Array.from(this.records).flatMap(record => this.getMissingMessages(record[0], record[1]));
     for (const record of this.records) {
       this.records.set(record[0], this.buffer.length);
     }

@@ -1,4 +1,4 @@
 export interface Address {
-  column: string;
-  row: string;
+  readonly column: string;
+  readonly row: string;
 }

@@ -1,11 +1,11 @@
 import {RaftMessage, Term} from "../Types";
 
-export interface Log {
-  content: any;
+export interface Log<T> {
+  content: T;
   term: Term;
 }
 
-export function isLog(message: RaftMessage): message is Log {
+export function isLog<T>(message: RaftMessage<T>): message is Log<T> {
   return (
     typeof message === 'object' &&
     'content' in message &&

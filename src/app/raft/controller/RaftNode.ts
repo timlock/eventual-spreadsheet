@@ -20,26 +20,27 @@ import {RaftNodeObserver} from "./RaftNodeObserver";
 import {RaftMetaData} from "../util/RaftMetaData";
 
 
-export class RaftNode {
+export class RaftNode<T> {
   private role: Leader | Candidate | Follower = new Follower();
-  private serverState: ServerState;
+  private serverState: ServerState<T>;
   private _cluster: Set<NodeId> = new Set();
   private commandBuffer: any[] = [];
 
 
   constructor(
     private readonly _nodeId: NodeId,
-    private readonly observer: RaftNodeObserver,
-    private debug = false, logs: Log[] = []
+    private readonly observer: RaftNodeObserver<T>,
+    private debug = false,
+    logs: Log<T>[] = []
   ) {
     this.serverState = new ServerState(logs);
   }
 
   public start() {
-    this.observer.restartElectionTimer();
+    this.timeout();
   }
 
-  public handleMessage(message: RaftMessage) {
+  public handleMessage(message: RaftMessage<T>) {
     if (message !== undefined) {
       if (isRequestVoteRequest(message)) {
         this.handleRequestVoteRequest(message)
@@ -49,10 +50,10 @@ export class RaftNode {
         this.handleAppendEntriesRequest(message);
       } else if (isAppendEntriesResponse(message)) {
         this.handleAppendEntriesResponse(message);
-      } else if (isLog(message)) {
+      } else if (isLog<T>(message)) {
         this.handleCommand(message);
       } else {
-        this.warn('invalid message: ', message);
+        console.warn('invalid message: ', message);
       }
     }
   }
@@ -67,9 +68,9 @@ export class RaftNode {
       && (this.serverState.votedFor === undefined || this.serverState.votedFor === request.candidateId)
       && this.serverState.isUpToDate(request.lastLogIndex, request.lastLogTerm)
     ) {
+      this.observer.restartElectionTimer();
       this.serverState.votedFor = request.candidateId;
       voteGranted = true;
-      this.observer.restartElectionTimer();
     }
     this.requestVoteResponse(request.candidateId, voteGranted);
   }
@@ -88,25 +89,26 @@ export class RaftNode {
   }
 
 
-  private handleAppendEntriesRequest(request: AppendEntriesRequest) {
+  private handleAppendEntriesRequest(request: AppendEntriesRequest<T>) {
     this.print('Handle AppendEntriesRequest: ', request);
-    if (request.term > this.serverState.currentTerm || (this.role instanceof Candidate && this.serverState.currentTerm == request.term)) {
+    if (request.term > this.serverState.currentTerm || (!(this.role instanceof Follower) && this.serverState.currentTerm === request.term)) {
       this.becomeFollower(request.term, request.leaderId);
-    }
-    if (this.role instanceof Follower) {
-      this.role.leaderId = request.leaderId;
     }
     this.observer.restartElectionTimer();
     if (request.term < this.serverState.currentTerm
       || !this.serverState.hasLogAtIndex(request.prevLogIndex)
       || request.prevLogTerm !== this.serverState.getLogTerm(request.prevLogIndex)) {
+      this.print('Declined request term: ' + request.term + ' currentTerm: ' + this.serverState.currentTerm + ' request prevLogIndex: ' + request.prevLogIndex + ' current lastLogIndex: ' + this.serverState.lastLogIndex + ' request prevLogTerm: ' + request.prevLogTerm + ' current logTermAt: ' + this.serverState.getLogTerm(request.prevLogIndex));
       this.appendEntriesResponse(request.leaderId, false);
       return;
     }
-    // let newIndex = request.prevLogIndex;
+    if (this.role instanceof Follower && this.role.leaderId === undefined && this.serverState.currentTerm === request.term) {
+      this.role.leaderId = request.leaderId;
+    }
+    // const newIndex = request.prevLogIndex;
     // for (const log of request.entries) {
     //   newIndex++;
-    //   let oldEntry = this.serverState.log[newIndex - 1];
+    //   const oldEntry = this.serverState.log[newIndex - 1];
     //   if (oldEntry === undefined) {
     //     this.serverState.log.push(log);
     //   } else {
@@ -117,13 +119,13 @@ export class RaftNode {
     //   }
     // }
     // this.serverState.log.splice(request.prevLogIndex -1);
-    let removedLogs = this.serverState.replaceInvalidLogs(request.prevLogIndex);
+    const removedLogs = this.serverState.replaceInvalidLogs(request.prevLogIndex);
     if (removedLogs) {
       this.print('Removed invalid logs after index ', request.prevLogIndex);
     }
     this.serverState.logs.push(...request.entries)
     if (request.leaderCommit > this.serverState.commitIndex) {
-      this.serverState.commitIndex = Math.min(request.leaderCommit, this.serverState.logs.length);
+      this.serverState.commitIndex = Math.min(request.leaderCommit, this.serverState.lastLogIndex);
       this.serverState.fetchCommittedLogs().forEach(log => this.observer.onLog(log));
       this.print('Leader increased commitIndex to: ', this.serverState.commitIndex);
       this.observer.onStateChange(this.getMetaData());
@@ -136,7 +138,8 @@ export class RaftNode {
   private handleAppendEntriesResponse(response: AppendEntriesResponse) {
     this.print('Handle AppendEntriesResponse: ', response);
     if (response.term > this.serverState.currentTerm) {
-      this.becomeFollower(response.term, response.id);
+      this.becomeFollower(response.term);
+      return;
     }
     if (this.role instanceof Leader) {
       if (response.success) {
@@ -147,13 +150,13 @@ export class RaftNode {
         }
       } else {
         this.role.decrementNexIndex(response.id);
-        let prevLogIndex = this.role.nextIndex.get(response.id);
+        const prevLogIndex = this.role.nextIndex.get(response.id);
         if (prevLogIndex === undefined) {
           this.warn('Missing entry in nextIndex for: ', response.id);
           return;
         }
-        let prevLogTerm = this.serverState.getLogTerm(prevLogIndex)!;
-        let logs = this.serverState.logs.slice(prevLogIndex);
+        const prevLogTerm = this.serverState.getLogTerm(prevLogIndex)!;
+        const logs = this.serverState.getMissingLogs(prevLogIndex);
         this.appendEntriesRequest(response.id, prevLogIndex, prevLogTerm, logs);
         return;
       }
@@ -162,22 +165,22 @@ export class RaftNode {
     }
   }
 
-  public command(command: any) {
+  public command(command: T) {
     if (this.role instanceof Follower && this.role.leaderId !== undefined) {
       this.log(this.role.leaderId, command)
     } else if (this.role instanceof Leader) {
-      let log: Log = {term: this.serverState.currentTerm, content: command};
+      const log: Log<T> = {term: this.serverState.currentTerm, content: command};
       this.handleCommand(log);
     } else {
       this.commandBuffer.push(command);
     }
   }
 
-  private handleCommand(log: Log) {
+  private handleCommand(log: Log<T>) {
     if (this.role instanceof Leader) {
       this.print('Received command: ', log);
-      let prevLogIndex = this.serverState.lastLogIndex;
-      let prevLogTerm = this.serverState.lastLogTerm;
+      const prevLogIndex = this.serverState.lastLogIndex;
+      const prevLogTerm = this.serverState.lastLogTerm;
       this.serverState.logs.push(log);
       this._cluster.forEach(id => this.appendEntriesRequest(id, prevLogIndex, prevLogTerm, [log]));
     } else {
@@ -186,28 +189,28 @@ export class RaftNode {
   }
 
   private requestVoteRequest(destination: NodeId) {
-    let message: RequestVoteRequest = {
+    const message: RequestVoteRequest = {
       term: this.serverState.currentTerm,
       candidateId: this._nodeId,
       lastLogIndex: this.serverState.lastLogIndex,
       lastLogTerm: this.serverState.getLogTerm(this.serverState.lastLogIndex)!
     }
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send requestVoteRequest: ', message);
   }
 
   private requestVoteResponse(destination: NodeId, voteGranted: boolean) {
-    let message: RequestVoteResponse = {
+    const message: RequestVoteResponse = {
       term: this.serverState.currentTerm,
       voteGranted: voteGranted,
       id: this.nodeId
     }
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send requestVoteResponse: ', message);
   }
 
-  private appendEntriesRequest(destination: NodeId, prevLogIndex: LogIndex, prevLogTerm: Term | undefined, entries: Log[] = []) {
-    let message: AppendEntriesRequest = {
+  private appendEntriesRequest(destination: NodeId, prevLogIndex: LogIndex, prevLogTerm: Term | undefined, entries: Log<T>[] = []) {
+    const message: AppendEntriesRequest<T> = {
       term: this.serverState.currentTerm,
       leaderId: this._nodeId,
       prevLogIndex: prevLogIndex,
@@ -215,25 +218,25 @@ export class RaftNode {
       entries: entries,
       leaderCommit: this.serverState.commitIndex
     };
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send appendEntriesRequest: ', message);
   }
 
 
   private appendEntriesResponse(destination: NodeId, success: boolean) {
-    let message: AppendEntriesResponse = {
+    const message: AppendEntriesResponse = {
       term: this.serverState.currentTerm,
       success: success,
       id: this.nodeId,
       lastLogIndex: this.serverState.lastLogIndex
     }
-    this.observer.sendMessage(destination, message);
+    this.observer.sendRaftMessage(destination, message);
     this.print('Send appendEntriesResponse: ', message);
   }
 
   private log(destination: NodeId, command: any) {
-    let message: Log = {term: this.serverState.currentTerm, content: command};
-    this.observer.sendMessage(destination, message);
+    const message: Log<T> = {term: this.serverState.currentTerm, content: command};
+    this.observer.sendLog(destination, message);
     this.print('Send command: ', message);
   }
 
@@ -266,8 +269,8 @@ export class RaftNode {
 
   private becomeLeader() {
     this.print('New role: LEADER');
-    let nextIndex = new Map();
-    let matchIndex = new Map();
+    const nextIndex = new Map();
+    const matchIndex = new Map();
     this._cluster.forEach(id => {
       nextIndex.set(id, this.serverState.logs.length + 1);
       matchIndex.set(id, 0);
@@ -281,14 +284,15 @@ export class RaftNode {
 
   private advanceCommitIndex() {
     if (this.role instanceof Leader) {
-      let matchingIndices = Array.from(this.role.matchIndex.values())
+      const matchingIndices = Array.from(this.role.matchIndex.values())
         .filter(value => value > this.serverState.commitIndex && this.serverState.getLogTerm(value) === this.serverState.currentTerm);
-      let majority = this.majority();
+      const majority = this.majority();
       if (matchingIndices.length < majority) {
+        this.print(`Cant advance commit index ${this.serverState.commitIndex} required ${matchingIndices.length}/${majority}`, this.role.matchIndex.values())
         return;
       }
       matchingIndices.sort((a, b) => a - b);
-      this.serverState.commitIndex = matchingIndices[majority - 1];
+      this.serverState.commitIndex = matchingIndices[0];
       this.serverState.fetchCommittedLogs().forEach(log => this.observer.onLog(log));
       this.print('Increased commitIndex to: ', this.serverState.commitIndex);
       this.observer.onStateChange(this.getMetaData());
@@ -309,20 +313,21 @@ export class RaftNode {
     if (this.role instanceof Leader) {
       this.print('Heartbeat');
       for (const id of this._cluster) {
-        let lastReplicated = this.role.matchIndex.get(id);
-        if (lastReplicated !== undefined) {
-          let missingLogs = this.serverState.getMissingLogs(lastReplicated);
-          this.appendEntriesRequest(id, this.serverState.lastLogIndex, this.serverState.lastLogTerm, missingLogs);
-        } else {
-          this.warn('Missing matchIndex entry for : ', id);
-        }
+        this.appendEntriesRequest(id, this.serverState.lastLogIndex, this.serverState.lastLogTerm);
+        // const lastReplicated = this.role.matchIndex.get(id);
+        // if (lastReplicated !== undefined) {
+        //   const missingLogs = this.serverState.getMissingLogs(lastReplicated);
+        //   this.appendEntriesRequest(id, this.serverState.lastLogIndex, this.serverState.lastLogTerm, missingLogs);
+        // } else {
+        //   this.warn('Missing matchIndex entry for : ', id);
+        // }
       }
       this.observer.restartHeartbeatTimer();
     }
   }
 
   public addNode(id: NodeId): boolean {
-    let oldSize = this._cluster.size;
+    const oldSize = this._cluster.size;
     this._cluster.add(id);
     if (this._cluster.size > oldSize) {
       if (this.role instanceof Leader) {
@@ -363,7 +368,7 @@ export class RaftNode {
     return this._nodeId;
   }
 
-  get allLogs(): Log[] {
+  get allLogs(): Log<T>[] {
     return this.serverState.logs;
   }
 
@@ -402,9 +407,12 @@ export class RaftNode {
 
   public getMetaData(): RaftMetaData {
     return {
-      lastLogIndex: this.lastLogIndex,
+      lastLogIndex: this.serverState.lastLogIndex,
       role: this.getCurrentRole(),
-      term: this.term
+      term: this.term,
+      commitIndex: this.serverState.commitIndex,
+      lastAppliedLog: this.serverState.lastApplied,
+
     };
   }
 }

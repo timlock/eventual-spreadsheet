@@ -2,10 +2,12 @@ import {Log} from "../domain/message/Log";
 import {NodeId, RaftMessage} from "../domain/Types";
 import {RaftMetaData} from "../util/RaftMetaData";
 
-export interface RaftNodeObserver {
-  sendMessage(receiver: NodeId, message: RaftMessage): void;
+export interface RaftNodeObserver<T> {
+  sendRaftMessage(destination: NodeId, message: RaftMessage<T>): void;
 
-  onLog(log: Log): void;
+  sendLog(destination: NodeId, log: Log<T>): void
+
+  onLog(log: Log<T>): void;
 
   restartHeartbeatTimer(): void;
 

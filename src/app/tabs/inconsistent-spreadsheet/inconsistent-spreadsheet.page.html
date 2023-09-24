@@ -14,13 +14,37 @@
           <ion-card-content>
             <ion-list>
               <ion-item>
-                <ion-label>Remote nodes: {{nodes.size}}</ion-label>
+                <ion-label>Remote nodes: {{communication.nodes.size}}</ion-label>
               </ion-item>
               <ion-item>
-                <ion-label>Received messages: {{receivedMessageCounter}}</ion-label>
+                <ion-label>Time: {{trackedTime}}</ion-label>
               </ion-item>
               <ion-item>
-                <ion-label>Sent messages: {{sentMessageCounter}}</ion-label>
+                <ion-label>Exchanged bytes: {{countedBytes}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Exchanged messages: {{countedMessages}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-button (click)="fillTable()">Fill table</ion-button>
+              </ion-item>
+              <ion-item>
+                <ion-button (click)="clear()">Clear table</ion-button>
+              </ion-item>
+              <ion-item>
+                <form (submit)="grow(growQuantity)">
+                  <ion-input name="growInput" type="number" fill="outline" label="Grow"
+                             [(ngModel)]="growQuantity"></ion-input>
+                </form>
+              </ion-item>
+              <ion-item>
+                <ion-label>Total bytes: {{totalBytes}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Received messages: {{communication.totalReceivedMessages}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Sent messages: {{communication.totalSentMessages}}</ion-label>
               </ion-item>
               <ion-item lines="none">
                 <ion-toggle justify="start" [(ngModel)]="isConnected">
@@ -31,15 +55,51 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
+      <ion-col>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Testing</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="none">
+              <ion-grid>
+                <ion-row>
+                  <ion-input type="number" fill="outline" label="Test size" [(ngModel)]="testSize"></ion-input>
+                </ion-row>
+                <ion-row>
+                  <ion-input type="number" fill="outline" label="Number of tests" [(ngModel)]="testRuns"></ion-input>
+                </ion-row>
+                <ion-row>
+                  <ion-col size="auto">
+                    <ion-toggle [(ngModel)]="countBytes">
+                      <ion-title>Count bytes</ion-title>
+                    </ion-toggle>
+                  </ion-col>
+                  <ion-col size="auto">
+                    <ion-toggle [(ngModel)]="measureTime">
+                      <ion-title>Measure time</ion-title>
+                    </ion-toggle>
+                  </ion-col>
+                </ion-row>
+                <ion-row>
+                  <ion-button (click)="startTests()">Start test</ion-button>
+                </ion-row>
+              </ion-grid>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
     </ion-row>
     <ion-row>
       <ion-col size="auto">
-        <ion-title class="ion-padding-top">{{currentCell.colIndex}}|{{currentCell.rowIndex}}</ion-title>
+        <ion-title class="ion-padding-top">{{currentCell?.columnIndex}}|{{currentCell?.rowIndex}}</ion-title>
       </ion-col>
       <ion-col>
-        <form (submit)="insertCell(currentCell)">
-          <ion-input name="inconsistent-input" fill="outline" [(ngModel)]="currentCell.input"></ion-input>
-        </form>
+        <div *ngIf="currentCell !== undefined">
+          <form (submit)="insertCell(currentCell!.address, input)">
+            <ion-input name="inconsistent" fill="outline" [(ngModel)]="input"></ion-input>
+          </form>
+        </div>
       </ion-col>
     </ion-row>
   </ion-grid>
@@ -48,7 +108,7 @@
       <thead>
       <tr>
         <th class="table-header small-cell"></th>
-        <th class="table-header cell" *ngFor="let col of table.columns;let i = index">
+        <th class="table-header cell" *ngFor="let col of spreadsheet.renderTable().columns;let i = index">
           <ion-toolbar>
             <ion-buttons slot="start">
               <ion-button fill="clear" size="small" color="success" (click)="insertColumn(col)">
@@ -69,7 +129,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let row of table.rows;let r = index">
+      <tr *ngFor="let row of spreadsheet.renderTable().rows;let r = index">
         <td class="table-header small-cell ">
           <ion-toolbar>
             <ion-buttons slot="start">
@@ -86,14 +146,15 @@
           </ion-toolbar>
         </td>
         <td class="ion-text-right cell" (click)=selectCell(column,row)
-            *ngFor="let column of table.columns; let c = index">
-          <div *ngIf="currentCell.row === row && currentCell.column === column; else cellValue">
+            *ngFor="let column of spreadsheet.renderTable().columns; let c = index">
+          <div
+            *ngIf="currentCell !== undefined && (currentCell!.address.row === row && currentCell!.address.column === column); else cellValue">
             <div class="selected">
-              {{ table.get({column: column, row: row})?.content }}
+              {{ spreadsheet.renderTable().get({column: column, row: row})?.content }}
             </div>
           </div>
           <ng-template #cellValue>
-            {{ table.get({column: column, row: row})?.content }}
+            {{ spreadsheet.renderTable().get({column: column, row: row})?.content }}
           </ng-template>
         </td>
       </tr>
