@@ -1,9 +1,9 @@
 import {ApplicationRef, Component, NgZone} from '@angular/core';
-import {RaftService} from "../../raft/controller/raft.service";
+import {RaftService} from "../../raft-spreadsheet/raft.service";
 import {Action, isPayload} from "../../spreadsheet/util/Action";
 import {RaftServiceObserver} from "../../raft/util/RaftServiceObserver";
 import {RaftMetaData} from "../../raft/util/RaftMetaData";
-import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
+import {ConsistencyCheckerService} from "../../test-environment/consistency-checker.service";
 import {AlertController} from "@ionic/angular";
 import {TestEnvironment} from "../../test-environment/TestEnvironment";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
@@ -26,8 +26,6 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
     applicationRef: ApplicationRef
   ) {
     super(consistencyChecker, raftService, spreadsheetService, ConsistentSpreadsheetPage.TAG, applicationRef);
-    this.raftService.openChannel(ConsistentSpreadsheetPage.TAG, this);
-    this.startTimeMeasuring();
   }
 
   public start() {
@@ -80,7 +78,7 @@ export class ConsistentSpreadsheetPage extends TestEnvironment<Action> implement
       alert = await this.alertController.create({
         header: 'Can not alter spreadsheet!',
         subHeader: 'Raft needs to be started first',
-        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.raftService.nodes.size}/3`,
+        message: `connection enabled: ${this.raftService.isConnected}/true connected nodes: ${this.raftService.nodes.size + 1}/3`,
         buttons: [{
           text: 'Cancel',
           role: 'cancel'

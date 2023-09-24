@@ -1,7 +1,7 @@
 import {ApplicationRef, Component, NgZone} from '@angular/core';
 import {BroadcastService} from "../../communication/controller/broadcast.service";
 import {CrdtSpreadsheetService} from "../../crdt-spreadsheet/controller/crdt-spreadsheet.service";
-import {ConsistencyCheckerService} from "../../consistency-checker/consistency-checker.service";
+import {ConsistencyCheckerService} from "../../test-environment/consistency-checker.service";
 import {TestEnvironment} from "../../test-environment/TestEnvironment";
 import {OutputCell} from "../../spreadsheet/domain/OutputCell";
 

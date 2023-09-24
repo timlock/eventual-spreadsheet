@@ -13,24 +13,24 @@ import {CrdtTableNoKeep} from "../domain/CrdtTableNoKeep";
     providedIn: 'root'
 })
 export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
-    private table: CrdtTable<InputCell> = new CrdtTable();
-    // private table: CrdtTableNoKeep<InputCell> = new CrdtTableNoKeep();
-    private spreadsheetSolver = new SpreadsheetSolver(this.table);
+    private inputTable: CrdtTable<InputCell> = new CrdtTable();
+    // private inputTable: CrdtTableNoKeep<InputCell> = new CrdtTableNoKeep();
+    private spreadsheetSolver = new SpreadsheetSolver(this.inputTable);
 
     public applyUpdate(update: Uint8Array) {
-        this.table.applyUpdate(update);
+        this.inputTable.applyUpdate(update);
         this.spreadsheetSolver.reset();
     }
 
 
     public addRow(id: string): Uint8Array | undefined {
-        const update = this.table.addRow(id);
+        const update = this.inputTable.addRow(id);
         this.spreadsheetSolver.reset();
         return update;
     }
 
     public insertRow(id: string, row: string): Uint8Array | undefined {
-        const update = this.table.insertRow(id, row);
+        const update = this.inputTable.insertRow(id, row);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -39,7 +39,7 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     }
 
     public deleteRow(id: string): Uint8Array | undefined {
-        const update = this.table.deleteRow(id);
+        const update = this.inputTable.deleteRow(id);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -48,7 +48,7 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     }
 
     public addColumn(id: string): Uint8Array | undefined {
-        const update = this.table.addColumn(id);
+        const update = this.inputTable.addColumn(id);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -57,7 +57,7 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     }
 
     public insertColumn(id: string, column: string): Uint8Array | undefined {
-        const update = this.table.insertColumn(id, column);
+        const update = this.inputTable.insertColumn(id, column);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -66,7 +66,7 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     }
 
     public deleteColumn(id: string): Uint8Array | undefined {
-        const update = this.table.deleteColumn(id);
+        const update = this.inputTable.deleteColumn(id);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -74,12 +74,12 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
         return update;
     }
 
-    public insertCellById(address: Address, input: string): Uint8Array | undefined {
+    public set(address: Address, input: string): Uint8Array | undefined {
         if (input.trim().length === 0) {
             return this.deleteCell(address);
         }
         const cell = CellParser.parseCell(input);
-        const update = this.table.set(address, cell);
+        const update = this.inputTable.set(address, cell);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -90,7 +90,7 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     }
 
     public deleteCell(address: Address): Uint8Array | undefined {
-        const update = this.table.deleteValue(address);
+        const update = this.inputTable.deleteValue(address);
         this.spreadsheetSolver.reset();
         if (update === undefined) {
             console.warn('Update is undefined');
@@ -106,14 +106,14 @@ export class CrdtSpreadsheetService implements Spreadsheet<Uint8Array>{
     }
 
     get rows(): string[] {
-        return this.table.rows;
+        return this.inputTable.rows;
     }
 
     get columns(): string[] {
-        return this.table.columns;
+        return this.inputTable.columns;
     }
 
     public getEncodedState(encodedStateVector?: Uint8Array): Uint8Array | undefined {
-        return this.table.encodeStateAsUpdate(encodedStateVector);
+        return this.inputTable.encodeStateAsUpdate(encodedStateVector);
     }
 }

@@ -24,12 +24,12 @@ export class BroadcastService<T> implements Communication<T> {
   private _totalReceivedMessages = 0;
   private _totalSentMessages = 0;
   private _totalBytes = 0;
-  private _countBytes = false;
+  private _countBytes = true;
   private _delay = 0;
   private consoleHook: ConsoleHook = new ConsoleHook();
 
   public openChannel(channelName: string, observer: CommunicationObserver<T>) {
-    if (this.channel !== undefined) { 
+    if (this.channel !== undefined) {
       this.closeChannel();
     }
     this.observer = observer;

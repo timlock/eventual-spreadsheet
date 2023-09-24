@@ -15,7 +15,7 @@ export interface Spreadsheet<T> {
 
   deleteColumn(id: string): T | undefined;
 
-  insertCellById(address: Address, input: string): T | undefined;
+  set(address: Address, input: string): T | undefined;
 
   renderTable(): Table<OutputCell>;
 

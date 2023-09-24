@@ -1,15 +1,15 @@
 import {Injectable} from '@angular/core';
-import {BroadcastService} from "../../communication/controller/broadcast.service";
-import {NodeId, RaftMessage} from "../domain/Types";
-import {CommunicationObserver} from "../../communication/controller/CommunicationObserver";
-import {Timer} from "../util/Timer";
-import {RaftNode} from "./RaftNode";
-import {Identifier} from "../../identifier/Identifier";
-import {RaftNodeObserver} from "./RaftNodeObserver";
-import {Log} from "../domain/message/Log";
-import {RaftServiceObserver} from "../util/RaftServiceObserver";
-import {RaftMetaData} from "../util/RaftMetaData";
-import {Communication} from "../../test-environment/Communication";
+import {BroadcastService} from "../communication/controller/broadcast.service";
+import {NodeId, RaftMessage} from "../raft/domain/Types";
+import {CommunicationObserver} from "../communication/controller/CommunicationObserver";
+import {Timer} from "../raft/util/Timer";
+import {RaftNode} from "../raft/controller/RaftNode";
+import {Identifier} from "../identifier/Identifier";
+import {RaftNodeObserver} from "../raft/controller/RaftNodeObserver";
+import {Log} from "../raft/domain/message/Log";
+import {RaftServiceObserver} from "../raft/util/RaftServiceObserver";
+import {RaftMetaData} from "../raft/util/RaftMetaData";
+import {Communication} from "../test-environment/Communication";
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +23,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   private messageDelays: number[] = [];
   private lastMedianDelay: number | undefined;
 
-  constructor(private readonly communicationService: BroadcastService<RaftMessage<T>>) {
+  constructor(private readonly broadcastService: BroadcastService<RaftMessage<T>>) {
     this.timer = new Timer();
     this.node = new RaftNode(this.identifier.uuid, this);
   }
@@ -32,12 +32,12 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
     this.closeChannel();
     this.channelName = channelName;
     this.observer = observer;
-    this.communicationService.openChannel(this.channelName, this);
+    this.broadcastService.openChannel(this.channelName, this);
   }
 
   public closeChannel() {
     this.timer.stop();
-    this.communicationService.closeChannel();
+    this.broadcastService.closeChannel();
   }
 
   public start() {
@@ -51,7 +51,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
 
   public sendLog(destination: NodeId, log: Log<T>) {
     if (this._isConnected) {
-      this.communicationService.send(log, destination, true);
+      this.broadcastService.send(log, destination, true);
     }
   }
 
@@ -77,7 +77,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
 
   public sendRaftMessage(destination: NodeId, raftMessage: RaftMessage<T>): void {
     if (this._isConnected) {
-      this.communicationService.send(raftMessage, destination, false);
+      this.broadcastService.send(raftMessage, destination, false);
     }
   }
 
@@ -133,7 +133,7 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   }
 
   get identifier(): Identifier {
-    return this.communicationService.identifier;
+    return this.broadcastService.identifier;
   }
 
   set isConnected(value: boolean) {
@@ -157,35 +157,35 @@ export class RaftService<T> implements RaftNodeObserver<T>, CommunicationObserve
   }
 
   get totalBytes(): number {
-    return this.communicationService.totalBytes;
+    return this.broadcastService.totalBytes;
   }
 
   get countedMessages(): number {
-    return this.communicationService.countedMessages;
+    return this.broadcastService.countedMessages;
   }
 
   get totalReceivedMessages(): number {
-    return this.communicationService.totalReceivedMessages;
+    return this.broadcastService.totalReceivedMessages;
   }
 
   get totalSentMessages(): number {
-    return this.communicationService.totalSentMessages;
+    return this.broadcastService.totalSentMessages;
   }
 
   get countBytes(): boolean {
-    return this.communicationService.countBytes;
+    return this.broadcastService.countBytes;
   }
 
   set countBytes(value: boolean) {
-    this.communicationService.countBytes = value;
+    this.broadcastService.countBytes = value;
   }
 
   get delay(): number {
-    return this.communicationService.delay;
+    return this.broadcastService.delay;
   }
 
   set delay(value: number) {
-    this.communicationService.delay = value;
+    this.broadcastService.delay = value;
   }
 
 }

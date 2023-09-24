@@ -1,14 +1,15 @@
 import {OutputCell} from "../spreadsheet/domain/OutputCell";
 import {Address} from "../spreadsheet/domain/Address";
 import {CommunicationObserver} from "../communication/controller/CommunicationObserver";
-import {ConsistencyCheckerService} from "../consistency-checker/consistency-checker.service";
+import {ConsistencyCheckerService} from "./consistency-checker.service";
 import {Communication} from "./Communication";
 import {TestResult, TestType} from "./TestResult";
 import {Spreadsheet} from "./Spreadsheet";
 import {ApplicationRef} from "@angular/core";
+import {ViewDidEnter} from "@ionic/angular";
 
 
-export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
+export abstract class TestEnvironment<T> implements CommunicationObserver<T>, ViewDidEnter {
   private _currentCell: OutputCell | undefined;
   private _input = '';
   private startTime: number | undefined;
@@ -16,11 +17,11 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
   private messageCounterStart = 0;
   private _growQuantity = 3;
   private modifiedState = false;
+  private _testSize = 3;
+  private _testRuns = 10;
   private currentTestRun: number | undefined;
   private clearResults: TestResult[] = [];
   private growResults: TestResult[] = [];
-  private _testSize = 3;
-  private _testRuns = 10;
   private currentResult: TestResult = TestResult.empty();
   private _measureTime = true;
 
@@ -39,66 +40,6 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
 
   public ionViewDidEnter() {
     this._communication.openChannel(this.tag, this);
-    this.startTimeMeasuring();
-  }
-
-  public addRow() {
-    const id = this._communication.identifier.next();
-    this.performAction(() => this._spreadsheet.addRow(id));
-  }
-
-  public insertRow(row: string) {
-    const id = this._communication.identifier.next();
-    this.performAction(() => this._spreadsheet.insertRow(id, row));
-  }
-
-  public deleteRow(row: string) {
-    this.performAction(() => this._spreadsheet.deleteRow(row));
-  }
-
-  public addColumn() {
-    const id = this._communication.identifier.next();
-    this.performAction(() => this._spreadsheet.addColumn(id));
-  }
-
-  public insertColumn(column: string) {
-    const id = this._communication.identifier.next();
-    this.performAction(() => this._spreadsheet.insertColumn(id, column));
-  }
-
-  public deleteColumn(column: string) {
-    this.performAction(() => this._spreadsheet.deleteColumn(column));
-  }
-
-  public insertCell(address: Address, input: string) {
-    this.performAction(() => this._spreadsheet.insertCellById(address, input));
-  }
-
-  public deleteCell(address: Address) {
-    this.insertCell(address, '');
-  }
-
-
-  private startStopwatch() {
-    if (this.startTime === undefined) {
-      this.startTime = Date.now();
-      this.byteCounterStart = this._communication.totalBytes;
-      this.messageCounterStart = this._communication.countedMessages;
-    }
-  }
-
-
-  public startTests() {
-    this.clear();
-    this.currentTestRun = -1;
-    this.clearResults = [];
-    this.growResults = [];
-    this.grow(this._testSize);
-    // this.fillTable();
-  }
-
-
-  public startTimeMeasuring() {
     this.consistencyChecker.subscribe(this._communication.identifier.uuid, this._spreadsheet.renderTable(), (time, medianDelay) => {
       if (this.startTime !== undefined) {
         this.updateCurrentResult(time, medianDelay);
@@ -134,19 +75,64 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
         }
         if (this.currentTestRun === this._testRuns) {
           this.createLogs();
-          if (this._measureTime && !this.countBytes) {
-            this._measureTime = false;
-            this.countBytes = true;
-            setTimeout(() => {
-              this.startTests();
-            }, 200)
-          } else if (!this._measureTime && this.countBytes) {
-            this._measureTime = true;
-            this.countBytes = false;
-          }
+          this.currentTestRun = undefined;
         }
       }
     });
+  }
+
+  public addRow() {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.addRow(id));
+  }
+
+  public insertRow(row: string) {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.insertRow(id, row));
+  }
+
+  public deleteRow(row: string) {
+    this.performAction(() => this._spreadsheet.deleteRow(row));
+  }
+
+  public addColumn() {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.addColumn(id));
+  }
+
+  public insertColumn(column: string) {
+    const id = this._communication.identifier.next();
+    this.performAction(() => this._spreadsheet.insertColumn(id, column));
+  }
+
+  public deleteColumn(column: string) {
+    this.performAction(() => this._spreadsheet.deleteColumn(column));
+  }
+
+  public insertCell(address: Address, input: string) {
+    this.performAction(() => this._spreadsheet.set(address, input));
+  }
+
+  public deleteCell(address: Address) {
+    this.insertCell(address, '');
+  }
+
+
+  private startStopwatch() {
+    if (this.startTime === undefined) {
+      this.startTime = Date.now();
+      this.byteCounterStart = this._communication.totalBytes;
+      this.messageCounterStart = this._communication.countedMessages;
+    }
+  }
+
+
+  public startTests() {
+    this.clear();
+    this.currentTestRun = -1;
+    this.clearResults = [];
+    this.growResults = [];
+    this.grow(this._testSize);
   }
 
   private createLogs() {
@@ -295,7 +281,7 @@ export abstract class TestEnvironment<T> implements CommunicationObserver<T> {
     if (this._spreadsheet.renderTable().rows.length === 0 || this._spreadsheet.renderTable().columns.length === 0) {
       this._currentCell = undefined;
     }
-    // this.applicationRef.tick();
+    this.applicationRef.tick();
   }
 
 

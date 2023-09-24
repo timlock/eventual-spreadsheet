@@ -19,7 +19,7 @@ describe('SpreadsheetService', () => {
   it('insert value', () => {
     let address: Address = {column: table.columns[0], row: table.rows[0]};
     let expected: OutputCell = {address: address, columnIndex: 1, rowIndex: 1, input: '1', content: 1};
-    table.insertCellById(address, expected.input);
+    table.set(address, expected.input);
     table.renderTable();
     let actualDto = table.renderTable().get(address);
     expect(actualDto).toBeDefined();
@@ -54,9 +54,9 @@ describe('SpreadsheetService', () => {
     let rawFormula = '=SUM(' + range + ')';
     let formulaAddress: Address = {column: table.columns[0], row: table.rows[2]};
     let formula: OutputCell = {address: formulaAddress, columnIndex: 1, rowIndex: 3, input: rawFormula, content: 4};
-    table.insertCellById(firstCell.address, firstCell.input);
-    table.insertCellById(secondCell.address, secondCell.input);
-    table.insertCellById(formula.address, formula.input);
+    table.set(firstCell.address, firstCell.input);
+    table.set(secondCell.address, secondCell.input);
+    table.set(formula.address, formula.input);
     let actualRenderedCell = table.renderTable().get(formula.address);
     expect(actualRenderedCell).toBeDefined();
     expect(actualRenderedCell!.content).toEqual(4);
@@ -71,9 +71,9 @@ describe('SpreadsheetService', () => {
     let rawFormula = '=SUM(' + range + ')';
     let formulaAddress: Address = {column: table.columns[2], row: table.rows[0]};
     let formula: OutputCell = {address: formulaAddress, columnIndex: 3, rowIndex: 1, input: rawFormula, content: 4};
-    table.insertCellById(firstCell.address, firstCell.input);
-    table.insertCellById(secondCell.address, secondCell.input);
-    table.insertCellById(formula.address, formula.input);
+    table.set(firstCell.address, firstCell.input);
+    table.set(secondCell.address, secondCell.input);
+    table.set(formula.address, formula.input);
     let actualRenderedCell = table.renderTable().get(formula.address);
     expect(actualRenderedCell).toBeDefined();
     expect(actualRenderedCell!.content).toEqual(4);
@@ -92,10 +92,10 @@ describe('SpreadsheetService', () => {
     rawFormula = '=SUM(' + range + ')';
     let secondFormulaAddress: Address = {column: table.columns[0], row: table.rows[0]};
     let secondFormula: OutputCell = {address: secondFormulaAddress, columnIndex: 1, rowIndex: 1, input: rawFormula, content: 4};
-    table.insertCellById(firstCell.address, firstCell.input);
-    table.insertCellById(secondCell.address, secondCell.input);
-    table.insertCellById(secondFormula.address, secondFormula.input);
-    table.insertCellById(firstFormula.address, firstFormula.input);
+    table.set(firstCell.address, firstCell.input);
+    table.set(secondCell.address, secondCell.input);
+    table.set(secondFormula.address, secondFormula.input);
+    table.set(firstFormula.address, firstFormula.input);
     let actual = table.renderTable().get(secondFormula.address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(4);
@@ -106,7 +106,7 @@ describe('SpreadsheetService', () => {
     let rawFormula = '=SUM(' + address.column + '|' + address.row + ':' + address.column + '|' + address.row + ')';
     let formulaAddress: Address = {column: table.columns[0], row: table.rows[0]};
     let formula: OutputCell = {address: formulaAddress, columnIndex: 1, rowIndex: 1, input: rawFormula, content: 0};
-    table.insertCellById(formula.address, formula.input);
+    table.set(formula.address, formula.input);
     let actual = table.renderTable().get(address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(0);
@@ -119,8 +119,8 @@ describe('SpreadsheetService', () => {
     let firstFormula: OutputCell = {address: firstFormulaAddress, columnIndex: 3, rowIndex: 2, input: rawFormula, content: 0};
     rawFormula = '=SUM(' + firstFormula.address.column + '|' + address.row + ':' + firstFormula.address.column + '|' + address.row + ')';
     let secondFormula: OutputCell = {address: address, columnIndex: 1, rowIndex: 2, input: rawFormula, content: 0};
-    table.insertCellById(firstFormula.address, firstFormula.input);
-    table.insertCellById(secondFormula.address, secondFormula.input);
+    table.set(firstFormula.address, firstFormula.input);
+    table.set(secondFormula.address, secondFormula.input);
     let actual = table.renderTable().get(address);
     expect(actual).toBeDefined();
     expect(actual?.content).toEqual(0);

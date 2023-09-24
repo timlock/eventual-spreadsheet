@@ -15,8 +15,8 @@ import {Spreadsheet} from "../test-environment/Spreadsheet";
   providedIn: 'root'
 })
 export class RaftSpreadsheetService implements Spreadsheet<Action> {
-  private table: Table<InputCell> = new Table();
-  private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.table);
+  private inputTable: Table<InputCell> = new Table();
+  private spreadsheetSolver: SpreadsheetSolver = new SpreadsheetSolver(this.inputTable);
 
   public constructor() {
     this.fillTable();
@@ -58,12 +58,12 @@ export class RaftSpreadsheetService implements Spreadsheet<Action> {
     return PayloadFactory.deleteColumn(id);
   }
 
-  public insertCellById(address: Address, input: string): Action {
+  public set(address: Address, input: string): Action {
     return PayloadFactory.insertCell(address, input);
   }
 
   private deleteCell(address: Address) {
-    this.table.deleteValue(address);
+    this.inputTable.deleteValue(address);
     this.spreadsheetSolver.reset();
   }
 
@@ -75,38 +75,38 @@ export class RaftSpreadsheetService implements Spreadsheet<Action> {
           this.deleteCell(address);
         } else {
           const cell = CellParser.parseCell(update.input!);
-          this.table.set(address, cell);
+          this.inputTable.set(address, cell);
         }
         this.spreadsheetSolver.reset();
       }
         break;
       case ActionType.ADD_ROW: {
-        this.table.addRow(update.input!);
+        this.inputTable.addRow(update.input!);
         this.spreadsheetSolver.reset();
       }
         break;
       case ActionType.INSERT_ROW: {
-        this.table.insertRow(update.input!, update.row!);
+        this.inputTable.insertRow(update.input!, update.row!);
         this.spreadsheetSolver.reset();
       }
         break;
       case ActionType.ADD_COLUMN: {
-        this.table.addColumn(update.input!);
+        this.inputTable.addColumn(update.input!);
         this.spreadsheetSolver.reset();
       }
         break;
       case ActionType.INSERT_COLUMN: {
-        this.table.insertColumn(update.input!, update.column!);
+        this.inputTable.insertColumn(update.input!, update.column!);
         this.spreadsheetSolver.reset();
       }
         break;
       case ActionType.DELETE_COLUMN: {
-        this.table.deleteColumn(update.column!);
+        this.inputTable.deleteColumn(update.column!);
         this.spreadsheetSolver.reset();
       }
         break;
       case ActionType.DELETE_ROW: {
-        this.table.deleteRow(update.row!);
+        this.inputTable.deleteRow(update.row!);
         this.spreadsheetSolver.reset();
       }
         break;
@@ -121,11 +121,11 @@ export class RaftSpreadsheetService implements Spreadsheet<Action> {
   }
 
   get rows(): string[] {
-    return this.table.rows;
+    return this.inputTable.rows;
   }
 
   get columns(): string[] {
-    return this.table.columns;
+    return this.inputTable.columns;
   }
 
 }
